@@ -419,6 +419,9 @@ M5:
   `.\.venv\Scripts\ruff.exe format --check .` and `git diff --check` passed.
 - `git ls-files data/raw data/processed artifacts runs` returned no paths;
   `.gitignore` still excludes all four generated-data roots.
+- The public README's repository tree now lists only tracked directories.
+  Generated data, model artefacts and run outputs are documented separately as
+  machine-local working files, not as repository content.
 - The first public GitHub Actions run exposed a clean-clone-only fixture issue:
   ignored empty local directories do not exist after checkout. The healthy
   `doctor` test now creates its required temporary config and local-directory
