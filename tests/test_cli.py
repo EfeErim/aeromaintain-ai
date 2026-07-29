@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 from typer.testing import CliRunner
 
 from aeromaintain.cli import app, collect_doctor_checks
+from aeromaintain.config import REQUIRED_LOCAL_DATA_DIRS
 from aeromaintain.data import DataPipelineError, PrepareResult
 from aeromaintain.models import ModelingError
 from aeromaintain.models.rul import EvaluationResult, TrainResult
@@ -14,10 +16,14 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
 
 
-def test_doctor_reports_a_healthy_repository() -> None:
+def test_doctor_reports_a_healthy_repository(tmp_path: Path) -> None:
+    shutil.copytree(REPOSITORY_ROOT / "configs", tmp_path / "configs")
+    for directory in REQUIRED_LOCAL_DATA_DIRS:
+        (tmp_path / directory).mkdir(parents=True)
+
     result = runner.invoke(
         app,
-        ["doctor", "--project-root", str(REPOSITORY_ROOT)],
+        ["doctor", "--project-root", str(tmp_path)],
     )
 
     assert result.exit_code == 0, result.output

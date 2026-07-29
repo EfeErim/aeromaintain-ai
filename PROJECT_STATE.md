@@ -419,6 +419,10 @@ M5:
   `.\.venv\Scripts\ruff.exe format --check .` and `git diff --check` passed.
 - `git ls-files data/raw data/processed artifacts runs` returned no paths;
   `.gitignore` still excludes all four generated-data roots.
+- The first public GitHub Actions run exposed a clean-clone-only fixture issue:
+  ignored empty local directories do not exist after checkout. The healthy
+  `doctor` test now creates its required temporary config and local-directory
+  contract without tracking raw, processed, artefact or run paths.
 
 ## Decisions and blockers
 
