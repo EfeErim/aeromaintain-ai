@@ -1,25 +1,25 @@
 # AeroMaintain AI
 
-AeroMaintain AI is a local educational prototype for leakage-resistant remaining
-useful life prediction and synthetic maintenance scheduling with NASA C-MAPSS
-FD001.
+AeroMaintain AI is a local educational prototype that predicts remaining useful
+life from NASA C-MAPSS FD001 and converts predictions into a synthetic,
+capacity-constrained maintenance schedule.
 
 It is not an airworthiness, maintenance-approval, or production fleet system.
 
 ## Current delivery
 
-Phase 0 is complete. The Python 3.11 project foundation, research and data
-governance documents, quality tooling, CI, and environment doctor are in place.
+Phases 0 and 1 are complete. The foundation, governance, quality infrastructure,
+and deterministic FD001 preparation pipeline are in place. Later milestones
+implement RUL modeling, optimization, and the Streamlit application.
 
 The product and experiment contract is in `PROJECT_PLAN.md`; evidence-based
 status is in `PROJECT_STATE.md`.
 
 ## Data boundary
 
-V1 uses only NASA's simulated C-MAPSS FD001 subset. It is not operational fleet
-telemetry. Raw archives and extracted files are excluded from Git and releases.
-All operational, resource, and cost fields planned for later phases are
-synthetic.
+FD001 is simulated NASA data, not operational fleet telemetry. Because the
+dataset page does not specify a redistribution license, raw archives and
+extracted members are excluded from Git and releases.
 
 ## Installation
 
@@ -29,6 +29,20 @@ py -3.11 -m venv .venv
 python -m pip install -e ".[dev]"
 aeromaintain doctor
 ```
+
+## Prepare FD001
+
+Download and hash-verify the NASA archive, safely select only FD001 members,
+validate the fixed schema, create RUL targets and engine splits, and generate
+development-only EDA:
+
+```powershell
+aeromaintain prepare
+```
+
+An existing verified archive can be supplied with `--archive`. Repeated runs
+reuse only byte-identical raw and processed outputs. Official test labels are
+isolated under `evaluation/` for later locked evaluation.
 
 ## Quality checks
 
@@ -53,7 +67,7 @@ aeromaintain app --run-id ID
 aeromaintain doctor
 ```
 
-Only `doctor` is implemented in Phase 0.
+`doctor` and `prepare` are implemented through Phase 1.
 
 ## License
 
