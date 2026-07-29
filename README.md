@@ -16,12 +16,14 @@ It is not an airworthiness, maintenance-approval, or production fleet system.
 
 ## Current delivery
 
-Phases 0 through 4 are complete. One immutable command now runs verified FD001
+Phases 0 through 5 are complete. One immutable command now runs verified FD001
 preparation, leakage-safe model selection and lock, official evaluation,
 synthetic maintenance optimization, and final reporting. A four-page Streamlit
 application verifies the complete artefact hash chain before exposing risk,
 schedule, policy-comparison, CSV-download, and truth-free capacity what-if
-views.
+views. The portfolio-facing decision console keeps solver status, unproven
+optimality, planning exceptions, synthetic assumptions, and evidence provenance
+visible.
 
 The detailed product and experiment contract is
 [`PROJECT_PLAN.md`](PROJECT_PLAN.md). Evidence-based milestone status is in
@@ -195,13 +197,13 @@ assumptions. See the [full results](docs/results.md),
 
 ## Application screenshots
 
-![Overview showing locked model and decision metrics](docs/screenshots/overview.png)
+![Fleet brief showing locked model and decision metrics](docs/screenshots/overview.png)
 
-![Engine risk ranking without true RUL](docs/screenshots/engine-health.png)
+![Engine condition risk ranking without true RUL](docs/screenshots/engine-health.png)
 
-![Maintenance schedule with visible feasible and unproven status](docs/screenshots/maintenance-schedule.png)
+![30-day work plan with visible feasible and unproven status](docs/screenshots/maintenance-schedule.png)
 
-![Policy and capacity comparison](docs/screenshots/policy-comparison.png)
+![Scenario lab policy and capacity comparison](docs/screenshots/policy-comparison.png)
 
 ## Quality checks
 

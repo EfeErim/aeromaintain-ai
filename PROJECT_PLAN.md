@@ -750,6 +750,30 @@ Faz kapısı:
 - manifest veri/model/config hash'lerini içeriyor
 - bütün milestone'lar `PROJECT_STATE.md` içinde kanıtlarıyla tamamlanmış
 
+### Faz 5 — Portföy sunumu ve arayüz sertleştirmesi
+
+#### M5 — Karar konsolu sunum kalitesi
+
+Teslimatlar:
+
+- sabit açık tema ve tutarlı karar-konsolu görsel dili
+- operasyonel adlarla düzenlenmiş dört sayfa: `Fleet brief`,
+  `Engine condition`, `30-day work plan` ve `Scenario lab`
+- risk, takvim, erteleme, politika ve kapasite sonuçlarını önceleyen görseller
+- doğrulanmış gerçek run'dan yenilenmiş dört ekran görüntüsü
+
+Kabul:
+
+- uygulama yalnızca açıkça verilen, hash zinciri doğrulanmış run'ı yüklemeye
+  devam ediyor
+- dört sayfa küçük fixture ve gerçek run smoke kontrollerinde hatasız açılıyor
+- gerçek RUL karar katmanına sızmıyor; kapasite what-if işlemi doğrulanmış
+  truth-free senaryoyu kullanıyor ve release run'ını değiştirmiyor
+- sentetik kapsam, solver durumu, kanıtlanmamış optimalite ve ertelenen işler
+  görünür kalıyor
+- Ruff, format, tam test paketi, yüzde 80 coverage kapısı ve `git diff --check`
+  geçiyor
+
 ---
 
 ## 10. Test Planı
