@@ -4,17 +4,17 @@
 
 ```mermaid
 flowchart LR
-    A["Verified NASA FD001 archive"] --> B["Prepare and data contract"]
+    A["Checksum-checked NASA FD001 archive"] --> B["Prepare and data contract"]
     B --> C["Development-only model selection"]
     C --> D["Calibration and model lock"]
     D --> E["Locked official evaluation"]
     E --> F["Truth-free synthetic scenario"]
     F --> G["Policies and two-stage CP-SAT"]
-    G --> H["Verified report and Streamlit app"]
+    G --> H["Hashed report and Streamlit app"]
 ```
 
 Reusable logic lives under `src/aeromaintain/`; notebooks are exploratory only.
-The CLI is the orchestration surface:
+The package keeps orchestration separate from reusable domain logic:
 
 - `data/pipeline.py` verifies and prepares FD001;
 - `features/causal.py` creates past-and-current-only rolling features;
@@ -42,10 +42,10 @@ that excludes `rul_true`.
 
 Model training creates a new run atomically and refuses an existing ID.
 Evaluation and optimization add separately verified artefact groups. The
-end-to-end command writes `report.json` and `report.html`, then atomically changes
-the run manifest from `model_locked` to `pipeline_complete`. A failure before
-that final replacement remains visibly incomplete and cannot be resumed by
-silently overwriting the run.
+end-to-end workflow writes `report.json` and `report.html`, then atomically
+changes the run manifest from `model_locked` to `pipeline_complete`. A failure
+before that final replacement remains visibly incomplete and cannot be resumed
+by silently overwriting the run.
 
 The application requires an explicit run ID. It checks:
 

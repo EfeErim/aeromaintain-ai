@@ -1,18 +1,13 @@
-# Verified Results
+# Reference Run Results
 
-## Evidence scope
+## Run
 
 These results come from the local immutable run
-`m4-fd001-seed42-20260729`, produced on 2026-07-29 by:
+`m4-fd001-seed42-20260729`, produced on 2026-07-29.
 
-```powershell
-aeromaintain pipeline --run-id m4-fd001-seed42-20260729
-```
-
-The run is Git-ignored because it contains generated model and data-derived
-artefacts. Its final manifest status is `pipeline_complete`; the report and
-source manifest SHA-256 values are retained locally. The committed screenshots
-are presentation evidence, not substitutes for the machine-readable run.
+The run is Git-ignored because it contains model and data-derived artefacts.
+Its final manifest status is `pipeline_complete`; report and source-manifest
+hashes are retained locally.
 
 ## RUL prediction
 
@@ -34,8 +29,8 @@ reproduced the previously locked official-test metrics:
 | Observed official-test coverage | 0.89 |
 | Mean interval width | 60.623140 |
 
-The empirical interval does not provide a safety guarantee. Critical-RUL recall
-and the coverage shortfall are visible negative results.
+The empirical interval is not a safety guarantee. Critical-RUL recall and the
+coverage shortfall are reported alongside the headline error metrics.
 
 ## Policy comparison
 
@@ -63,13 +58,13 @@ three due jobs and retained 13 retrospective simulated failures.
 All three outcomes were `FEASIBLE` with unproven optimality. This table is a
 capacity sensitivity check, not a tuned policy recommendation.
 
-## Application evidence
+## Screenshots
 
 - [Overview](screenshots/overview.png)
 - [Engine risk](screenshots/engine-health.png)
 - [Maintenance plan](screenshots/maintenance-schedule.png)
 - [Policy analysis](screenshots/policy-comparison.png)
 
-The browser verification covered all four pages with the explicit release run
-and reported no console errors. The automated Streamlit fixture also exercises
-every page and a validated truth-free what-if solve.
+All four pages were opened against the named run without browser-console
+errors. The Streamlit test fixture also covers every page and one validated
+capacity replan.

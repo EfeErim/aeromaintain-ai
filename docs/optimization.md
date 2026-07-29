@@ -2,11 +2,11 @@
 
 ## Scope and safety boundary
 
-Phase 3 converts one verified locked FD001 evaluation into an educational,
-synthetic maintenance decision experiment. It is not an airworthiness,
-maintenance-approval, production-planning, or real-fleet system. All staffing,
-bay, parts, operating-demand, duration, and cost fields are synthetic. Costs
-are dimensionless `cost_units`, not currency.
+The optimizer turns a locked FD001 evaluation into a synthetic maintenance
+experiment. It is not an airworthiness, maintenance-approval,
+production-planning, or real-fleet system. Staffing, bays, parts,
+operating-demand, duration, and cost fields are synthetic. Costs are
+dimensionless `cost_units`, not currency.
 
 The planning boundary accepts only engine ID, last observed cycle, point RUL
 prediction, nominal empirical interval, and risk band. A frame containing
@@ -81,13 +81,12 @@ kept distinct from `OPTIMAL`; when stage 1 is not proven optimal, the schedule
 is labelled `unproven`. `INFEASIBLE`, `MODEL_INVALID`, and `UNKNOWN` results
 contain no schedule.
 
-## Verified M3 run
+## Reference optimization run
 
 Run: `m2-fd001-seed42-20260729`
 
 The base solver found a valid `FEASIBLE` schedule within the two-stage time
-limits but did not prove lexicographic optimality. Negative results are retained
-rather than hidden.
+limits but did not prove lexicographic optimality.
 
 | Policy | Scheduled | Due deferrals | Late days | Retrospective failures | Total synthetic cost |
 |---|---:|---:|---:|---:|---:|
@@ -111,9 +110,9 @@ they are not available to any scenario, policy, or solver decision.
 
 ## Artefacts and reproducibility
 
-`aeromaintain optimize --run-id ID` verifies the model-lock and official
-prediction hashes before writing a new immutable `optimization/` directory.
-The directory contains:
+Before writing a new immutable `optimization/` directory, the optimization
+stage verifies the model lock and official prediction hashes. The directory
+contains:
 
 - `scenario.json` and `scenario_data_dictionary.json`;
 - four policy schedules and three capacity schedules;
@@ -121,5 +120,4 @@ The directory contains:
 - `manifest.json` with generator/config/source hashes and every output hash.
 
 The same seed and prediction input reproduce the same scenario. Solver wall
-time and any time-limited feasible solution are evidence, not deterministic
-artefact guarantees.
+time and a time-limited feasible schedule can vary between environments.

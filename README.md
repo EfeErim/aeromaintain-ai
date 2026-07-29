@@ -1,32 +1,18 @@
 # AeroMaintain AI
 
-**From turbofan sensor history to a capacity-constrained maintenance plan.**
+RUL prediction and synthetic maintenance scheduling with NASA C-MAPSS FD001.
 
 AeroMaintain AI is an educational decision-support prototype built on NASA's
-simulated C-MAPSS FD001 dataset. It connects remaining-useful-life prediction
-to maintenance scheduling, so the output is not just a model score but an
-explicit plan with visible resource constraints, deferrals, and uncertainty.
+simulated C-MAPSS FD001 dataset. It predicts remaining useful life (RUL), then
+uses the locked predictions in a capacity-constrained maintenance schedule.
 
 > This is not an airworthiness, maintenance-approval, or production fleet
 > system. FD001 is simulated, and every staffing, bay, parts, duration, demand,
 > and cost assumption is synthetic.
 
-## The problem
+## Project scope
 
-Predicting when an engine may need maintenance is only half of the decision.
-A planner still needs to decide which engines to service, when to service them,
-and what to defer when technicians, bays, parts, and operating capacity are
-limited.
-
-That creates two connected risks:
-
-- a model can look accurate while leaking future or test information; and
-- a maintenance recommendation can look plausible while violating real
-  planning constraints.
-
-## The solution
-
-AeroMaintain AI treats prediction and planning as one verified workflow:
+The project covers one path from sensor history to a maintenance plan:
 
 ```text
 Sensor history
@@ -37,21 +23,17 @@ Sensor history
     → decision interface
 ```
 
-The workflow is designed around three safeguards:
+Three rules shape the implementation:
 
 - engines, not individual cycle rows, define model splits and validation folds;
 - official test RUL is unavailable to model selection and maintenance planning;
 - the application verifies the model, evaluation, optimization, and report
   hash chain before showing a result.
 
-The final interface answers four practical questions:
+The Streamlit app has four pages for fleet risk, engine review, the maintenance
+plan, and policy/capacity comparison.
 
-1. What is the current fleet-level risk?
-2. Which engines should be reviewed first?
-3. What maintenance plan fits the available resources?
-4. How do alternative policies and capacity assumptions change the outcome?
-
-## Verified results
+## Reference run
 
 The release-candidate run `m4-fd001-seed42-20260729` completed the full
 prediction-to-decision pipeline. Ridge remained the champion under the
@@ -70,9 +52,9 @@ predefined selection rule.
 | Critical-RUL precision | 100% |
 | Critical-RUL recall | 48% |
 
-The 48% critical-RUL recall is an important negative result: the point
-prediction threshold missed more than half of the truly critical engines. The
-empirical interval also fell one percentage point below its nominal target.
+At the fixed threshold, the model found 48% of the truly critical engines. The
+empirical interval covered 89% of the official test cases against a nominal 90%
+target.
 
 ### Maintenance decision
 
@@ -100,9 +82,9 @@ Capacity sensitivity showed the expected trade-off:
 | Base | 2 | 80% | 17 | 3 |
 | Expanded | 3 | 70% | 19 | 1 |
 
-[Read the complete result report →](docs/results.md)
+[Read the full result report](docs/results.md).
 
-## Product views
+## Application
 
 | Fleet overview | Engine risk |
 |---|---|
@@ -110,61 +92,37 @@ Capacity sensitivity showed the expected trade-off:
 | **Maintenance plan** | **Policy analysis** |
 | [![Maintenance plan](docs/screenshots/maintenance-schedule.png)](docs/screenshots/maintenance-schedule.png) | [![Policy analysis](docs/screenshots/policy-comparison.png)](docs/screenshots/policy-comparison.png) |
 
-The application exposes solver status, unproven optimality, deferred work,
-synthetic assumptions, and run identity instead of presenting every result as
-an unconditional success.
+Solver status, deferred work, the synthetic-data warning, and the run ID remain
+visible in the interface.
 
-## How it works
+## Implementation
 
-### 1. Leakage-resistant modeling
+- Causal rolling features use only the current and earlier cycles.
+- Preprocessing is fitted separately inside each engine-grouped fold.
+- The champion model, preprocessing, calibration values, and hashes are locked
+  before official test labels are read.
+- The optimizer receives predictions and synthetic planning fields, never true
+  test RUL.
+- CP-SAT models team, bay, parts, operating-demand, duration, and horizon
+  constraints. No-solution states return no schedule.
+- The app loads one named completed run and checks its artefact hashes.
 
-Causal rolling features use only the current and earlier cycles. Preprocessing
-is fitted inside each engine-grouped fold. A development target mean, Ridge,
-and bounded XGBoost search are compared under one fixed protocol.
+## Repository contents
 
-### 2. Model lock and independent evaluation
+The repository includes source code, configuration, tests, aggregate results,
+method notes, model limitations, and four application screenshots:
 
-The champion, feature order, preprocessing decisions, calibration state, and
-file hashes are frozen before official test labels are opened. The evaluator
-rejects a missing or changed lock.
-
-### 3. Prediction-to-decision boundary
-
-The optimizer receives only engine identity, last observed cycle, predicted
-RUL, interval bounds, and risk band. It rejects any scenario containing true
-RUL.
-
-### 4. Constrained scheduling
-
-OR-Tools CP-SAT schedules maintenance across teams, bays, parts inventory,
-daily operating demand, job durations, and a 30-day horizon. Solver failure or
-unknown status never becomes a plausible-looking schedule.
-
-### 5. Verified presentation
-
-The Streamlit application opens one explicitly selected completed run and
-checks the full artefact hash chain before rendering fleet risk, engine review,
-maintenance planning, and policy analysis.
-
-## Public evidence
-
-The repository contains the source code, configuration, tests, aggregate
-results, methodology, model limitations, and four verified application
-screenshots:
-
-- [Verified results](docs/results.md)
+- [Reference run results](docs/results.md)
 - [Model card](docs/model_card.md)
 - [System architecture](docs/architecture.md)
 - [Optimization formulation](docs/optimization.md)
 - [FD001 data card](docs/data_card.md)
 - [Research basis](docs/research.md)
-- [Milestone evidence](PROJECT_STATE.md)
 
 Raw NASA data, derived row-level tables, trained model binaries, and full run
-directories are intentionally excluded. They are generated locally and may
-carry redistribution-license ambiguity or large, reproducible intermediate
-artefacts. The committed reports expose the aggregate outcome without
-redistributing NASA records.
+directories are excluded. They are generated locally; NASA's dataset page does
+not specify a redistribution license. The committed reports contain aggregate
+results only.
 
 ## Limitations
 
@@ -177,43 +135,20 @@ redistributing NASA records.
 - The release schedule is feasible but not proven optimal.
 - Results do not establish performance under real distribution shift.
 
-<details>
-<summary><strong>Run locally</strong></summary>
+## Run locally
 
-### Requirements
-
-- Python `>=3.11,<3.12`
-- Git
+With Python `>=3.11,<3.12`, install the package and launch a named run:
 
 ```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
-```
-
-Run the environment check, complete pipeline, and application:
-
-```powershell
-aeromaintain doctor
-aeromaintain pipeline --run-id your-fd001-run
-aeromaintain app --run-id your-fd001-run
+python -m pip install -e .
+aeromaintain pipeline --run-id fd001-demo
+aeromaintain app --run-id fd001-demo
 ```
 
 The pipeline verifies and prepares FD001, trains and locks the model, performs
 official evaluation, builds the synthetic optimization scenario, solves the
 maintenance policies, and writes the final report. Existing run directories
 are never overwritten.
-
-Quality checks:
-
-```powershell
-ruff check .
-ruff format --check .
-pytest --cov=src/aeromaintain --cov-report=term-missing --cov-fail-under=80
-```
-
-</details>
 
 ## License
 
