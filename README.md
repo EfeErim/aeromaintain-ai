@@ -219,7 +219,7 @@ pytest --cov=src/aeromaintain --cov-report=term-missing --cov-fail-under=80
 GitHub Actions runs the same checks on Ubuntu with Python 3.11. CI uses
 synthetic smoke fixtures and does not download NASA data.
 
-## Repository structure
+## Tracked repository structure
 
 ```text
 src/aeromaintain/
@@ -235,14 +235,14 @@ configs/
 docs/
 notebooks/       # exploration and visualization only
 tests/
-data/raw/        # local only; Git ignored
-data/processed/  # local only; Git ignored
-artifacts/       # local only; Git ignored
-runs/            # local only; Git ignored
 ```
 
 Reusable data, metric, model, and solver logic belongs in
 `src/aeromaintain/`. Notebooks remain exploratory.
+
+Generated NASA data, model artefacts, and run outputs are not part of the
+repository. Commands write them to Git-ignored working directories only on the
+machine where the project is run.
 
 ## CLI contract
 
