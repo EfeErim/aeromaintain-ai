@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroMaintain RUL Modeling"
+  short_description: "Train and lock leakage-safe RUL models"
+  default_prompt: "Use $aeromaintain-rul-modeling to implement the next RUL modeling milestone."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroMaintain Phase Gates"
+  short_description: "Track milestones and enforce phase gates"
+  default_prompt: "Use $aeromaintain-phase-gates to complete the next verified project milestone."

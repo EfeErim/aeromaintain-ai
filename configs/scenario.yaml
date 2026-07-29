@@ -1,0 +1,36 @@
+metadata:
+  synthetic: true
+  warning: All operational, resource, and cost fields are synthetic.
+  seed: 42
+
+planning:
+  fleet_size: 20
+  horizon_days: 30
+  operating_demand_fraction: 0.80
+
+resources:
+  bays:
+    - bay_1
+    - bay_2
+  teams:
+    team_A:
+      technicians: 6
+    team_B:
+      technicians: 6
+  parts:
+    types:
+      - kit_A
+      - kit_B
+      - kit_C
+    initial_units_per_type: 4
+    replenishment:
+      days:
+        - 10
+        - 20
+      units_per_type: 3
+
+cost_units:
+  planned_maintenance: 100
+  emergency_maintenance: 500
+  unused_predicted_cycle: 1
+  low_risk_deferral: 150

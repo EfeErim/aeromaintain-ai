@@ -1,0 +1,4 @@
+interface:
+  display_name: "AeroMaintain Maintenance Optimization"
+  short_description: "Build and verify maintenance schedules"
+  default_prompt: "Use $aeromaintain-maintenance-optimization to implement the next scheduling milestone."

@@ -1,0 +1,22 @@
+project:
+  name: aeromaintain-ai
+  seed: 42
+  educational_prototype: true
+
+data:
+  dataset: FD001
+  source_url: https://data.nasa.gov/docs/legacy/CMAPSSData.zip
+  archive_size_bytes: 12425978
+  archive_sha256: 74BEF434A34DB25C7BF72E668EA4CD52AFE5F2CF8E44367C55A82BFD91A5A34F
+  rul_cap: 125
+  development_engines: 80
+  calibration_engines: 20
+
+modeling:
+  group_folds: 5
+  critical_rul_threshold: 30
+  nominal_interval_coverage: 0.90
+
+run:
+  root: runs
+  overwrite_existing: false
