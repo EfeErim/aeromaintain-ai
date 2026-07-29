@@ -1,4 +1,0 @@
-interface:
-  display_name: "AeroMaintain Data Pipeline"
-  short_description: "Build and verify the FD001 data pipeline"
-  default_prompt: "Use $aeromaintain-data-pipeline to implement the next FD001 data milestone."

@@ -46,7 +46,7 @@ failure; test trajectories stop before failure and have a separate RUL vector.
 |---|---|
 | Engine-grouped validation | Each trajectory belongs to a distinct simulated engine. All rows from one engine stay in one role or fold; row-wise random splitting is prohibited. |
 | Mean and Ridge baselines | A constant model exposes task difficulty. L2-regularized Ridge provides an interpretable linear baseline for correlated engineered sensor features. |
-| XGBoost candidate | Chen and Guestrin's tree-boosting system is a strong tabular nonlinear comparator. It is not automatically selected; the fixed champion rule in `PROJECT_PLAN.md` governs selection. |
+| XGBoost candidate | Chen and Guestrin's tree-boosting system is a strong tabular nonlinear comparator. It is selected only when RMSE improves by at least 5% without worsening the motor-normalized NASA score; the fixed rule and observed decision are documented in the [model card](model_card.md). |
 | Nominal empirical interval | A held-out calibration engine set supplies one absolute residual per engine. The finite-sample quantile creates a simple split-conformal-style interval, reported as nominal rather than guaranteed for a real fleet. |
 | Explanation | Ridge coefficients or SHAP explain fitted model behavior, not physical causality. |
 | CP-SAT scheduling | OR-Tools CP-SAT represents integer day, resource, and deferral decisions and exposes explicit solver statuses. Only `OPTIMAL` or `FEASIBLE` may produce a schedule. |
@@ -72,7 +72,7 @@ failure; test trajectories stop before failure and have a separate RUL vector.
 6. Angelopoulos and Bates (2021),
    [A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification](https://arxiv.org/abs/2107.07511).
    This provides the finite-sample calibration context used to motivate the
-   project's deliberately modest nominal interval.
+   project's nominal empirical interval.
 7. Google OR-Tools,
    [CP-SAT Solver](https://developers.google.com/optimization/cp/cp_solver).
    This is the authoritative solver interface and status contract used by the

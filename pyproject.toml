@@ -9,7 +9,7 @@ description = "Educational RUL prediction and synthetic maintenance scheduling p
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 license = { file = "LICENSE" }
-authors = [{ name = "AeroMaintain AI contributors" }]
+authors = [{ name = "EfeErim" }]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Science/Research",

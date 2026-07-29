@@ -59,7 +59,7 @@ misordered, or schema-invalid rows.
 - engine-grouped cross-validation and leakage-control demonstrations;
 - nominal empirical prediction-interval evaluation;
 - input to an explicitly synthetic maintenance-planning scenario; and
-- reproducible portfolio evidence.
+- reproducible experiment runs.
 
 ## Out-of-scope and prohibited claims
 
