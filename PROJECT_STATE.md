@@ -4,9 +4,9 @@ Last updated: 2026-07-29
 
 ## Current position
 
-- Active phase: Phase 1
-- Active milestone: M1.1 — Safe data acquisition
-- Overall status: Phase 0 complete; Phase 1 ready to start
+- Active phase: Phase 2
+- Active milestone: M2.1 — Causal feature generation
+- Overall status: Phases 0 and 1 complete; Phase 2 ready to start
 - Current blocker: None
 
 ## Milestone register
@@ -16,10 +16,10 @@ Last updated: 2026-07-29
 | M0.1 | Project skeleton | complete | Python 3.11 editable install; package import; doctor 5/5 |
 | M0.2 | Research and data governance | complete | `docs/research.md`; `docs/data_card.md`; NASA source and redistribution boundary |
 | M0.3 | Quality infrastructure | complete | Ruff, pytest, coverage and Python 3.11 CI pass |
-| M1.1 | Safe data acquisition | pending | — |
-| M1.2 | Parser and data contract | pending | — |
-| M1.3 | RUL target and engine split | pending | — |
-| M1.4 | EDA and quality report | pending | — |
+| M1.1 | Safe data acquisition | complete | NASA ZIP size/hash verification; FD001-only safe extraction |
+| M1.2 | Parser and data contract | complete | 26-column schema; expected train/test row and engine counts |
+| M1.3 | RUL target and engine split | complete | Capped/uncapped RUL; deterministic 80/20 engine split; isolated labels |
+| M1.4 | EDA and quality report | complete | Development-only EDA; stable processed hashes across repeated prepare |
 | M2.1 | Causal feature generation | pending | — |
 | M2.2 | Baselines and grouped CV | pending | — |
 | M2.3 | XGBoost and champion selection | pending | — |
@@ -37,15 +37,27 @@ Last updated: 2026-07-29
 ## Phase 0 closure evidence
 
 - Clean Python 3.11 editable installation and package import passed.
-- `aeromaintain doctor` and `python -m aeromaintain doctor` passed all five
-  environment checks.
-- `docs/research.md` and `docs/data_card.md` record FD001 simulation status,
-  primary method sources, label isolation, and raw-data redistribution limits.
-- `ruff check .`, `ruff format --check .`, pytest and the 80% coverage gate
+- `aeromaintain doctor`, Ruff, format, pytest, coverage, and Python 3.11 CI
   passed.
-- CI runs the same checks on Ubuntu and Python 3.11 without downloading NASA
-  data.
-- Raw, processed, artifact, and run paths are Git-ignored.
+- Research and data-card documents record simulation and redistribution limits.
+- Generated data and run paths are Git-ignored.
+
+## Phase 1 closure evidence
+
+- `aeromaintain prepare` verified the NASA archive:
+  `Bytes=12425978`,
+  `SHA256=74BEF434A34DB25C7BF72E668EA4CD52AFE5F2CF8E44367C55A82BFD91A5A34F`.
+- Safe extraction selected only train, test, and RUL FD001 members and rejected
+  changed archives, traversal, duplicates, and conflicting raw files.
+- Train contains `20,631` rows/100 engines; test contains `13,096` rows/100
+  engines with unique ordered `(unit_id, cycle)` keys and finite values.
+- Train has non-negative uncapped and capped-at-125 RUL targets.
+- Seed-42 split contains 80 development and 20 disjoint calibration engines.
+  Official test labels remain isolated under `evaluation/`.
+- Development-only EDA and quality reports were generated.
+- Two prepare runs produced the same hashes for all eight processed artefacts.
+- Data tests, Ruff, format, `git diff --check`, and the 80% coverage gate passed.
+- No raw, processed, artifact, or run file is tracked.
 
 ## Decisions and blockers
 

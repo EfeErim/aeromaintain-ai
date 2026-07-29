@@ -16,6 +16,7 @@ from aeromaintain.config import (
     REQUIRED_LOCAL_DATA_DIRS,
     resolve_project_root,
 )
+from aeromaintain.data import DataPipelineError, prepare_fd001
 
 app = typer.Typer(
     add_completion=False,
@@ -120,3 +121,45 @@ def doctor(
     typer.echo(f"Summary: {passed}/{len(checks)} checks passed")
     if passed != len(checks):
         raise typer.Exit(code=1)
+
+
+@app.command()
+def prepare(
+    archive: Annotated[
+        Path | None,
+        typer.Option(
+            "--archive",
+            help="Verified local CMAPSSData.zip; otherwise download from NASA.",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            resolve_path=True,
+        ),
+    ] = None,
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+) -> None:
+    """Prepare the frozen NASA C-MAPSS FD001 dataset."""
+    root = resolve_project_root(project_root)
+    try:
+        result = prepare_fd001(root, archive_path=archive)
+    except DataPipelineError as exc:
+        typer.echo(f"Preparation failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo("FD001 preparation complete")
+    typer.echo(
+        f"Rows: train={result.train_rows}, test={result.test_rows}; "
+        f"engines: development={result.development_engines}, "
+        f"calibration={result.calibration_engines}"
+    )
+    typer.echo(f"Processed data: {result.output_dir}")
+    typer.echo(f"Verified artifacts: {len(result.artifact_hashes)}")
