@@ -4,9 +4,9 @@ Last updated: 2026-07-29
 
 ## Current position
 
-- Active phase: Phase 4
-- Active milestone: M4.1 — Streamlit decision application
-- Overall status: Phases 0, 1, 2, and 3 complete; Phase 4 ready to start
+- Active phase: Phase 4 complete
+- Active milestone: None — release candidate verified
+- Overall status: Phases 0 through 4 complete
 - Current blocker: None
 
 ## Status rules
@@ -37,10 +37,10 @@ Last updated: 2026-07-29
 | M3.2 | Baseline maintenance policies | complete | Reactive, fixed-90 and predicted-RUL-30 schedules use one scenario and common resource evaluator |
 | M3.3 | CP-SAT schedule | complete | Hand fixture matches; base solver FEASIBLE with 17 scheduled, 3 due deferrals, 0 capacity shortfall; optimality unproven and visible |
 | M3.4 | Policy and capacity comparison | complete | Four-policy and constrained/base/expanded JSON/CSV comparisons plus `docs/optimization.md` verified |
-| M4.1 | Streamlit decision application | pending | — |
-| M4.2 | End-to-end pipeline | pending | — |
-| M4.3 | Documentation and release preparation | pending | — |
-| M4.4 | Final release candidate | pending | — |
+| M4.1 | Streamlit decision application | complete | Verified explicit-run loader; four-page fixture/browser smoke; CSV and truth-free what-if checks |
+| M4.2 | End-to-end pipeline | complete | Real `m4-fd001-seed42-20260729` run is `pipeline_complete`; overwrite and partial-run tests pass |
+| M4.3 | Documentation and release preparation | complete | Final README, model card, results, architecture and four verified screenshots |
+| M4.4 | Final release candidate | complete | Clean Python 3.11 install/doctor/app smoke; 41 tests; 84.45% coverage; Ruff/hash/Git exclusion gates pass |
 
 ## Current milestone evidence
 
@@ -315,6 +315,79 @@ M3.4:
 - `.\.venv\Scripts\ruff.exe check .` and
   `.\.venv\Scripts\ruff.exe format --check .` — all Python files pass after the
   final annotation correction.
+
+### Phase 4 closure — 2026-07-29
+
+M4.1:
+
+- `src/aeromaintain/app/artifacts.py` requires one explicit safe run ID and
+  verifies the current config/data hashes, every locked model artefact, official
+  evaluation manifest, optimization source/output hashes and completed-pipeline
+  report hashes. External paths, missing or changed files, malformed structures
+  and planning scenarios containing `rul_true`, `true_rul` or `actual_rul`
+  fail closed.
+- `src/aeromaintain/app/main.py` renders Overview, Engine Health, Maintenance
+  Schedule and Policy Comparison & What-if. Decision tables select a safe schema
+  with no official true RUL; policy/capacity/risk/schedule CSV downloads are
+  exposed.
+- What-if inputs are validated at 1–3 bays and 70%–90% minimum operating demand
+  before the solver is called. The solver receives only the verified synthetic
+  scenario and returns its real status; no-solution results contain no schedule.
+- The small Streamlit fixture rendered all four pages and ran a truth-free
+  what-if. Browser verification of the real release run produced
+  `docs/screenshots/{overview,engine-health,maintenance-schedule,
+  policy-comparison}.png` with no browser-console errors.
+
+M4.2:
+
+- `.\.venv\Scripts\python.exe -m aeromaintain pipeline --run-id
+  m4-fd001-seed42-20260729 --project-root .` completed prepare, train/lock,
+  locked official evaluation, optimization and report in one command.
+- The final run manifest has status `pipeline_complete`, model-lock SHA-256
+  `32E5E7A421AD8CCB81FFF4E8B8C17957F49FA855954B27E4E4B16219634AF829`
+  and verified hashes for `report.json`, `report.html`,
+  `official_test/evaluation_manifest.json` and
+  `optimization/manifest.json`.
+- Repeating the pipeline with the same ID fails before preparation with
+  `Run directory already exists`. The small end-to-end fixture proves stage
+  order, final report creation and hash validation; an injected evaluation
+  failure remains `model_locked`, writes no report and is never marked complete.
+
+M4.3:
+
+- `README.md` contains tested installation, pipeline, app, smoke and quality
+  commands plus the verified release result and screenshots.
+- `docs/model_card.md` records intended/prohibited uses, data/split/feature
+  contracts, locked metrics, limitations, critical-RUL recall and interval
+  coverage shortfall. `docs/results.md` reports all four policies and three
+  capacity cases without hiding the FEASIBLE/unproven solver outcome.
+- `docs/architecture.md` documents the prediction-to-decision flow, label/truth
+  boundaries, immutable run state, application hash checks and actual two-stage
+  CP-SAT structure. `docs/optimization.md` remains the detailed optimization
+  contract/result document.
+- Git tracks no raw NASA data, processed tables, run directory or model file.
+  The four PNG screenshots total less than 250 KB.
+
+M4.4:
+
+- A new temporary Python `3.11.9` virtual environment installed `.[dev]`
+  successfully; `pip check` returned `No broken requirements found`, package
+  version `0.1.0` imported, and `python -m aeromaintain doctor --project-root .`
+  returned `5/5` PASS.
+- The clean environment ran `python -m aeromaintain app --run-id
+  m4-fd001-seed42-20260729 --project-root . --smoke` successfully.
+- Current environment gates:
+  `.\.venv\Scripts\ruff.exe check .` passed;
+  `.\.venv\Scripts\ruff.exe format --check .` reported 41 files formatted;
+  `.\.venv\Scripts\pytest.exe --cov=src/aeromaintain
+  --cov-report=term-missing --cov-fail-under=80` reported `41 passed` and
+  `84.45%` coverage.
+- The real-run Streamlit smoke passed again. `load_verified_run` returned
+  `pipeline_complete` only after verifying the full release hash chain.
+- `git check-ignore -v` matched the real raw archive, processed manifest,
+  release run manifest and artefact probe. `git ls-files data/raw
+  data/processed artifacts runs` returned no paths.
+- `git diff --check` passed.
 
 ## Decisions and blockers
 

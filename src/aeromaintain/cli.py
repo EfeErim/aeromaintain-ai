@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,6 +18,7 @@ from aeromaintain.config import (
     resolve_project_root,
 )
 from aeromaintain.data import DataPipelineError, prepare_fd001
+from aeromaintain.delivery import DeliveryError, run_pipeline
 from aeromaintain.models import ModelingError, evaluate_locked, train_and_lock
 from aeromaintain.optimization import OptimizationError, optimize_run
 
@@ -282,3 +284,127 @@ def optimize(
         f"late days={cp_sat.get('late_days', 'n/a')}"
     )
     typer.echo(f"Optimization artifacts: {result.output_dir}")
+
+
+@app.command()
+def pipeline(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="New immutable end-to-end run directory name under runs/.",
+        ),
+    ],
+    archive: Annotated[
+        Path | None,
+        typer.Option(
+            "--archive",
+            help="Verified local CMAPSSData.zip; otherwise download from NASA.",
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            readable=True,
+            resolve_path=True,
+        ),
+    ] = None,
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+) -> None:
+    """Run prepare, train/lock, evaluate, optimize, and report."""
+    root = resolve_project_root(project_root)
+    try:
+        result = run_pipeline(root, run_id=run_id, archive_path=archive)
+    except DeliveryError as exc:
+        typer.echo(f"Pipeline failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo("AeroMaintain end-to-end pipeline complete")
+    typer.echo(f"Run: {result.run_id}")
+    typer.echo(f"Manifest: {result.manifest_path}")
+    typer.echo(f"Report: {result.report_path}")
+
+
+@app.command("app")
+def app_command(
+    run_id: Annotated[
+        str,
+        typer.Option("--run-id", help="Explicit verified run to display."),
+    ],
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+    smoke: Annotated[
+        bool,
+        typer.Option("--smoke", help="Render once with Streamlit's test runtime."),
+    ] = False,
+) -> None:
+    """Open the local Streamlit application for one verified run."""
+    from aeromaintain.app import ArtifactValidationError, load_verified_run
+
+    root = resolve_project_root(project_root)
+    try:
+        load_verified_run(root, run_id)
+    except ArtifactValidationError as exc:
+        typer.echo(f"Application failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    script = Path(__file__).parent / "app" / "main.py"
+    environment = os.environ.copy()
+    environment["AEROMAINTAIN_RUN_ID"] = run_id
+    environment["AEROMAINTAIN_PROJECT_ROOT"] = str(root)
+    if smoke:
+        previous_run = os.environ.get("AEROMAINTAIN_RUN_ID")
+        previous_root = os.environ.get("AEROMAINTAIN_PROJECT_ROOT")
+        os.environ.update(
+            {
+                "AEROMAINTAIN_RUN_ID": run_id,
+                "AEROMAINTAIN_PROJECT_ROOT": str(root),
+            }
+        )
+        try:
+            from streamlit.testing.v1 import AppTest
+
+            tested = AppTest.from_file(str(script), default_timeout=30).run()
+        finally:
+            if previous_run is None:
+                os.environ.pop("AEROMAINTAIN_RUN_ID", None)
+            else:
+                os.environ["AEROMAINTAIN_RUN_ID"] = previous_run
+            if previous_root is None:
+                os.environ.pop("AEROMAINTAIN_PROJECT_ROOT", None)
+            else:
+                os.environ["AEROMAINTAIN_PROJECT_ROOT"] = previous_root
+        if tested.exception:
+            typer.echo(f"Application smoke failed: {tested.exception}", err=True)
+            raise typer.Exit(code=1)
+        typer.echo(f"Streamlit smoke passed for verified run: {run_id}")
+        return
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "streamlit",
+            "run",
+            str(script),
+            "--server.headless=true",
+        ],
+        check=False,
+        env=environment,
+    )
+    if completed.returncode:
+        raise typer.Exit(code=completed.returncode)

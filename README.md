@@ -16,13 +16,12 @@ It is not an airworthiness, maintenance-approval, or production fleet system.
 
 ## Current delivery
 
-Phases 0, 1, 2, and 3 are complete. The Python 3.11 foundation, governance
-documentation, deterministic FD001 preparation pipeline, leakage-safe RUL
-model selection, nominal empirical interval, model lock, and locked official
-evaluation are in place. The project now also generates a deterministic
-synthetic maintenance scenario, compares three rule policies with a two-stage
-CP-SAT schedule, and reports base/constrained/expanded capacity sensitivity.
-Phase 4 delivers the Streamlit application and end-to-end release workflow.
+Phases 0 through 4 are complete. One immutable command now runs verified FD001
+preparation, leakage-safe model selection and lock, official evaluation,
+synthetic maintenance optimization, and final reporting. A four-page Streamlit
+application verifies the complete artefact hash chain before exposing risk,
+schedule, policy-comparison, CSV-download, and truth-free capacity what-if
+views.
 
 The detailed product and experiment contract is
 [`PROJECT_PLAN.md`](PROJECT_PLAN.md). Evidence-based milestone status is in
@@ -151,6 +150,59 @@ simulated failures and emergency `cost_units`. `FEASIBLE`, `UNKNOWN`,
 status never produces a plausible-looking schedule. See
 [the optimization method and verified M3 results](docs/optimization.md).
 
+## End-to-end release workflow
+
+Run the complete workflow with a new run ID:
+
+```powershell
+aeromaintain pipeline --run-id m4-fd001-seed42
+```
+
+An already downloaded and verified archive can be supplied with `--archive`.
+The command refuses to overwrite an existing run. A model-locked run left by a
+later-stage failure is not marked `pipeline_complete`; successful runs retain
+data, config, model-lock, evaluation, optimization, and report hashes in
+`manifest.json`.
+
+Open one explicitly named, verified run:
+
+```powershell
+aeromaintain app --run-id m4-fd001-seed42
+```
+
+Run a non-interactive Streamlit render check:
+
+```powershell
+aeromaintain app --run-id m4-fd001-seed42 --smoke
+```
+
+The application never trains a model and never exposes official true RUL in a
+decision view. It rejects missing, changed, externally referenced, or
+truth-leaking artefacts before rendering. Capacity what-if inputs are limited
+to 1–3 bays and 70%–90% minimum operating demand before CP-SAT is invoked.
+
+## Verified release-candidate result
+
+The local `m4-fd001-seed42-20260729` run completed the full pipeline. Ridge
+remained champion. Official-test MAE was `15.369728`, RMSE was `19.622062`, and
+the nominal 90% empirical interval observed `0.89` coverage. The base CP-SAT
+schedule was `FEASIBLE`, not proven optimal: 17 maintenance jobs were scheduled
+and 3 due jobs were deferred.
+
+These are experimental results on simulated FD001 data and synthetic planning
+assumptions. See the [full results](docs/results.md),
+[model card](docs/model_card.md), and [architecture](docs/architecture.md).
+
+## Application screenshots
+
+![Overview showing locked model and decision metrics](docs/screenshots/overview.png)
+
+![Engine risk ranking without true RUL](docs/screenshots/engine-health.png)
+
+![Maintenance schedule with visible feasible and unproven status](docs/screenshots/maintenance-schedule.png)
+
+![Policy and capacity comparison](docs/screenshots/policy-comparison.png)
+
 ## Quality checks
 
 ```powershell
@@ -188,22 +240,22 @@ runs/            # local only; Git ignored
 Reusable data, metric, model, and solver logic belongs in
 `src/aeromaintain/`. Notebooks remain exploratory.
 
-## Planned CLI contract
+## CLI contract
 
 ```text
 aeromaintain prepare
-aeromaintain train
-aeromaintain evaluate
-aeromaintain optimize
-aeromaintain pipeline
+aeromaintain train --run-id ID
+aeromaintain evaluate --run-id ID
+aeromaintain optimize --run-id ID
+aeromaintain pipeline --run-id ID
 aeromaintain app --run-id ID
 aeromaintain doctor
 ```
 
-`doctor`, `prepare`, `train`, `evaluate`, and `optimize` are implemented through
-Phase 3. Later commands are delivered at their corresponding gated milestones.
+All commands are implemented. Generated outputs remain local and Git-ignored.
 Commands do not overwrite existing generated outputs; completed runs retain
-config, seed, data/model hashes, and metrics in their manifests.
+config, seed, data/model hashes, metrics, and report identities in their
+manifests.
 
 ## License
 
