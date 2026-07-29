@@ -66,9 +66,9 @@ capacity sensitivity check, not a tuned policy recommendation.
 ## Application evidence
 
 - [Overview](screenshots/overview.png)
-- [Engine Health](screenshots/engine-health.png)
-- [Maintenance Schedule](screenshots/maintenance-schedule.png)
-- [Policy Comparison & What-if](screenshots/policy-comparison.png)
+- [Engine risk](screenshots/engine-health.png)
+- [Maintenance plan](screenshots/maintenance-schedule.png)
+- [Policy analysis](screenshots/policy-comparison.png)
 
 The browser verification covered all four pages with the explicit release run
 and reported no console errors. The automated Streamlit fixture also exercises

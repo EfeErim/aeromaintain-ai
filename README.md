@@ -21,13 +21,15 @@ preparation, leakage-safe model selection and lock, official evaluation,
 synthetic maintenance optimization, and final reporting. A four-page Streamlit
 application verifies the complete artefact hash chain before exposing risk,
 schedule, policy-comparison, CSV-download, and truth-free capacity what-if
-views. The portfolio-facing decision console keeps solver status, unproven
-optimality, planning exceptions, synthetic assumptions, and evidence provenance
-visible.
+views. The interface uses standard Streamlit controls and keeps solver status,
+unproven optimality, planning exceptions, synthetic assumptions, and run
+provenance visible.
 
 The detailed product and experiment contract is
 [`PROJECT_PLAN.md`](PROJECT_PLAN.md). Evidence-based milestone status is in
-[`PROJECT_STATE.md`](PROJECT_STATE.md).
+[`PROJECT_STATE.md`](PROJECT_STATE.md). The research basis for the restrained
+application presentation is in
+[`docs/interface_design.md`](docs/interface_design.md).
 
 ## Data boundary
 
@@ -197,13 +199,13 @@ assumptions. See the [full results](docs/results.md),
 
 ## Application screenshots
 
-![Fleet brief showing locked model and decision metrics](docs/screenshots/overview.png)
+![Overview showing locked model and maintenance metrics](docs/screenshots/overview.png)
 
-![Engine condition risk ranking without true RUL](docs/screenshots/engine-health.png)
+![Engine risk ranking without true RUL](docs/screenshots/engine-health.png)
 
-![30-day work plan with visible feasible and unproven status](docs/screenshots/maintenance-schedule.png)
+![Maintenance plan with visible feasible and unproven status](docs/screenshots/maintenance-schedule.png)
 
-![Scenario lab policy and capacity comparison](docs/screenshots/policy-comparison.png)
+![Policy and capacity analysis](docs/screenshots/policy-comparison.png)
 
 ## Quality checks
 

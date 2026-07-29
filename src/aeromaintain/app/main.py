@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-from html import escape
 from pathlib import Path
 
 import pandas as pd
@@ -18,364 +17,74 @@ from aeromaintain.app.artifacts import (
 
 APP_CSS = """
 <style>
-    :root {
-        --ink: #17211f;
-        --muted: #64706d;
-        --line: #d9ddda;
-        --paper: #f5f6f2;
-        --panel: #ffffff;
-        --petrol: #123f3c;
-        --teal: #167c73;
-        --amber: #b56a21;
-        --red: #9a3f3f;
-    }
-
-    [data-testid="stAppViewContainer"] {
-        background: var(--paper);
-        color: var(--ink);
-    }
-    [data-testid="stHeader"],
-    [data-testid="stToolbar"],
-    footer {
-        display: none;
-    }
     [data-testid="stMainBlockContainer"] {
-        max-width: 1240px;
-        padding: 2.1rem 2.5rem 4rem;
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 4rem;
     }
     [data-testid="stSidebar"] {
-        background: var(--petrol);
-        border-right: 0;
-        min-width: 250px;
-    }
-    [data-testid="stSidebar"] * {
-        color: #eef4f1;
+        border-right: 1px solid #d9dee3;
     }
     [data-testid="stSidebarContent"] {
-        padding: 1.75rem 1rem;
-    }
-    [data-testid="stSidebar"] [role="radiogroup"] {
-        gap: 0.25rem;
-    }
-    [data-testid="stSidebar"] label[data-baseweb="radio"] {
-        min-height: 2.55rem;
-        padding: 0.62rem 0.7rem;
-        border-radius: 4px;
-        transition: background 120ms ease;
-    }
-    [data-testid="stSidebar"] label[data-baseweb="radio"]:hover {
-        background: rgba(255,255,255,0.08);
-    }
-    [data-testid="stSidebar"] label[data-baseweb="radio"]:has(input:checked) {
-        background: #f4f2e9;
-    }
-    [data-testid="stSidebar"]
-      label[data-baseweb="radio"]:has(input:checked) p {
-        color: var(--petrol) !important;
-        font-weight: 650;
-    }
-    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
-        color: inherit;
-    }
-
-    h1, h2, h3 {
-        color: var(--ink);
-        font-family: "Segoe UI", Arial, sans-serif;
-        letter-spacing: -0.025em;
-    }
-    h2 {
-        font-size: 2rem !important;
-        font-weight: 650 !important;
-        margin: 0.15rem 0 0.25rem !important;
-    }
-    h3 {
-        font-size: 1.08rem !important;
-        font-weight: 650 !important;
-        margin-top: 0.35rem !important;
-    }
-    p, label, button, input {
-        font-family: "Segoe UI", Arial, sans-serif;
-    }
-    [data-testid="stCaptionContainer"] {
-        color: var(--muted);
-        font-size: 0.9rem;
+        padding-top: 1.5rem;
     }
     [data-testid="stDataFrame"] {
-        border: 1px solid var(--line);
-        border-radius: 3px;
-        overflow: hidden;
+        border: 1px solid #d9dee3;
     }
-    [data-testid="stExpander"] {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: 3px;
+    h1, h2, h3 {
+        letter-spacing: -0.01em;
     }
-    [data-testid="stDownloadButton"] button,
-    [data-testid="stFormSubmitButton"] button {
-        border: 1px solid var(--petrol);
-        border-radius: 3px;
-        background: transparent;
-        color: var(--petrol);
-        font-weight: 650;
+    h2 {
+        font-size: 1.8rem !important;
     }
-    [data-testid="stDownloadButton"] button:hover,
-    [data-testid="stFormSubmitButton"] button:hover {
-        border-color: var(--petrol);
-        background: var(--petrol);
-        color: white;
-    }
-
-    .side-brand {
-        border-bottom: 1px solid rgba(255,255,255,0.18);
-        margin: 0 0 1.25rem;
-        padding: 0 0.4rem 1.2rem;
-    }
-    .side-brand__mark {
-        align-items: center;
-        border: 1px solid rgba(255,255,255,0.55);
-        display: inline-flex;
-        font-family: Consolas, monospace;
-        font-size: 0.78rem;
-        height: 2rem;
-        justify-content: center;
-        letter-spacing: 0.08em;
-        margin-bottom: 0.8rem;
-        width: 2rem;
-    }
-    .side-brand strong {
-        display: block;
-        font-size: 1rem;
-        letter-spacing: 0.01em;
-    }
-    .side-brand small {
-        color: #b8cbc5 !important;
-        display: block;
-        font-size: 0.72rem;
-        letter-spacing: 0.12em;
-        margin-top: 0.18rem;
-        text-transform: uppercase;
-    }
-    .side-run {
-        border-top: 1px solid rgba(255,255,255,0.18);
-        color: #b8cbc5 !important;
-        font-family: Consolas, monospace;
-        font-size: 0.67rem;
-        line-height: 1.55;
-        margin: 1.2rem 0.4rem 0;
-        overflow-wrap: anywhere;
-        padding-top: 1rem;
-    }
-    .side-run b {
-        color: #ffffff !important;
-        display: block;
-        font-family: "Segoe UI", Arial, sans-serif;
-        font-size: 0.67rem;
-        letter-spacing: 0.1em;
-        margin-bottom: 0.3rem;
-        text-transform: uppercase;
-    }
-
-    .masthead {
-        align-items: center;
-        border-bottom: 1px solid var(--line);
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 1.4rem;
-        padding-bottom: 0.75rem;
-    }
-    .masthead__product {
-        color: var(--petrol);
-        font-size: 0.73rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-    }
-    .masthead__status {
-        align-items: center;
-        color: var(--muted);
-        display: flex;
-        font-size: 0.73rem;
-        gap: 0.45rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-    .masthead__status::before {
-        background: var(--teal);
-        border-radius: 50%;
-        content: "";
-        height: 7px;
-        width: 7px;
-    }
-    .page-deck {
-        color: var(--muted);
-        font-size: 0.98rem;
-        margin: -0.25rem 0 1.4rem;
-        max-width: 760px;
-    }
-
-    .metric-strip {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        margin: 0.5rem 0 1.5rem;
-    }
-    .metric-strip__item {
-        border-right: 1px solid var(--line);
-        min-height: 104px;
-        padding: 1.05rem 1.1rem 0.9rem;
-    }
-    .metric-strip__item:last-child {
-        border-right: 0;
-    }
-    .metric-strip__label {
-        color: var(--muted);
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-    }
-    .metric-strip__value {
-        color: var(--ink);
-        font-family: Consolas, "Segoe UI", monospace;
-        font-size: 1.75rem;
-        line-height: 1.2;
-        margin-top: 0.42rem;
-    }
-    .metric-strip__note {
-        color: var(--muted);
-        font-size: 0.72rem;
-        margin-top: 0.18rem;
-    }
-    .metric-strip__value--warn {
-        color: var(--amber);
-    }
-    .metric-strip__value--bad {
-        color: var(--red);
-    }
-
-    .section-label {
-        color: var(--muted);
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.11em;
-        margin: 0.4rem 0 0.55rem;
-        text-transform: uppercase;
-    }
-    .scope-note {
-        border-left: 3px solid var(--amber);
-        color: #5f4b37;
-        font-size: 0.82rem;
-        line-height: 1.5;
-        margin: 1.1rem 0 1.4rem;
-        padding: 0.55rem 0.8rem;
-    }
-    .status-line {
-        align-items: center;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        display: flex;
-        gap: 0.8rem;
-        margin: 0.4rem 0 1.25rem;
-        padding: 0.75rem 0.9rem;
-    }
-    .status-line__badge {
-        border: 1px solid currentColor;
-        color: var(--amber);
-        font-family: Consolas, monospace;
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        padding: 0.22rem 0.42rem;
-    }
-    .status-line__copy {
-        color: var(--muted);
-        font-size: 0.8rem;
-    }
-    .provenance {
-        color: var(--muted);
-        font-family: Consolas, monospace;
-        font-size: 0.72rem;
-        line-height: 1.7;
-    }
-
-    @media (max-width: 900px) {
-        [data-testid="stMainBlockContainer"] {
-            padding: 1.4rem 1rem 3rem;
-        }
-        .metric-strip {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        .metric-strip__item:nth-child(2) {
-            border-right: 0;
-        }
-        .metric-strip__item:nth-child(-n+2) {
-            border-bottom: 1px solid var(--line);
-        }
+    h3 {
+        font-size: 1.1rem !important;
+        margin-top: 1.25rem !important;
     }
 </style>
 """
 
-PLOT_COLORS = ["#167c73", "#b56a21", "#637a75", "#9a3f3f"]
+PLOT_COLORS = ["#2F5D8A", "#6F7F8F", "#B35C44", "#7A6F9B"]
+RISK_COLORS = {
+    "Critical": "#B42318",
+    "Elevated": "#B26A00",
+    "Routine": "#667085",
+}
 
 
 def _plot_style(figure, *, height: int = 330):
     figure.update_layout(
         template="plotly_white",
         colorway=PLOT_COLORS,
-        font={"family": "Segoe UI, Arial, sans-serif", "color": "#28312f"},
+        font={"family": "Arial, sans-serif", "color": "#27313B"},
         height=height,
-        margin={"l": 12, "r": 12, "t": 26, "b": 12},
-        paper_bgcolor="#ffffff",
-        plot_bgcolor="#ffffff",
+        margin={"l": 16, "r": 16, "t": 20, "b": 16},
+        paper_bgcolor="#FFFFFF",
+        plot_bgcolor="#FFFFFF",
         legend_title_text="",
-        hoverlabel={"font_family": "Segoe UI, Arial, sans-serif"},
+        hoverlabel={"font_family": "Arial, sans-serif"},
     )
-    figure.update_xaxes(gridcolor="#eaede9", zerolinecolor="#d9ddda")
-    figure.update_yaxes(gridcolor="#eaede9", zerolinecolor="#d9ddda")
+    figure.update_xaxes(gridcolor="#E8EBEE", zeroline=False)
+    figure.update_yaxes(gridcolor="#E8EBEE", zeroline=False)
     return figure
 
 
-def _page_header(title: str, deck: str) -> None:
-    st.markdown(
-        """
-        <div class="masthead">
-          <span class="masthead__product">AeroMaintain / Decision Console</span>
-          <span class="masthead__status">Verified local evidence</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+def _page_header(title: str, summary: str) -> None:
     st.header(title, anchor=False)
-    st.markdown(f'<div class="page-deck">{escape(deck)}</div>', unsafe_allow_html=True)
+    st.caption(summary)
 
 
-def _metric_strip(items: tuple[tuple[str, str, str, str], ...]) -> None:
-    cells = "".join(
-        (
-            '<div class="metric-strip__item">'
-            f'<div class="metric-strip__label">{escape(label)}</div>'
-            f'<div class="metric-strip__value {escape(tone)}">{escape(value)}</div>'
-            f'<div class="metric-strip__note">{escape(note)}</div>'
-            "</div>"
-        )
-        for label, value, note, tone in items
-    )
-    st.markdown(f'<div class="metric-strip">{cells}</div>', unsafe_allow_html=True)
-
-
-def _section_label(text: str) -> None:
-    st.markdown(
-        f'<div class="section-label">{escape(text)}</div>',
-        unsafe_allow_html=True,
-    )
+def _metric_row(items: tuple[tuple[str, str, str], ...]) -> None:
+    columns = st.columns(len(items))
+    for column, (label, value, help_text) in zip(columns, items, strict=True):
+        column.metric(label, value, help=help_text)
 
 
 def _download_buttons(artifacts, names: tuple[str, ...]) -> None:
     columns = st.columns(len(names))
     for column, name in zip(columns, names, strict=True):
         column.download_button(
-            "Export CSV",
+            f"Download {name}",
             artifacts.downloads[name],
             file_name=name,
             mime="text/csv",
@@ -386,39 +95,46 @@ def _download_buttons(artifacts, names: tuple[str, ...]) -> None:
 
 def _overview(artifacts) -> None:
     _page_header(
-        "Fleet brief",
-        "Locked model evidence and the current 30-day synthetic maintenance position.",
+        "Overview",
+        "Locked model results and the current 30-day synthetic maintenance plan.",
     )
     metrics = artifacts.metrics
+    interval = metrics["nominal_empirical_interval"]
     cp_sat = artifacts.policy_comparison.loc[
         artifacts.policy_comparison["policy"].eq("cp_sat")
     ].iloc[0]
-    interval = metrics["nominal_empirical_interval"]
-    _metric_strip(
+
+    _metric_row(
         (
-            ("Official-test RMSE", f"{metrics['rmse']:.2f}", "100 FD001 engines", ""),
+            (
+                "Official-test RMSE",
+                f"{metrics['rmse']:.2f}",
+                "Measured on 100 FD001 test engines after model lock.",
+            ),
             (
                 "Interval coverage",
                 f"{interval['observed_official_test_coverage']:.0%}",
-                "90% nominal target",
-                "metric-strip__value--warn",
+                "Observed coverage for the nominal 90% empirical interval.",
             ),
             (
-                "Maintenance placed",
+                "Maintenance scheduled",
                 str(int(cp_sat["scheduled_maintenance"])),
-                "20-engine synthetic fleet",
-                "",
+                "Jobs placed in the 30-day synthetic plan.",
             ),
             (
-                "Due deferrals",
+                "Due jobs deferred",
                 str(int(cp_sat["due_deferrals"])),
-                "Visible planning exceptions",
-                "metric-strip__value--bad",
+                "Due jobs that could not be placed under base capacity.",
             ),
         )
     )
 
-    left, right = st.columns((1.15, 0.85), gap="large")
+    st.info(
+        "NASA C-MAPSS FD001 is simulated. Staffing, bays, parts, duration and "
+        "cost are synthetic assumptions. This prototype is not an airworthiness "
+        "or maintenance-approval system."
+    )
+
     risk_counts = (
         artifacts.risk_ranking["risk_band"]
         .value_counts()
@@ -427,35 +143,34 @@ def _overview(artifacts) -> None:
         .reset_index(name="Engines")
     )
     risk_counts["Risk band"] = risk_counts["Risk band"].str.title()
+
+    left, right = st.columns((1.1, 0.9), gap="large")
     with left:
-        _section_label("Official test fleet / interval-lower-bound risk")
+        st.subheader("Fleet risk distribution")
         risk_chart = px.bar(
             risk_counts,
             x="Engines",
             y="Risk band",
             orientation="h",
             color="Risk band",
-            color_discrete_map={
-                "Critical": "#9a3f3f",
-                "Elevated": "#b56a21",
-                "Routine": "#167c73",
-            },
+            color_discrete_map=RISK_COLORS,
             text="Engines",
         )
         risk_chart.update_layout(showlegend=False)
         risk_chart.update_traces(textposition="outside", cliponaxis=False)
         st.plotly_chart(_plot_style(risk_chart, height=270), width="stretch")
+
     with right:
-        _section_label("Base plan / decision record")
+        st.subheader("Base plan summary")
         plan_rows = pd.DataFrame(
             [
-                ("Solver state", str(cp_sat["solver_status"])),
+                ("Solver status", str(cp_sat["solver_status"])),
                 ("Optimality", str(cp_sat["lexicographic_optimality"])),
-                ("Scheduled", int(cp_sat["scheduled_maintenance"])),
-                ("Deferred", int(cp_sat.get("deferred_maintenance", 0))),
+                ("Scheduled jobs", int(cp_sat["scheduled_maintenance"])),
+                ("Deferred jobs", int(cp_sat.get("deferred_maintenance", 0))),
                 ("Late days", int(cp_sat.get("late_days", 0))),
                 (
-                    "Synthetic total cost",
+                    "Total synthetic cost",
                     f"{int(cp_sat.get('total_synthetic_cost_units', 0)):,}",
                 ),
             ],
@@ -473,66 +188,58 @@ def _overview(artifacts) -> None:
             },
         )
 
-    st.markdown(
-        """
-        <div class="scope-note">
-          Scope: NASA C-MAPSS FD001 is simulated. Staffing, bays, parts,
-          duration and cost are synthetic planning assumptions. This console
-          is not an airworthiness or maintenance-approval system.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    with st.expander("Release provenance"):
-        lock_hash = artifacts.run_manifest["model_lock_sha256"]
-        st.markdown(
-            (
-                '<div class="provenance">'
-                f"RUN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{escape(artifacts.run_id)}<br>"
-                f"DATASET&nbsp;&nbsp;{escape(artifacts.model_lock['dataset'])}<br>"
-                "MODEL&nbsp;&nbsp;&nbsp;&nbsp;"
-                f"{escape(artifacts.model_lock['champion']['kind'])}<br>"
-                f"SEED&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{artifacts.model_lock['seed']}<br>"
-                f"LOCK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{escape(lock_hash)}"
-                "</div>"
-            ),
-            unsafe_allow_html=True,
+    with st.expander("Run details"):
+        identity = pd.DataFrame(
+            [
+                ("Run", artifacts.run_id),
+                ("Dataset", artifacts.model_lock["dataset"]),
+                ("Champion model", artifacts.model_lock["champion"]["kind"]),
+                ("Seed", artifacts.model_lock["seed"]),
+                (
+                    "Interval",
+                    artifacts.model_lock["calibration"]["label"],
+                ),
+                (
+                    "Model lock SHA-256",
+                    artifacts.run_manifest["model_lock_sha256"],
+                ),
+            ],
+            columns=["Field", "Value"],
         )
+        identity["Value"] = identity["Value"].astype(str)
+        st.dataframe(identity, hide_index=True, width="stretch")
 
 
-def _engine_health(artifacts) -> None:
+def _engine_risk(artifacts) -> None:
     _page_header(
-        "Engine condition",
-        "Risk ranking from the locked point estimate and nominal interval. "
-        "Official true RUL is not exposed in this decision view.",
+        "Engine risk",
+        "Prioritization uses the locked prediction and nominal interval. "
+        "Official true RUL is not available in this decision view.",
     )
     ranking = artifacts.risk_ranking.copy()
     counts = ranking["risk_band"].value_counts()
-    _metric_strip(
+    _metric_row(
         (
-            ("Engines", str(len(ranking)), "Official FD001 test fleet", ""),
+            ("Engines", str(len(ranking)), "Official FD001 test fleet."),
             (
                 "Critical",
                 str(int(counts.get("critical", 0))),
-                "Interval lower bound ≤ 30",
-                "metric-strip__value--bad",
+                "Interval lower bound at or below 30 cycles.",
             ),
             (
                 "Elevated",
                 str(int(counts.get("elevated", 0))),
-                "Interval lower bound 31-60",
-                "metric-strip__value--warn",
+                "Interval lower bound from 31 to 60 cycles.",
             ),
             (
                 "Routine",
                 str(int(counts.get("routine", 0))),
-                "Interval lower bound > 60",
-                "",
+                "Interval lower bound above 60 cycles.",
             ),
         )
     )
 
-    _section_label("Priority queue")
+    st.subheader("Priority list")
     risk_view = ranking.rename(
         columns={
             "unit_id": "Engine",
@@ -552,36 +259,26 @@ def _engine_health(artifacts) -> None:
             "Engine": st.column_config.NumberColumn(format="%d"),
             "Observed cycle": st.column_config.NumberColumn(format="%d"),
             "Point RUL": st.column_config.NumberColumn(format="%.1f"),
-            "Interval low": st.column_config.ProgressColumn(
-                format="%.1f", min_value=0, max_value=150
-            ),
+            "Interval low": st.column_config.NumberColumn(format="%.1f"),
             "Interval high": st.column_config.NumberColumn(format="%.1f"),
             "Risk band": st.column_config.TextColumn(),
         },
     )
     _download_buttons(artifacts, ("risk_ranking.csv",))
 
-    _section_label("Engine trace")
-    selector, detail = st.columns((0.34, 0.66), gap="large")
+    st.subheader("Selected engine")
+    selector, chart_column = st.columns((0.32, 0.68), gap="large")
     with selector:
         engine_id = st.selectbox(
             "Engine ID",
             ranking["unit_id"].astype(int).tolist(),
         )
         selected = ranking.loc[ranking["unit_id"].eq(engine_id)].iloc[0]
-        selected_band = escape(str(selected["risk_band"]).upper())
-        st.markdown(
-            (
-                '<div class="status-line">'
-                f'<span class="status-line__badge">{selected_band}</span>'
-                '<span class="status-line__copy">'
-                f"Point RUL {selected['prediction']:.1f}<br>"
-                f"Interval {selected['interval_low']:.1f}-"
-                f"{selected['interval_high']:.1f}"
-                "</span></div>"
-            ),
-            unsafe_allow_html=True,
-        )
+        st.metric("Point RUL", f"{selected['prediction']:.1f} cycles")
+        low, high = st.columns(2)
+        low.metric("Interval low", f"{selected['interval_low']:.1f}")
+        high.metric("Interval high", f"{selected['interval_high']:.1f}")
+        st.caption(f"Risk band: {str(selected['risk_band']).title()}")
         sensors = st.multiselect(
             "Sensor channels",
             [
@@ -592,13 +289,16 @@ def _engine_health(artifacts) -> None:
             default=["sensor_2", "sensor_7", "sensor_12"],
             max_selections=5,
         )
+
     history = artifacts.sensor_history.loc[
         artifacts.sensor_history["unit_id"].eq(engine_id)
     ]
-    with detail:
+    with chart_column:
         if sensors:
             chart_data = history.loc[:, ["cycle", *sensors]].melt(
-                id_vars="cycle", var_name="Sensor", value_name="Reading"
+                id_vars="cycle",
+                var_name="Sensor",
+                value_name="Reading",
             )
             sensor_chart = px.line(
                 chart_data,
@@ -606,78 +306,75 @@ def _engine_health(artifacts) -> None:
                 y="Reading",
                 color="Sensor",
             )
-            sensor_chart.update_layout(xaxis_title="Cycle", yaxis_title="Reading")
-            st.plotly_chart(_plot_style(sensor_chart, height=360), width="stretch")
+            sensor_chart.update_layout(
+                xaxis_title="Cycle",
+                yaxis_title="Reading",
+            )
+            st.plotly_chart(
+                _plot_style(sensor_chart, height=350),
+                width="stretch",
+            )
 
+    st.subheader("Model coefficients")
+    st.caption(
+        "Standardized coefficients describe locked model behavior, not physical "
+        "causality or diagnosis."
+    )
     importance = pd.DataFrame(artifacts.explanation["global_importance"]).head(12)
-    _section_label("Locked model behavior / global coefficient magnitude")
-    explanation_chart = px.bar(
+    coefficient_chart = px.bar(
         importance.sort_values("coefficient"),
         x="coefficient",
         y="feature",
         orientation="h",
-        color="coefficient",
-        color_continuous_scale=["#9a3f3f", "#e3e7e3", "#167c73"],
     )
-    explanation_chart.update_layout(
-        coloraxis_showscale=False,
+    coefficient_chart.update_traces(marker_color="#2F5D8A")
+    coefficient_chart.update_layout(
         xaxis_title="Standardized coefficient",
         yaxis_title="",
     )
-    st.plotly_chart(_plot_style(explanation_chart, height=420), width="stretch")
-    st.caption(
-        "Coefficients describe model behavior, not physical causality or diagnosis."
+    st.plotly_chart(
+        _plot_style(coefficient_chart, height=420),
+        width="stretch",
     )
 
 
-def _schedule(artifacts) -> None:
+def _maintenance_plan(artifacts) -> None:
     _page_header(
-        "30-day work plan",
-        "The base synthetic schedule, resource assignment and unresolved exceptions.",
+        "Maintenance plan",
+        "Base synthetic schedule, resource assignment and unresolved work.",
     )
     cp_sat = artifacts.policy_comparison.loc[
         artifacts.policy_comparison["policy"].eq("cp_sat")
     ].iloc[0]
-    _metric_strip(
+    _metric_row(
         (
             (
-                "Solver",
+                "Solver status",
                 str(cp_sat["solver_status"]),
-                "Two-stage CP-SAT",
-                "metric-strip__value--warn",
+                "Two-stage CP-SAT result.",
             ),
             (
-                "Scheduled",
+                "Scheduled jobs",
                 str(int(cp_sat["scheduled_maintenance"])),
-                "Maintenance jobs placed",
-                "",
+                "Maintenance jobs placed.",
             ),
             (
-                "Due deferrals",
+                "Due jobs deferred",
                 str(int(cp_sat["due_deferrals"])),
-                "Require operator review",
-                "metric-strip__value--bad",
+                "Planning exceptions requiring review.",
             ),
             (
                 "Capacity shortfall",
                 str(int(cp_sat.get("operating_capacity_shortfall_cycles", 0))),
-                "Synthetic cycles",
-                "",
+                "Synthetic operating cycles below demand.",
             ),
         )
     )
-    solver_status = escape(str(cp_sat["solver_status"]))
-    optimality = escape(str(cp_sat["lexicographic_optimality"]))
-    st.markdown(
-        (
-            '<div class="status-line">'
-            f'<span class="status-line__badge">{solver_status}</span>'
-            '<span class="status-line__copy">'
-            f"Lexicographic optimality is {optimality}. "
-            "A feasible result is not presented as optimal."
-            "</span></div>"
-        ),
-        unsafe_allow_html=True,
+
+    st.warning(
+        f"Solver status is {cp_sat['solver_status']}; lexicographic optimality "
+        f"is {cp_sat['lexicographic_optimality']}. A feasible schedule is not "
+        "presented as proven optimal."
     )
 
     scheduled = artifacts.schedule.loc[
@@ -688,13 +385,17 @@ def _schedule(artifacts) -> None:
     ].copy()
     if not scheduled.empty:
         scheduled["start"] = pd.to_datetime(
-            scheduled["start_day"], unit="D", origin="2026-01-01"
+            scheduled["start_day"],
+            unit="D",
+            origin="2026-01-01",
         )
         scheduled["finish"] = pd.to_datetime(
-            scheduled["end_day"], unit="D", origin="2026-01-01"
+            scheduled["end_day"],
+            unit="D",
+            origin="2026-01-01",
         )
         scheduled["engine"] = "Engine " + scheduled["engine_id"].astype(str)
-        _section_label("Assignment timeline")
+        st.subheader("Assignment timeline")
         timeline = px.timeline(
             scheduled,
             x_start="start",
@@ -702,15 +403,18 @@ def _schedule(artifacts) -> None:
             y="engine",
             color="team_id",
             hover_data=["bay_id"],
-            color_discrete_map={"team_A": "#167c73", "team_B": "#b56a21"},
+            color_discrete_map={
+                "team_A": "#2F5D8A",
+                "team_B": "#7A6F9B",
+            },
         )
         timeline.update_yaxes(autorange="reversed", title="")
         timeline.update_xaxes(title="Planning day")
         st.plotly_chart(_plot_style(timeline, height=500), width="stretch")
 
-    left, right = st.columns((0.42, 0.58), gap="large")
+    left, right = st.columns((0.45, 0.55), gap="large")
     with left:
-        _section_label("Unresolved exceptions")
+        st.subheader("Deferred work")
         if deferred.empty:
             st.caption("No deferred maintenance.")
         else:
@@ -721,8 +425,9 @@ def _schedule(artifacts) -> None:
                 hide_index=True,
                 width="stretch",
             )
+
     with right:
-        _section_label("Resource position")
+        st.subheader("Resource summary")
         resource = pd.DataFrame(
             [
                 ("Team utilization", f"{cp_sat.get('team_utilization', 0):.0%}"),
@@ -735,15 +440,15 @@ def _schedule(artifacts) -> None:
         resource["Value"] = resource["Value"].astype(str)
         st.dataframe(resource, hide_index=True, width="stretch")
 
-    with st.expander("Full assignment ledger"):
+    with st.expander("Full assignment table"):
         st.dataframe(artifacts.schedule, hide_index=True, width="stretch")
         _download_buttons(artifacts, ("cp_sat_schedule.csv",))
 
 
-def _comparison(artifacts) -> None:
+def _policy_analysis(artifacts) -> None:
     _page_header(
-        "Scenario lab",
-        "Policy outcomes, capacity sensitivity and a bounded truth-free replan.",
+        "Policy analysis",
+        "Policy results, capacity sensitivity and a bounded truth-free replan.",
     )
     policy = artifacts.policy_comparison.copy()
     capacity = artifacts.capacity_comparison.copy()
@@ -763,35 +468,33 @@ def _comparison(artifacts) -> None:
     ):
         if column not in capacity:
             capacity[column] = 0
+
     cp_sat = policy.loc[policy["policy"].eq("cp_sat")].iloc[0]
-    _metric_strip(
+    _metric_row(
         (
             (
                 "CP-SAT cost",
                 f"{int(cp_sat['total_synthetic_cost_units']):,}",
-                "Synthetic cost units",
-                "",
+                "Synthetic cost units, not currency.",
             ),
             (
                 "Simulated failures",
                 str(int(cp_sat["unplanned_failures"])),
-                "Retrospective only",
-                "metric-strip__value--bad",
+                "Retrospective evaluation only.",
             ),
             (
-                "Base due deferrals",
+                "Due jobs deferred",
                 str(int(cp_sat["due_deferrals"])),
-                "2 bays / 80% demand",
-                "metric-strip__value--warn",
+                "Base case: two bays and 80% operating demand.",
             ),
             (
                 "Solve time",
                 f"{cp_sat['solve_time_seconds']:.1f}s",
-                str(cp_sat["solver_status"]),
-                "",
+                f"Solver status: {cp_sat['solver_status']}.",
             ),
         )
     )
+    st.caption("All costs are synthetic cost units, not real currency.")
 
     policy_labels = {
         "reactive": "Reactive",
@@ -802,23 +505,22 @@ def _comparison(artifacts) -> None:
     policy["Policy"] = policy["policy"].map(policy_labels)
     left, right = st.columns(2, gap="large")
     with left:
-        _section_label("Synthetic total cost by policy")
+        st.subheader("Total cost by policy")
         cost_chart = px.bar(
             policy,
             x="Policy",
             y="total_synthetic_cost_units",
-            color="Policy",
-            color_discrete_sequence=PLOT_COLORS,
             text="total_synthetic_cost_units",
         )
+        cost_chart.update_traces(marker_color="#2F5D8A")
         cost_chart.update_layout(
-            showlegend=False,
             xaxis_title="",
             yaxis_title="Synthetic cost units",
         )
         st.plotly_chart(_plot_style(cost_chart), width="stretch")
+
     with right:
-        _section_label("Maintenance placement and deferral")
+        st.subheader("Scheduled and deferred work")
         decision_chart_data = policy.melt(
             id_vars="Policy",
             value_vars=["scheduled_maintenance", "due_deferrals"],
@@ -828,7 +530,7 @@ def _comparison(artifacts) -> None:
         decision_chart_data["Decision"] = decision_chart_data["Decision"].map(
             {
                 "scheduled_maintenance": "Scheduled",
-                "due_deferrals": "Due deferrals",
+                "due_deferrals": "Due jobs deferred",
             }
         )
         decision_chart = px.bar(
@@ -838,14 +540,14 @@ def _comparison(artifacts) -> None:
             color="Decision",
             barmode="group",
             color_discrete_map={
-                "Scheduled": "#167c73",
-                "Due deferrals": "#9a3f3f",
+                "Scheduled": "#2F5D8A",
+                "Due jobs deferred": "#B42318",
             },
         )
         decision_chart.update_layout(xaxis_title="", yaxis_title="Engines")
         st.plotly_chart(_plot_style(decision_chart), width="stretch")
 
-    _section_label("Capacity sensitivity")
+    st.subheader("Capacity sensitivity")
     capacity_order = ["constrained", "base", "expanded"]
     capacity["capacity_scenario"] = pd.Categorical(
         capacity["capacity_scenario"],
@@ -854,14 +556,18 @@ def _comparison(artifacts) -> None:
     )
     capacity_plot = capacity.sort_values("capacity_scenario").melt(
         id_vars="capacity_scenario",
-        value_vars=["scheduled_maintenance", "due_deferrals", "unplanned_failures"],
+        value_vars=[
+            "scheduled_maintenance",
+            "due_deferrals",
+            "unplanned_failures",
+        ],
         var_name="Measure",
         value_name="Engines",
     )
     capacity_plot["Measure"] = capacity_plot["Measure"].map(
         {
             "scheduled_maintenance": "Scheduled",
-            "due_deferrals": "Due deferrals",
+            "due_deferrals": "Due jobs deferred",
             "unplanned_failures": "Simulated failures",
         }
     )
@@ -872,9 +578,9 @@ def _comparison(artifacts) -> None:
         color="Measure",
         markers=True,
         color_discrete_map={
-            "Scheduled": "#167c73",
-            "Due deferrals": "#9a3f3f",
-            "Simulated failures": "#b56a21",
+            "Scheduled": "#2F5D8A",
+            "Due jobs deferred": "#B42318",
+            "Simulated failures": "#B26A00",
         },
     )
     capacity_chart.update_layout(
@@ -883,29 +589,37 @@ def _comparison(artifacts) -> None:
     )
     st.plotly_chart(_plot_style(capacity_chart, height=350), width="stretch")
 
-    with st.expander("Underlying comparison tables"):
-        st.dataframe(policy.drop(columns="Policy"), hide_index=True, width="stretch")
+    with st.expander("Comparison tables"):
+        st.dataframe(
+            policy.drop(columns="Policy"),
+            hide_index=True,
+            width="stretch",
+        )
         st.dataframe(capacity, hide_index=True, width="stretch")
         _download_buttons(
             artifacts,
             ("policy_comparison.csv", "capacity_comparison.csv"),
         )
 
-    _section_label("Bounded capacity replan")
+    st.subheader("Capacity replan")
     st.caption(
-        "The run remains immutable. This solve uses the verified truth-free "
-        "scenario in memory and does not write into the release run."
+        "This calculation uses the verified truth-free scenario in memory and "
+        "does not write into the release run."
     )
     with st.form("capacity-what-if", border=True):
         control_left, control_right = st.columns(2)
         bays = control_left.slider("Maintenance bays", 1, 3, 2)
         demand_percent = control_right.slider(
-            "Minimum operating demand (%)", 70, 90, 80
+            "Minimum operating demand (%)",
+            70,
+            90,
+            80,
         )
         submitted = st.form_submit_button(
             "Run capacity replan",
             width="stretch",
         )
+
     if submitted:
         try:
             schedule, result = run_capacity_what_if(
@@ -916,35 +630,38 @@ def _comparison(artifacts) -> None:
         except ArtifactValidationError as exc:
             st.error(str(exc))
         else:
-            _metric_strip(
+            _metric_row(
                 (
                     (
-                        "Solver",
+                        "Solver status",
                         str(result["solver_status"]),
-                        "Truth-free what-if",
-                        "metric-strip__value--warn",
+                        "Truth-free what-if result.",
                     ),
                     (
-                        "Scheduled",
+                        "Scheduled jobs",
                         str(int(result.get("scheduled_maintenance", 0))),
-                        "Maintenance jobs",
-                        "",
+                        "Maintenance jobs placed.",
                     ),
                     (
-                        "Due deferrals",
+                        "Due jobs deferred",
                         str(int(result.get("due_deferrals", 0))),
-                        "Planning exceptions",
-                        "metric-strip__value--bad",
+                        "Planning exceptions.",
                     ),
                     (
-                        "Shortfall",
-                        str(int(result.get("operating_capacity_shortfall_cycles", 0))),
-                        "Synthetic cycles",
-                        "",
+                        "Capacity shortfall",
+                        str(
+                            int(
+                                result.get(
+                                    "operating_capacity_shortfall_cycles",
+                                    0,
+                                )
+                            )
+                        ),
+                        "Synthetic operating cycles below demand.",
                     ),
                 )
             )
-            with st.expander("What-if assignment ledger"):
+            with st.expander("What-if assignment table"):
                 st.dataframe(
                     pd.DataFrame(schedule.get("jobs", [])),
                     hide_index=True,
@@ -955,7 +672,7 @@ def _comparison(artifacts) -> None:
 def main() -> None:
     """Render the four-page decision application."""
     st.set_page_config(
-        page_title="AeroMaintain | Decision Console",
+        page_title="AeroMaintain",
         layout="wide",
         initial_sidebar_state="expanded",
     )
@@ -968,39 +685,28 @@ def main() -> None:
         st.error(f"Verified run could not be loaded: {exc}")
         st.stop()
 
-    st.sidebar.markdown(
-        """
-        <div class="side-brand">
-          <span class="side-brand__mark">AM</span>
-          <strong>AeroMaintain</strong>
-          <small>Maintenance decision console</small>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.sidebar.title("AeroMaintain")
+    st.sidebar.caption("Maintenance planning prototype")
     pages = (
-        "Fleet brief",
-        "Engine condition",
-        "30-day work plan",
-        "Scenario lab",
+        "Overview",
+        "Engine risk",
+        "Maintenance plan",
+        "Policy analysis",
     )
-    page = st.sidebar.radio(
-        "Workspace",
-        pages,
-        label_visibility="collapsed",
-    )
-    st.sidebar.markdown(
-        (f'<div class="side-run"><b>Verified run</b>{escape(artifacts.run_id)}</div>'),
-        unsafe_allow_html=True,
-    )
-    if page == "Fleet brief":
+    page = st.sidebar.radio("View", pages)
+    st.sidebar.divider()
+    st.sidebar.caption("Verified run")
+    st.sidebar.code(artifacts.run_id, language=None)
+    st.sidebar.caption("NASA C-MAPSS FD001 · simulated data")
+
+    if page == "Overview":
         _overview(artifacts)
-    elif page == "Engine condition":
-        _engine_health(artifacts)
-    elif page == "30-day work plan":
-        _schedule(artifacts)
+    elif page == "Engine risk":
+        _engine_risk(artifacts)
+    elif page == "Maintenance plan":
+        _maintenance_plan(artifacts)
     else:
-        _comparison(artifacts)
+        _policy_analysis(artifacts)
 
 
 if __name__ == "__main__":

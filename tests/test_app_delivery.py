@@ -351,9 +351,9 @@ def test_streamlit_small_fixture_renders_all_pages(
 
     tested = AppTest.from_file(str(script), default_timeout=30).run()
     assert not tested.exception
-    assert tested.header[0].value == "Fleet brief"
+    assert tested.header[0].value == "Overview"
 
-    for page in ("Engine condition", "30-day work plan", "Scenario lab"):
+    for page in ("Engine risk", "Maintenance plan", "Policy analysis"):
         tested.sidebar.radio[0].set_value(page)
         tested.run()
         assert not tested.exception
