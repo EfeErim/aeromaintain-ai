@@ -17,6 +17,7 @@ from aeromaintain.config import (
     resolve_project_root,
 )
 from aeromaintain.data import DataPipelineError, prepare_fd001
+from aeromaintain.models import ModelingError, evaluate_locked, train_and_lock
 
 app = typer.Typer(
     add_completion=False,
@@ -45,6 +46,7 @@ def collect_doctor_checks(
         sys.version_info.micro,
     )
     supported_python = version[:2] == (3, 11)
+
     missing_configs = [
         name
         for name in REQUIRED_CONFIG_FILES
@@ -55,6 +57,7 @@ def collect_doctor_checks(
     ]
     package_available = importlib.util.find_spec("aeromaintain") is not None
     writable_root = project_root.is_dir() and os.access(project_root, os.W_OK)
+
     return (
         DoctorCheck(
             "python",
@@ -113,10 +116,12 @@ def doctor(
     """Report whether the local Python and project environment are usable."""
     root = resolve_project_root(project_root)
     checks = collect_doctor_checks(root)
+
     typer.echo("AeroMaintain AI environment doctor")
     for check in checks:
         marker = "PASS" if check.passed else "FAIL"
         typer.echo(f"[{marker}] {check.name}: {check.detail}")
+
     passed = sum(check.passed for check in checks)
     typer.echo(f"Summary: {passed}/{len(checks)} checks passed")
     if passed != len(checks):
@@ -155,6 +160,7 @@ def prepare(
     except DataPipelineError as exc:
         typer.echo(f"Preparation failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
+
     typer.echo("FD001 preparation complete")
     typer.echo(
         f"Rows: train={result.train_rows}, test={result.test_rows}; "
@@ -163,3 +169,76 @@ def prepare(
     )
     typer.echo(f"Processed data: {result.output_dir}")
     typer.echo(f"Verified artifacts: {len(result.artifact_hashes)}")
+
+
+@app.command()
+def train(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="New immutable run directory name under runs/.",
+        ),
+    ],
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+) -> None:
+    """Select, fit, calibrate, explain, persist, and lock an FD001 RUL model."""
+    root = resolve_project_root(project_root)
+    try:
+        result = train_and_lock(root, run_id=run_id)
+    except ModelingError as exc:
+        typer.echo(f"Training failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    typer.echo("FD001 model training and lock complete")
+    typer.echo(f"Run: {result.run_id}")
+    typer.echo(f"Champion: {result.champion}")
+    typer.echo(f"Calibration q: {result.calibration_q:.6f}")
+    typer.echo(f"Model lock: {result.model_lock}")
+
+
+@app.command()
+def evaluate(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Existing run with a verified model_lock.json.",
+        ),
+    ],
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+) -> None:
+    """Evaluate one verified model lock against isolated official test labels."""
+    root = resolve_project_root(project_root)
+    try:
+        result = evaluate_locked(root, run_id=run_id)
+    except ModelingError as exc:
+        typer.echo(f"Evaluation failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    metrics = result.metrics
+    typer.echo("Locked FD001 official evaluation complete")
+    typer.echo(f"Run: {result.run_id}")
+    typer.echo(
+        f"MAE={metrics['mae']:.6f}; RMSE={metrics['rmse']:.6f}; "
+        f"NASA={metrics['nasa_score_motor_normalized']:.6f}"
+    )
+    typer.echo(f"Official results: {result.output_dir}")
