@@ -41,7 +41,7 @@ Last updated: 2026-07-29
 | M4.2 | End-to-end pipeline | complete | Real `m4-fd001-seed42-20260729` run is `pipeline_complete`; overwrite and partial-run tests pass |
 | M4.3 | Documentation and release preparation | complete | Final README, model card, results, architecture and four verified screenshots |
 | M4.4 | Final release candidate | complete | Clean Python 3.11 install/doctor/app smoke; 41 tests; 84.45% coverage; Ruff/hash/Git exclusion gates pass |
-| M5 | Decision-console presentation quality | complete | Four-page real-run interface and screenshots verified; 41 tests; 85.23% coverage; Ruff/format/smoke/diff gates pass |
+| M5 | Decision-console presentation quality | complete | Research-backed four-page real-run interface and screenshots verified; 41 tests; 85.29% coverage; Ruff/format/smoke/diff gates pass |
 
 ## Current milestone evidence
 
@@ -394,19 +394,19 @@ M4.4:
 
 M5:
 
-- Replaced the default dark Streamlit presentation with a restrained
-  maintenance-decision console: fixed light theme, petrol navigation rail,
-  compact evidence masthead, line-based KPI strips and operational page names
-  (`Fleet brief`, `Engine condition`, `30-day work plan`, `Scenario lab`).
-- Fleet brief now leads with interval-risk distribution and the base decision
-  record. Engine condition presents a formatted priority queue, selected-engine
-  trace and locked coefficient view. The work plan leads with the assignment
-  timeline and deferred-job exceptions. Scenario lab charts policy/capacity
-  outcomes before exposing underlying tables and the bounded replan form.
-- Real-run browser validation covered all four pages with no console errors.
-  The bounded 2-bay/80%-demand replan returned `FEASIBLE`, `16` scheduled,
-  `4` due deferrals and `0` operating shortfall without changing the immutable
-  release run. All four committed screenshots were refreshed from the real run.
+- `docs/interface_design.md` records the Streamlit, Carbon and GOV.UK design
+  sources and the resulting interface decisions.
+- Replaced the custom marketing-style presentation layer with standard
+  Streamlit components, a neutral gray/blue theme and direct task names:
+  `Overview`, `Engine risk`, `Maintenance plan` and `Policy analysis`.
+- Removed the invented logo, uppercase evidence masthead, petrol navigation
+  rail, custom KPI cards, decorative micro-labels and coefficient gradient.
+  Tables remain the primary record-review surface; red and amber are limited to
+  critical, deferred or warning states.
+- Real-run browser validation rendered all four pages at `1440 × 900` after
+  load completion. The screenshots were refreshed from the verified
+  `m4-fd001-seed42-20260729` run; solver status, unproven optimality, due
+  deferrals, synthetic scope and run identity remain visible.
 - `.\.venv\Scripts\pytest.exe -q tests\test_app_delivery.py` — `6 passed`;
   the four named pages render from the fixture without Streamlit exceptions.
 - `.\.venv\Scripts\aeromaintain.exe app --run-id
@@ -414,7 +414,7 @@ M5:
   verified real run.
 - `.\.venv\Scripts\pytest.exe --cov=src/aeromaintain
   --cov-report=term-missing --cov-fail-under=80` — `41 passed`, total coverage
-  `85.23%`; the Streamlit module is `96%` covered.
+  `85.29%`; the Streamlit module is `96%` covered.
 - `.\.venv\Scripts\ruff.exe check .`,
   `.\.venv\Scripts\ruff.exe format --check .` and `git diff --check` passed.
 - `git ls-files data/raw data/processed artifacts runs` returned no paths;

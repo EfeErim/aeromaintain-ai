@@ -448,15 +448,15 @@ Dört sayfa yeterlidir:
    - model ve veri kimliği
    - ana tahmin ve karar metrikleri
    - simülasyon uyarısı
-2. **Engine Health**
+2. **Engine risk**
    - motor risk sıralaması
    - RUL ve interval
    - sensör geçmişi ve açıklama
-3. **Maintenance Schedule**
+3. **Maintenance plan**
    - takvim
    - ekip, hangar ve parça kullanımı
    - solver durumu ve ertelenen işler
-4. **Policy Comparison & What-if**
+4. **Policy analysis**
    - dört politika
    - constrained/base/expanded karşılaştırması
    - kapasite değiştirerek optimizasyonu tekrar çalıştırma
@@ -756,9 +756,10 @@ Faz kapısı:
 
 Teslimatlar:
 
-- sabit açık tema ve tutarlı karar-konsolu görsel dili
-- operasyonel adlarla düzenlenmiş dört sayfa: `Fleet brief`,
-  `Engine condition`, `30-day work plan` ve `Scenario lab`
+- sabit açık tema ve sade bakım-planlama görsel dili
+- doğrudan görev adlarıyla düzenlenmiş dört sayfa: `Overview`, `Engine risk`,
+  `Maintenance plan` ve `Policy analysis`
+- araştırma kaynakları ve uygulanan kararlar için `docs/interface_design.md`
 - risk, takvim, erteleme, politika ve kapasite sonuçlarını önceleyen görseller
 - doğrulanmış gerçek run'dan yenilenmiş dört ekran görüntüsü
 
@@ -771,6 +772,8 @@ Kabul:
   truth-free senaryoyu kullanıyor ve release run'ını değiştirmiyor
 - sentetik kapsam, solver durumu, kanıtlanmamış optimalite ve ertelenen işler
   görünür kalıyor
+- desteklenen Streamlit tema ayarları ve standart bileşenler kullanılıyor;
+  özel CSS yalnızca temel yerleşim düzeltmeleriyle sınırlı
 - Ruff, format, tam test paketi, yüzde 80 coverage kapısı ve `git diff --check`
   geçiyor
 
