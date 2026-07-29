@@ -4,9 +4,9 @@ Last updated: 2026-07-29
 
 ## Current position
 
-- Active phase: Phase 3
-- Active milestone: M3.1 — Synthetic maintenance scenario
-- Overall status: Phases 0, 1, and 2 complete; Phase 3 ready to start
+- Active phase: Phase 4
+- Active milestone: M4.1 — Streamlit decision application
+- Overall status: Phases 0, 1, 2, and 3 complete; Phase 4 ready to start
 - Current blocker: None
 
 ## Status rules
@@ -33,10 +33,10 @@ Last updated: 2026-07-29
 | M2.3 | XGBoost and champion selection | complete | 12 candidates with fold early stopping; fixed rule selected Ridge; two real runs produced byte-identical decisions and model artefacts |
 | M2.4 | Uncertainty, explanation and model lock | complete | 20 engine-level calibration scores; nominal 90% empirical `q=31.701395`; coefficient explanation; verified model/data/config/feature hashes |
 | M2.5 | Locked official test evaluation | complete | 100 engines; MAE `15.369728`, RMSE `19.622062`, NASA `625.326953`; repeated evaluation byte-identical |
-| M3.1 | Synthetic maintenance scenario | pending | — |
-| M3.2 | Baseline maintenance policies | pending | — |
-| M3.3 | CP-SAT schedule | pending | — |
-| M3.4 | Policy and capacity comparison | pending | — |
+| M3.1 | Synthetic maintenance scenario | complete | Seed-42 risk-sorted 20-engine scenario is byte-reproducible; truth-free schema and synthetic dictionary verified |
+| M3.2 | Baseline maintenance policies | complete | Reactive, fixed-90 and predicted-RUL-30 schedules use one scenario and common resource evaluator |
+| M3.3 | CP-SAT schedule | complete | Hand fixture matches; base solver FEASIBLE with 17 scheduled, 3 due deferrals, 0 capacity shortfall; optimality unproven and visible |
+| M3.4 | Policy and capacity comparison | complete | Four-policy and constrained/base/expanded JSON/CSV comparisons plus `docs/optimization.md` verified |
 | M4.1 | Streamlit decision application | pending | — |
 | M4.2 | End-to-end pipeline | pending | — |
 | M4.3 | Documentation and release preparation | pending | — |
@@ -243,6 +243,78 @@ M2.5:
 - `git diff --check` and `git diff --cached --check` passed.
 - `git check-ignore` confirms both real run directories are ignored;
   `git ls-files data/raw data/processed artifacts runs` returned no paths.
+
+### Phase 3 closure — 2026-07-29
+
+M3.1:
+
+- `.\.venv\Scripts\python.exe -m aeromaintain optimize --run-id
+  m2-fd001-seed42-20260729 --project-root .` verified the locked official
+  prediction and model-lock hashes before creating the immutable
+  `optimization/` output.
+- `scenario.json` selects the 20 lowest `interval_low` engines with engine-ID
+  tie-breaking, uses the 30-day horizon and seed `42`, and records all
+  generated engine/resource/cost values plus generator version
+  `fd001-synthetic-maintenance-v1`.
+- Two independent generations produced the same scenario SHA-256:
+  `0D5EC52C503C3D095E2D9658D74CE04ADC9DA268F1EF6E8FD79EDE629ED8D4FB`.
+- Planning artefact scan found no `rul_true` or `true_rul`; focused sentinel
+  tests reject `rul_true`, `true_rul`, and `actual_rul` input columns.
+  `scenario_data_dictionary.json` and `configs/scenario.yaml` label every
+  operational, resource, duration and cost field as synthetic.
+
+M3.2:
+
+- Reactive, fixed-90-cycle and predicted-RUL-30 policies use the same scenario,
+  teams, bays, parts and operating-demand contract. Triggered jobs are attempted
+  on the earliest feasible day in safe-due-day/engine-ID order and
+  unschedulable work is explicitly deferred.
+- All three policies and CP-SAT pass the common evaluator. Base results:
+  reactive `0` scheduled/`20` failures/`10000` total synthetic cost units;
+  fixed-90 `13`/`18`/`10349`; predicted-RUL-30 `16`/`18`/`10662`.
+- True RUL is joined only by `evaluate_retrospective` after schedules are
+  frozen; raw truth never appears in the scenario, policy, solver or schedule
+  schema.
+
+M3.3:
+
+- The two-stage CP-SAT model enforces one assignment or deferral, full-duration
+  same-team/same-bay use, daily technician capacity, bay no-overlap, cumulative
+  kit stock, minimum operating capacity and completion within the horizon.
+- Stage 1 minimizes due deferrals before late days; stage 2 fixes the best
+  stage-1 score found and minimizes planned, early-cycle and low-risk-deferral
+  cost. Both stages use seed `42`, one worker and a 30-second limit.
+- The hand-solvable one-engine fixture returns `OPTIMAL`, start day `0`, end
+  day `2`, zero due deferrals and zero late days. A forced impossible fixture
+  returns `INFEASIBLE` with an empty schedule; an `UNKNOWN` status is likewise
+  verified to expose no plausible schedule.
+- Real base result: `FEASIBLE`, lexicographic optimality `unproven`,
+  `17` scheduled, `3` due deferrals, `264` late days, `0` operating-capacity
+  shortfall, `13` retrospective failures and `8287` total synthetic cost units.
+
+M3.4:
+
+- `policy_comparison.json/.csv` records the same decision and retrospective
+  metrics for all four policies. CP-SAT improves this controlled synthetic
+  run over the three baselines on failures and total synthetic cost, without
+  claiming proven optimality or real-fleet performance.
+- Capacity results preserve the same engine synthetic fields:
+  constrained (`1` bay/`90%`) schedules `10` with `10` due deferrals and
+  `17` failures; base (`2`/`80%`) schedules `17` with `3` and `13`; expanded
+  (`3`/`70%`) schedules `19` with `1` and `12`. All report zero operating
+  shortfall.
+- `docs/optimization.md` documents the truth boundary, scenario, four
+  policies, integer constraints, two-stage objective, negative-status behavior,
+  actual FEASIBLE/unproven result and capacity sensitivity.
+- Manifest validation found zero hash mismatches across all 13 optimization
+  artefacts; config hash and locked source hashes match. A repeated `optimize`
+  refuses to overwrite the existing output.
+- `.\.venv\Scripts\pytest.exe --cov=src/aeromaintain
+  --cov-report=term-missing --cov-fail-under=80` — `35 passed`, total coverage
+  `86.13%`.
+- `.\.venv\Scripts\ruff.exe check .` and
+  `.\.venv\Scripts\ruff.exe format --check .` — all Python files pass after the
+  final annotation correction.
 
 ## Decisions and blockers
 

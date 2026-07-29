@@ -16,11 +16,13 @@ It is not an airworthiness, maintenance-approval, or production fleet system.
 
 ## Current delivery
 
-Phases 0, 1, and 2 are complete. The Python 3.11 foundation, governance
+Phases 0, 1, 2, and 3 are complete. The Python 3.11 foundation, governance
 documentation, deterministic FD001 preparation pipeline, leakage-safe RUL
 model selection, nominal empirical interval, model lock, and locked official
-evaluation are in place. Later milestones implement CP-SAT optimization and
-the Streamlit application.
+evaluation are in place. The project now also generates a deterministic
+synthetic maintenance scenario, compares three rule policies with a two-stage
+CP-SAT schedule, and reports base/constrained/expanded capacity sensitivity.
+Phase 4 delivers the Streamlit application and end-to-end release workflow.
 
 The detailed product and experiment contract is
 [`PROJECT_PLAN.md`](PROJECT_PLAN.md). Evidence-based milestone status is in
@@ -127,6 +129,28 @@ visible error analysis under the run's `official_test/` directory. Repeating
 evaluation with the same valid lock reuses only byte-identical outputs. The
 interval is empirical and nominal; it is not a safety guarantee.
 
+## Optimize synthetic maintenance
+
+Use a run whose official predictions and model lock have already been
+verified:
+
+```powershell
+aeromaintain optimize --run-id m2-fd001-seed42
+```
+
+The command selects the 20 engines with the lowest interval lower bounds,
+generates the seed-42 synthetic 30-day fleet and resource scenario, and writes
+the reactive, fixed-90-cycle, predicted-RUL-30, and CP-SAT schedules under the
+run's `optimization/` directory. It also records policy and
+base/constrained/expanded capacity comparisons in JSON and CSV.
+
+The optimizer never receives official true RUL. True RUL is joined only after
+each schedule is frozen, in a separate retrospective evaluator used to report
+simulated failures and emergency `cost_units`. `FEASIBLE`, `UNKNOWN`,
+`INFEASIBLE`, and unproven-optimality outcomes remain visible; a no-solution
+status never produces a plausible-looking schedule. See
+[the optimization method and verified M3 results](docs/optimization.md).
+
 ## Quality checks
 
 ```powershell
@@ -176,10 +200,10 @@ aeromaintain app --run-id ID
 aeromaintain doctor
 ```
 
-`doctor`, `prepare`, `train`, and `evaluate` are implemented through Phase 2.
-Later commands are delivered at their corresponding gated milestones. Commands
-will not overwrite existing run directories; completed runs retain config,
-seed, data/model hashes, and metrics in `manifest.json`.
+`doctor`, `prepare`, `train`, `evaluate`, and `optimize` are implemented through
+Phase 3. Later commands are delivered at their corresponding gated milestones.
+Commands do not overwrite existing generated outputs; completed runs retain
+config, seed, data/model hashes, and metrics in their manifests.
 
 ## License
 

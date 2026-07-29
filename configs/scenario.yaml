@@ -8,6 +8,20 @@ planning:
   horizon_days: 30
   operating_demand_fraction: 0.80
 
+generation:
+  cycles_per_day:
+    min: 1
+    max: 4
+  maintenance_duration_days:
+    min: 2
+    max: 5
+  technicians_required:
+    min: 2
+    max: 6
+  kit_quantity:
+    min: 1
+    max: 2
+
 resources:
   bays:
     - bay_1

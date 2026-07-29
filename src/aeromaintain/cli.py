@@ -18,6 +18,7 @@ from aeromaintain.config import (
 )
 from aeromaintain.data import DataPipelineError, prepare_fd001
 from aeromaintain.models import ModelingError, evaluate_locked, train_and_lock
+from aeromaintain.optimization import OptimizationError, optimize_run
 
 app = typer.Typer(
     add_completion=False,
@@ -242,3 +243,42 @@ def evaluate(
         f"NASA={metrics['nasa_score_motor_normalized']:.6f}"
     )
     typer.echo(f"Official results: {result.output_dir}")
+
+
+@app.command()
+def optimize(
+    run_id: Annotated[
+        str,
+        typer.Option(
+            "--run-id",
+            help="Existing run with verified locked official predictions.",
+        ),
+    ],
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+) -> None:
+    """Generate, solve, and compare the synthetic maintenance scenario."""
+    root = resolve_project_root(project_root)
+    try:
+        result = optimize_run(root, run_id=run_id)
+    except OptimizationError as exc:
+        typer.echo(f"Optimization failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+    cp_sat = next(row for row in result.policy_comparison if row["policy"] == "cp_sat")
+    typer.echo("Synthetic FD001 maintenance optimization complete")
+    typer.echo(f"Run: {result.run_id}")
+    typer.echo(
+        f"CP-SAT status={cp_sat['solver_status']}; "
+        f"due deferrals={cp_sat.get('due_deferrals', 'n/a')}; "
+        f"late days={cp_sat.get('late_days', 'n/a')}"
+    )
+    typer.echo(f"Optimization artifacts: {result.output_dir}")
