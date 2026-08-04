@@ -37,11 +37,11 @@ jobs:
           python -m pip check
           aeromaintain doctor --project-root .
 
-      - name: Synthetic delivery smoke
+      - name: Delivery smoke
         run: |
           pytest -q \
-            tests/test_app_delivery.py::test_small_fixture_pipeline_completes_all_stages_and_report \
-            tests/test_app_delivery.py::test_streamlit_small_fixture_renders_all_pages
+            tests/test_app_delivery.py::test_small_fixture_pipeline_completes_evaluation_and_report \
+            tests/test_app_delivery.py::test_streamlit_small_fixture_renders_active_pages
 
       - name: Raw-data exclusion
         shell: bash

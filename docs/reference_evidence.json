@@ -1,0 +1,109 @@
+{
+  "schema_version": 2,
+  "active_scope": "rul_evaluation_only",
+  "run": {
+    "run_id": "m4-fd001-seed42-20260729",
+    "status": "pipeline_complete",
+    "seed": 42,
+    "stages": [
+      "prepare",
+      "train_and_lock",
+      "evaluate_locked",
+      "report"
+    ]
+  },
+  "dataset": {
+    "name": "NASA C-MAPSS FD001",
+    "simulated": true,
+    "archive_size_bytes": 12425978,
+    "archive_sha256": "74bef434a34db25c7bf72e668ea4cd52afe5f2cf8e44367c55a82bfd91a5a34f",
+    "development_engines": 80,
+    "calibration_engines": 20,
+    "official_test_engines": 100
+  },
+  "development_model_comparison": {
+    "selection_scope": "five engine-grouped folds on development engines only",
+    "ranking_rule": "lowest motor-normalized NASA score, then lowest RMSE",
+    "champion_rule": "XGBoost requires at least 5% lower development RMSE than Ridge without a worse motor-normalized NASA score",
+    "models": [
+      {
+        "model": "development_target_mean",
+        "mae": 59.056773494777026,
+        "rmse": 74.00158392573617,
+        "nasa_score_motor_normalized": 88366212.60270046,
+        "point_threshold_critical_recall": 0.0
+      },
+      {
+        "model": "ridge",
+        "alpha": 100.0,
+        "mae": 34.3930613688073,
+        "rmse": 50.89342949843443,
+        "nasa_score_motor_normalized": 3248762.702696098,
+        "point_threshold_critical_recall": 0.7044354838709678
+      },
+      {
+        "model": "xgboost",
+        "candidate": 5,
+        "mae": 32.38053702376974,
+        "rmse": 49.99568955114797,
+        "nasa_score_motor_normalized": 3893066.5298815654,
+        "point_threshold_critical_recall": 0.8463709677419354
+      }
+    ],
+    "xgboost_rmse_improvement_fraction": 0.01763960409298172,
+    "xgboost_nasa_not_worse": false,
+    "champion": "ridge"
+  },
+  "calibration": {
+    "engines": 20,
+    "nominal_coverage": 0.9,
+    "finite_sample_rank": 19,
+    "absolute_error_quantile_q": 31.701394860140987,
+    "risk_band_source": "interval_low",
+    "label": "nominal empirical interval; not a safety guarantee"
+  },
+  "official_test": {
+    "engines": 100,
+    "mae": 15.369727565238959,
+    "rmse": 19.622062205176082,
+    "nasa_score_motor_normalized": 625.3269526097953,
+    "signed_bias": -1.7774018687849023,
+    "overprediction_rate": 0.48,
+    "point_threshold_critical": {
+      "threshold": 30.0,
+      "precision": 1.0,
+      "recall": 0.48,
+      "f1": 0.6486486486486487,
+      "true_positive": 12,
+      "false_positive": 0,
+      "false_negative": 13
+    },
+    "nominal_interval": {
+      "target_coverage": 0.9,
+      "observed_coverage": 0.89,
+      "mean_width": 60.62313979736193
+    }
+  },
+  "integrity": {
+    "data_manifest_sha256": "3aba2c041982dc16afde1437f555cebe4c59748185f6ef744bcc32b5d96f03bd",
+    "model_lock_sha256": "32e5e7a421ad8ccb81fff4e8b8c17957f49fa855954b27e4e4b16219634af829",
+    "evaluation_manifest_sha256": "0bf55e414cb068b01e960d627ae3cc1c58183c9a46aae09738e0850e1d1c5a44"
+  },
+  "retired_scope": {
+    "reason": "No reviewed public source supplied event-level maintenance duration, technicians, bays, parts, operating demand, and cost in one defensible aviation dataset.",
+    "removed": [
+      "invented operational scenario",
+      "maintenance policy and cost comparison",
+      "resource-constrained schedule",
+      "capacity what-if analysis"
+    ],
+    "research_record": "docs/real_data_scope.md"
+  },
+  "boundaries": [
+    "FD001 is a simulated benchmark, not operational fleet telemetry.",
+    "Official test labels were opened only after the model lock was written and validated.",
+    "Point-threshold critical metrics use prediction <= 30; interface risk bands use interval_low.",
+    "The public bundle contains aggregate evidence only; it does not redistribute NASA rows or model binaries.",
+    "The active project produces no operational maintenance schedule or cost result."
+  ]
+}

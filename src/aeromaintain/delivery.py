@@ -1,4 +1,4 @@
-"""End-to-end delivery orchestration and immutable run reporting."""
+"""End-to-end RUL evaluation orchestration and immutable run reporting."""
 
 from __future__ import annotations
 
@@ -16,11 +16,10 @@ from aeromaintain.data import PrepareResult, prepare_fd001
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.models import evaluate_locked, train_and_lock
 from aeromaintain.models.rul import EvaluationResult, TrainResult
-from aeromaintain.optimization import OptimizationResult, optimize_run
 
 
 class DeliveryError(RuntimeError):
-    """Raised when an M4 delivery contract cannot be completed."""
+    """Raised when the RUL delivery contract cannot be completed."""
 
 
 @dataclass(frozen=True)
@@ -36,7 +35,6 @@ class PipelineResult:
 PrepareStep = Callable[..., PrepareResult]
 TrainStep = Callable[..., TrainResult]
 EvaluationStep = Callable[..., EvaluationResult]
-OptimizationStep = Callable[..., OptimizationResult]
 LoadStep = Callable[[Path, str], AppArtifacts]
 
 
@@ -70,12 +68,12 @@ def _atomic_replace(path: Path, payload: bytes) -> None:
 def _report_payload(artifacts: AppArtifacts) -> dict[str, Any]:
     metrics = artifacts.metrics
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "run_id": artifacts.run_id,
         "status": "pipeline_complete",
         "scope": (
-            "Educational NASA C-MAPSS FD001 prototype with synthetic operational "
-            "and cost assumptions; not an airworthiness or production-fleet system."
+            "Educational evaluation on NASA's simulated C-MAPSS FD001 benchmark; "
+            "not an airworthiness or production-fleet system."
         ),
         "model": {
             "champion": artifacts.model_lock["champion"]["kind"],
@@ -91,34 +89,28 @@ def _report_payload(artifacts: AppArtifacts) -> dict[str, Any]:
             "critical_rul": metrics["critical_rul"],
             "nominal_empirical_interval": metrics["nominal_empirical_interval"],
         },
-        "policy_comparison": artifacts.policy_comparison.to_dict(orient="records"),
-        "capacity_comparison": artifacts.capacity_comparison.to_dict(orient="records"),
-        "truth_boundary": (
-            "Official true RUL is excluded from scenario generation, policies, "
-            "solver inputs, and application decision views."
+        "label_boundary": (
+            "Official test RUL is opened only after model lock and is excluded "
+            "from the application review table."
+        ),
+        "retired_scope": (
+            "Synthetic maintenance resources, costs, policies, and schedules "
+            "are not part of the active product."
         ),
     }
 
 
 def _report_html(report: dict[str, Any]) -> bytes:
     official = report["official_test"]
-    policy_rows = "".join(
-        "<tr>"
-        f"<td>{escape(str(row['policy']))}</td>"
-        f"<td>{escape(str(row['solver_status']))}</td>"
-        f"<td>{int(row['scheduled_maintenance'])}</td>"
-        f"<td>{int(row['due_deferrals'])}</td>"
-        f"<td>{int(row['total_synthetic_cost_units'])}</td>"
-        "</tr>"
-        for row in report["policy_comparison"]
-    )
+    critical = official["critical_rul"]
+    interval = official["nominal_empirical_interval"]
     html = f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>AeroMaintain AI run report</title>
+  <title>AeroMaintain AI RUL report</title>
   <style>
-    body {{ font: 16px/1.5 system-ui; margin: 2rem auto; max-width: 960px; }}
+    body {{ font: 16px/1.5 system-ui; margin: 2rem auto; max-width: 760px; }}
     table {{ border-collapse: collapse; width: 100%; }}
     th, td {{ border: 1px solid #cbd5e1; padding: .55rem; text-align: left; }}
     .warning {{ background: #fff7ed; border-left: 5px solid #f97316; padding: 1rem; }}
@@ -128,19 +120,20 @@ def _report_html(report: dict[str, Any]) -> bytes:
   <h1>AeroMaintain AI — {escape(report["run_id"])}</h1>
   <p class="warning">{escape(report["scope"])}</p>
   <h2>Locked official-test result</h2>
-  <ul>
-    <li>MAE: {official["mae"]:.6f}</li>
-    <li>RMSE: {official["rmse"]:.6f}</li>
-    <li>Motor-normalized NASA score:
-      {official["nasa_score_motor_normalized"]:.6f}</li>
-  </ul>
-  <h2>Decision comparison</h2>
   <table>
-    <thead><tr><th>Policy</th><th>Status</th><th>Scheduled</th>
-      <th>Due deferrals</th><th>Synthetic total cost</th></tr></thead>
-    <tbody>{policy_rows}</tbody>
+    <tbody>
+      <tr><th>Engines</th><td>{int(official["engines"])}</td></tr>
+      <tr><th>MAE</th><td>{official["mae"]:.6f}</td></tr>
+      <tr><th>RMSE</th><td>{official["rmse"]:.6f}</td></tr>
+      <tr><th>Motor-normalized NASA score</th>
+        <td>{official["nasa_score_motor_normalized"]:.6f}</td></tr>
+      <tr><th>Critical recall</th><td>{critical["recall"]:.2%}</td></tr>
+      <tr><th>Observed interval coverage</th>
+        <td>{interval["observed_official_test_coverage"]:.2%}</td></tr>
+    </tbody>
   </table>
-  <p>{escape(report["truth_boundary"])}</p>
+  <p>{escape(report["label_boundary"])}</p>
+  <p>{escape(report["retired_scope"])}</p>
 </body>
 </html>
 """
@@ -169,23 +162,14 @@ def _finalize_run(
 
     manifest["status"] = "pipeline_complete"
     manifest["pipeline"] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "status": "complete",
-        "stages": [
-            "prepare",
-            "train_and_lock",
-            "evaluate_locked",
-            "optimize",
-            "report",
-        ],
+        "stages": ["prepare", "train_and_lock", "evaluate_locked", "report"],
         "artifacts": {
             "report.json": hashlib.sha256(report_json).hexdigest(),
             "report.html": hashlib.sha256(report_html).hexdigest(),
             "official_test/evaluation_manifest.json": sha256_file(
                 run_dir / "official_test" / "evaluation_manifest.json"
-            ),
-            "optimization/manifest.json": sha256_file(
-                run_dir / "optimization" / "manifest.json"
             ),
         },
     }
@@ -206,10 +190,9 @@ def run_pipeline(
     prepare_step: PrepareStep = prepare_fd001,
     train_step: TrainStep = train_and_lock,
     evaluation_step: EvaluationStep = evaluate_locked,
-    optimization_step: OptimizationStep = optimize_run,
     load_step: LoadStep = load_verified_run,
 ) -> PipelineResult:
-    """Run prepare through report without overwriting an existing run."""
+    """Run prepare through a locked evaluation report without overwriting a run."""
     root = project_root.resolve()
     if not run_id or Path(run_id).name != run_id:
         raise DeliveryError("run_id must be one safe path component")
@@ -220,7 +203,6 @@ def run_pipeline(
         prepare_step(root, archive_path=archive_path)
         train_step(root, run_id=run_id)
         evaluation_step(root, run_id=run_id)
-        optimization_step(root, run_id=run_id)
         return _finalize_run(root, run_id, load_step=load_step)
     except DeliveryError:
         raise
