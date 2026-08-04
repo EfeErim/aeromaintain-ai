@@ -93,10 +93,6 @@ def _report_payload(artifacts: AppArtifacts) -> dict[str, Any]:
             "Official test RUL is opened only after model lock and is excluded "
             "from the application review table."
         ),
-        "retired_scope": (
-            "Synthetic maintenance resources, costs, policies, and schedules "
-            "are not part of the active product."
-        ),
     }
 
 
@@ -133,7 +129,6 @@ def _report_html(report: dict[str, Any]) -> bytes:
     </tbody>
   </table>
   <p>{escape(report["label_boundary"])}</p>
-  <p>{escape(report["retired_scope"])}</p>
 </body>
 </html>
 """

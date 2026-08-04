@@ -17,9 +17,6 @@ simulated-data boundary easy to find.
 - Limit alert colors to risk meaning and use standard Streamlit components.
 - Require an explicit verified run and expose only `risk_ranking.csv` for
   download; official true RUL is not part of the review table.
-- Do not show maintenance jobs, resources, costs, policy comparisons, solver
-  statuses, or capacity controls because the repository has no defensible real
-  operational dataset for them.
 
 The tracked screenshots are captured from the verified reference run after the
 page finishes rendering.

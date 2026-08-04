@@ -30,10 +30,6 @@ after model selection. Official test labels are opened only after
 `model_lock.json` and every referenced file pass hash validation. The public
 review table deliberately excludes `rul_true`.
 
-The project does not create operational maintenance fields or a schedule. This
-removes the previous boundary where predictions were combined with invented
-resources, durations, costs, and policies.
-
 ## Run state
 
 Model training creates a new run and refuses an existing ID. Evaluation adds a

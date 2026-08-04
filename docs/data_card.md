@@ -127,5 +127,4 @@ scientific misuse and overclaiming rather than personal privacy.
 
 Known limitations include one operating condition, one modeled degradation
 mode, simulated sensor noise, a fixed historical benchmark, and no real
-maintenance resource or cost information. The active project does not invent
-those missing operational fields or produce a maintenance schedule.
+maintenance resource or cost information.

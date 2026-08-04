@@ -228,7 +228,7 @@ def test_small_fixture_pipeline_completes_evaluation_and_report(
         "report",
     ]
     report = json.loads((result.run_dir / "report.json").read_text(encoding="utf-8"))
-    assert report["retired_scope"].startswith("Synthetic maintenance resources")
+    assert "retired_scope" not in report
     assert result.report_path.is_file()
     load_verified_run(tmp_path, "fixture")
 

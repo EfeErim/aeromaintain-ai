@@ -34,14 +34,6 @@ critical engines. The interface risk bands instead use the empirical interval
 lower bound. That interval is not a safety guarantee and its observed coverage
 was one percentage point below the nominal target.
 
-## Active result boundary
-
-The repository no longer reports maintenance policies, synthetic costs,
-capacity sensitivity, or a CP-SAT schedule. No reviewed public source supplied
-the complete operational schema required to replace those invented values.
-See [`real_data_scope.md`](real_data_scope.md) for the source review and scope
-decision.
-
 ## Screenshots
 
 - [Overview](screenshots/overview.png)

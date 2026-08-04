@@ -18,8 +18,8 @@ maintenance-approval, production-readiness, or real-fleet system.
 - explain model behavior with standardized Ridge coefficients; and
 - review one locked official-test evaluation.
 
-It must not be used for dispatch, safety, certification, real maintenance
-approval, staffing, parts planning, cost estimation, or resource scheduling.
+It must not be used for dispatch, safety, certification, or real maintenance
+approval.
 
 ## Data and split
 
@@ -70,10 +70,6 @@ causality or component diagnosis. FD001 contains one simulated operating
 condition and one simulated fault mode. Critical recall is 0.48, observed
 interval coverage is below target, and neither result establishes performance
 under real distribution shift.
-
-The project deliberately produces no maintenance resource, duration, cost, or
-schedule output. Those fields were removed when no coherent public operational
-dataset could replace the earlier invented scenario.
 
 ## Reproducibility and integrity
 
