@@ -16,18 +16,42 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            constraints/python311-tested.txt
 
       - name: Install package and development tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -c constraints/python311-tested.txt -e ".[dev]"
+
+      - name: Package health
+        run: |
+          python -m pip check
+          aeromaintain doctor --project-root .
+
+      - name: Synthetic delivery smoke
+        run: |
+          pytest -q \
+            tests/test_app_delivery.py::test_small_fixture_pipeline_completes_all_stages_and_report \
+            tests/test_app_delivery.py::test_streamlit_small_fixture_renders_all_pages
+
+      - name: Raw-data exclusion
+        shell: bash
+        run: |
+          tracked="$(git ls-files data/raw data/processed artifacts runs)"
+          if [ -n "$tracked" ]; then
+            echo "Generated or raw data is tracked:"
+            echo "$tracked"
+            exit 1
+          fi
 
       - name: Ruff lint
         run: ruff check .

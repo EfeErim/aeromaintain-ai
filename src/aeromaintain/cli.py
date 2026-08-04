@@ -60,6 +60,7 @@ def collect_doctor_checks(
     ]
     package_available = importlib.util.find_spec("aeromaintain") is not None
     writable_root = project_root.is_dir() and os.access(project_root, os.W_OK)
+    local_directories_ready = not missing_directories or writable_root
 
     return (
         DoctorCheck(
@@ -83,10 +84,15 @@ def collect_doctor_checks(
         ),
         DoctorCheck(
             "local directories",
-            not missing_directories,
+            local_directories_ready,
             "raw, processed, and artifacts directories found"
             if not missing_directories
-            else f"missing: {', '.join(missing_directories)}",
+            else (
+                "created on first run: " + ", ".join(missing_directories)
+                if writable_root
+                else "missing and project root is not writable: "
+                + ", ".join(missing_directories)
+            ),
         ),
         DoctorCheck(
             "project root",

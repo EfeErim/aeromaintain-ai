@@ -1,9 +1,9 @@
 """RUL modeling components."""
 
+from aeromaintain.models.evaluation import evaluate_locked
 from aeromaintain.models.rul import (
     ModelingConfig,
     ModelingError,
-    evaluate_locked,
     train_and_lock,
 )
 

@@ -6,7 +6,6 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from aeromaintain.cli import app, collect_doctor_checks
-from aeromaintain.config import REQUIRED_LOCAL_DATA_DIRS
 from aeromaintain.data import DataPipelineError, PrepareResult
 from aeromaintain.models import ModelingError
 from aeromaintain.models.rul import EvaluationResult, TrainResult
@@ -18,8 +17,6 @@ runner = CliRunner()
 
 def test_doctor_reports_a_healthy_repository(tmp_path: Path) -> None:
     shutil.copytree(REPOSITORY_ROOT / "configs", tmp_path / "configs")
-    for directory in REQUIRED_LOCAL_DATA_DIRS:
-        (tmp_path / directory).mkdir(parents=True)
 
     result = runner.invoke(
         app,
@@ -29,6 +26,7 @@ def test_doctor_reports_a_healthy_repository(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "[PASS] python:" in result.output
     assert "[PASS] package:" in result.output
+    assert "created on first run" in result.output
     assert "Summary: 5/5 checks passed" in result.output
 
 
@@ -49,8 +47,8 @@ def test_doctor_reports_missing_project_contract(tmp_path: Path) -> None:
 
     assert not checks_by_name["configs"].passed
     assert "project.yaml" in checks_by_name["configs"].detail
-    assert not checks_by_name["local directories"].passed
-    assert "data/raw" in checks_by_name["local directories"].detail
+    assert checks_by_name["local directories"].passed
+    assert "created on first run" in checks_by_name["local directories"].detail
 
 
 def test_prepare_reports_success(monkeypatch, tmp_path: Path) -> None:

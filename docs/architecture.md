@@ -18,13 +18,19 @@ The package keeps orchestration separate from reusable domain logic:
 
 - `data/pipeline.py` verifies and prepares FD001;
 - `features/causal.py` creates past-and-current-only rolling features;
-- `models/rul.py` selects, calibrates, persists, locks, and evaluates the model;
+- `models/rul.py` selects, calibrates, persists, and locks the model;
+- `models/evaluation.py` validates that lock before opening official labels;
 - `optimization/maintenance.py` generates synthetic scenarios, evaluates
   baseline policies, and solves the capacity-constrained schedule;
 - `delivery.py` runs prepare through report and marks completion only at the end;
 - `app/artifacts.py` verifies the hash chain and removes true-RUL fields from
   decision views; and
 - `app/main.py` renders the four-page Streamlit interface.
+
+`runtime.py` records the interpreter, platform, installed distributions, and
+tested-constraints hash in each new model lock and run manifest. The constraints
+reduce direct dependency drift without adding a deployment orchestration
+platform.
 
 ## Trust boundaries
 
