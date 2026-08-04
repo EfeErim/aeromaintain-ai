@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aeromaintain-ai"
 version = "0.1.0"
-description = "Educational RUL prediction and synthetic maintenance scheduling prototype"
+description = "Educational NASA FD001 remaining-useful-life evaluation prototype"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 license = { file = "LICENSE" }
@@ -26,7 +26,6 @@ classifiers = [
 dependencies = [
   "joblib>=1.4.2",
   "numpy>=1.26.4",
-  "ortools>=9.11.4210",
   "pandas>=2.2.3",
   "plotly>=5.24.1",
   "pyarrow>=18.1.0",

@@ -2,165 +2,143 @@
 
 [![CI](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml)
 
-RUL prediction and synthetic maintenance scheduling with NASA C-MAPSS FD001.
+Bir motorun sensör geçmişine bakarak kaç çalışma çevrimi ömrü kaldığını tahmin
+edebilir miyiz? AeroMaintain AI bu soruyu, NASA'nın simülasyon tabanlı C-MAPSS
+FD001 benchmark'ı üzerinde inceliyor.
 
-AeroMaintain AI is an educational decision-support prototype built on NASA's
-simulated C-MAPSS FD001 dataset. It predicts remaining useful life (RUL), then
-uses the locked predictions in a capacity-constrained maintenance schedule.
+Proje bir bakım planlama sistemi değil. Çıktısı; her test motoru için kalan
+faydalı ömür (RUL) tahmini, ampirik tahmin aralığı, risk sırası ve modelin hangi
+özelliklere ağırlık verdiğini gösteren yerel bir inceleme ekranıdır.
 
-> This is not an airworthiness, maintenance-approval, or production fleet
-> system. FD001 is simulated, and every staffing, bay, parts, duration, demand,
-> and cost assumption is synthetic.
+> FD001 gerçek uçak filosundan toplanmış veri değildir. Bu çalışma eğitim ve
+> portföy amaçlıdır; uçuşa elverişlilik, bakım onayı veya gerçek filo kararı için
+> kullanılamaz.
 
-## Project scope
+## Okuyunca ne göreceksiniz?
 
-The project covers one path from sensor history to a maintenance plan:
+Proje baştan sona şu akışı uygular:
 
 ```text
-Sensor history
-    → leakage-resistant RUL model
-    → nominal prediction interval and risk band
-    → synthetic fleet and resource scenario
-    → constraint-checked CP-SAT schedule
-    → decision interface
+NASA FD001 arşivini doğrula
+    → motor bazında ayrılmış veriyi hazırla
+    → Ridge ve XGBoost adaylarını aynı protokolle karşılaştır
+    → modeli ve kalibrasyonu kilitle
+    → ancak bundan sonra resmî test etiketlerini aç
+    → sonuçları ve motor risk sırasını incele
 ```
 
-Three rules shape the implementation:
+Streamlit uygulaması iki sayfadan oluşur:
 
-- engines, not individual cycle rows, define model splits and validation folds;
-- official test RUL is unavailable to model selection and maintenance planning;
-- the application verifies the model, evaluation, optimization, and report
-  hash chain before showing a result.
+- **Overview:** kilitli test sonuçları, risk dağılımı ve deney kimliği;
+- **Engine risk:** motor sırası, RUL aralığı, sensör geçmişi ve Ridge katsayıları.
 
-The Streamlit app has four pages for fleet risk, engine review, the maintenance
-plan, and policy/capacity comparison.
-
-## Reference run
-
-The reference run `m4-fd001-seed42-20260729` completed the full
-prediction-to-decision pipeline. Ridge remained the champion under the
-predefined selection rule.
-
-### Prediction quality
-
-| Metric | Official test result |
-|---|---:|
-| Test engines | 100 |
-| MAE | 15.37 cycles |
-| RMSE | 19.62 cycles |
-| Motor-normalized NASA score | 625.33 |
-| Nominal interval | 90% |
-| Observed interval coverage | 89% |
-| Critical-RUL precision | 100% |
-| Critical-RUL recall | 48% |
-
-At the fixed threshold, the model found 48% of the truly critical engines. The
-empirical interval covered 89% of the official test cases against a nominal 90%
-target.
-
-### Maintenance decision
-
-The planning experiment selected the 20 engines with the lowest interval lower
-bounds and compared four policies under the same synthetic scenario.
-
-| Policy | Scheduled | Due deferrals | Retrospective failures | Synthetic cost |
-|---|---:|---:|---:|---:|
-| Reactive | 0 | 20 | 20 | 10,000 |
-| Fixed 90 | 13 | 7 | 18 | 10,349 |
-| Predicted RUL 30 | 16 | 4 | 18 | 10,662 |
-| **CP-SAT** | **17** | **3** | **13** | **8,287** |
-
-The CP-SAT plan satisfied the modeled team, bay, parts, operating-demand, and
-horizon constraints. Its status was `FEASIBLE`, not `OPTIMAL`; the solver did
-not prove that no better plan exists. Failure counts are retrospective only:
-true test RUL is joined after each schedule is frozen and is never available to
-the planner.
-
-Capacity sensitivity showed the expected trade-off:
-
-| Scenario | Bays | Minimum demand | Scheduled | Due deferrals |
-|---|---:|---:|---:|---:|
-| Constrained | 1 | 90% | 10 | 10 |
-| Base | 2 | 80% | 17 | 3 |
-| Expanded | 3 | 70% | 19 | 1 |
-
-[Read the full result report](docs/results.md).
-
-## Application
-
-| Fleet overview | Engine risk |
+| Overview | Engine risk |
 |---|---|
-| [![Fleet overview](docs/screenshots/overview.png)](docs/screenshots/overview.png) | [![Engine risk](docs/screenshots/engine-health.png)](docs/screenshots/engine-health.png) |
-| **Maintenance plan** | **Policy analysis** |
-| [![Maintenance plan](docs/screenshots/maintenance-schedule.png)](docs/screenshots/maintenance-schedule.png) | [![Policy analysis](docs/screenshots/policy-comparison.png)](docs/screenshots/policy-comparison.png) |
+| [![Overview](docs/screenshots/overview.png)](docs/screenshots/overview.png) | [![Engine risk](docs/screenshots/engine-health.png)](docs/screenshots/engine-health.png) |
 
-Solver status, deferred work, the synthetic-data warning, and the run ID remain
-visible in the interface.
+## Veri ve deney tasarımı
 
-## Implementation
+FD001; 100 eğitim ve 100 test motoruna ait, simüle edilmiş run-to-failure
+serileridir. Her satır bir motor çevrimindeki üç çalışma ayarını ve 21 sensör
+değerini içerir.
 
-- Causal rolling features use only the current and earlier cycles.
-- Preprocessing is fitted separately inside each engine-grouped fold.
-- The champion model, preprocessing, calibration values, and hashes are locked
-  before official test labels are read.
-- The optimizer receives predictions and synthetic planning fields, never true
-  test RUL.
-- CP-SAT models team, bay, parts, operating-demand, duration, and horizon
-  constraints. No-solution states return no schedule.
-- The app loads one named completed run and checks its artefact hashes.
-- Each new model lock records the Python, platform, installed distribution
-  versions, and tested-constraints hash used to create it.
+Proje şu sızıntı kontrollerini uygular:
 
-## Repository contents
+- ayrım ve çapraz doğrulama satırla değil motorla yapılır;
+- rolling özellikler yalnızca mevcut ve geçmiş çevrimleri kullanır;
+- ön işleme her fold'un yalnızca eğitim bölümünde öğrenilir;
+- 20 kalibrasyon motoru model seçiminden ayrıdır;
+- resmî test RUL etiketleri `model_lock.json` oluşmadan okunmaz;
+- mevcut run klasörlerinin üzerine yazılmaz ve çıktı hash'leri doğrulanır.
 
-The repository includes source code, configuration, tests, aggregate results,
-method notes, model limitations, and four application screenshots:
+Geliştirme karşılaştırmasında hedef ortalaması, Ridge ve sınırlandırılmış bir
+XGBoost araması kullanıldı. XGBoost'un Ridge'e göre RMSE iyileşmesi `%1,76` ile
+önceden belirlenen `%5` eşiğinin altında kaldığı ve NASA skoru kötüleştiği için
+Ridge referans model olarak seçildi.
 
-- [Reference run results](docs/results.md)
-- [Model card](docs/model_card.md)
-- [System architecture](docs/architecture.md)
-- [Optimization formulation](docs/optimization.md)
-- [FD001 data card](docs/data_card.md)
-- [Research basis](docs/research.md)
+## Referans sonuç
 
-Raw NASA data, derived row-level tables, trained model binaries, and full run
-directories are excluded. They are generated locally; NASA's dataset page does
-not specify a redistribution license. The committed reports contain aggregate
-results only.
+Kilitli `m4-fd001-seed42-20260729` koşusu, 100 resmî FD001 test motorunda şu
+sonuçları verdi:
 
-## Limitations
+| Metrik | Sonuç |
+|---|---:|
+| MAE | 15,37 çevrim |
+| RMSE | 19,62 çevrim |
+| Motor-normalize NASA skoru | 625,33 |
+| Hedef / gözlenen aralık kapsaması | %90 / %89 |
+| `prediction <= 30` kritik precision | %100 |
+| `prediction <= 30` kritik recall | %48 |
 
-- FD001 represents one simulated operating condition and one simulated fault
-  mode; it is not operational fleet telemetry.
-- The nominal empirical interval is not a safety guarantee.
-- Critical-RUL recall is 48% on the fixed official test set.
-- All maintenance resources, durations, demand, and costs are synthetic.
-- `cost_units` are dimensionless comparison values, not currency.
-- The release schedule is feasible but not proven optimal.
-- Results do not establish performance under real distribution shift.
+`%48` recall önemli bir zayıflıktır: nokta tahmin eşiği, gerçekten kritik 25
+motorun 13'ünü kaçırdı. Arayüz bu yüzden risk sırasını daha temkinli olan aralık
+alt sınırıyla kurar. Bu aralık da güvenlik garantisi değildir.
 
-## Run locally
+[Ayrıntılı sonuçlar](docs/results.md) ve
+[makinece okunabilir toplu kanıt](docs/reference_evidence.json) repoda yer alır.
 
-With Python `>=3.11,<3.12`, install the tested direct-dependency versions, then
-launch a named run:
+## Neden çizelgeleme yok?
+
+İlk sürümde bakım süresi, teknisyen, hangar, parça, kapasite ve maliyet alanları
+uydurulmuş değerlerle oluşturuluyordu. Araştırmada gerçek uçuş ve bakım olayları
+içeren kaynaklar bulundu; ancak aynı olaylar için bu operasyonel alanları birlikte
+sağlayan, savunulabilir bir açık veri seti bulunamadı. Bu nedenle sentetik senaryo,
+maliyet/politika karşılaştırmaları ve CP-SAT bakım çizelgesi aktif kapsamdan
+çıkarıldı. Ayrıntılı kaynak ve karar kaydı için
+[gerçek veri kapsam incelemesine](docs/real_data_scope.md) bakın.
+
+NGAFID gibi gerçek uçuş verileri değerli bir sonraki çalışma olabilir; fakat
+hedefi, veri hacmi ve problem tanımı FD001 RUL regresyonundan farklıdır. Bu repoda
+iki ayrı problemi sessizce birbirine karıştırmak yerine mevcut benchmark'ın
+sınırları açık tutulur.
+
+## Yerelde çalıştırma
+
+Python `>=3.11,<3.12` gerekir. PowerShell'de:
 
 ```powershell
+git clone https://github.com/EfeErim/aeromaintain-ai.git
+cd aeromaintain-ai
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 python -m pip install -c constraints/python311-tested.txt -e .
+aeromaintain doctor
 aeromaintain pipeline --run-id fd001-demo
 aeromaintain app --run-id fd001-demo
 ```
 
-The pipeline verifies and prepares FD001, trains and locks the model, performs
-official evaluation, builds the synthetic optimization scenario, solves the
-maintenance policies, and writes the final report. Existing run directories
-are never overwritten.
+`pipeline`, NASA arşivi yerelde yoksa indirir; boyutunu ve SHA-256 değerini
+doğrular, veriyi hazırlar, modeli seçip kilitler, resmî değerlendirmeyi çalıştırır
+ve raporu üretir. Ham NASA verileri, satır düzeyindeki türev tablolar, model
+dosyaları ve run klasörleri Git'e eklenmez.
 
-The constraints pin the project's direct dependencies without turning this
-portfolio prototype into a platform-specific deployment bundle. Every run
-records the versions actually imported, so transitive resolver changes remain
-visible in its manifest.
+Kalite kapısı:
 
-## License
+```powershell
+python -m pip install -c constraints/python311-tested.txt -e ".[dev]"
+ruff check .
+ruff format --check .
+pytest --cov=src/aeromaintain --cov-fail-under=80
+```
 
-Project code and documentation are licensed under the MIT License. This does
-not grant rights to redistribute NASA source data.
+## Belgeler
+
+- [Referans sonuçlar](docs/results.md)
+- [RUL model kartı](docs/model_card.md)
+- [FD001 veri kartı](docs/data_card.md)
+- [Mimari ve güven sınırları](docs/architecture.md)
+- [Araştırma temeli](docs/research.md)
+- [Gerçek veri kapsam incelemesi](docs/real_data_scope.md)
+
+## Sınırlar
+
+- FD001 tek bir simüle çalışma koşulu ve tek bir simüle arıza modu içerir.
+- Sonuçlar gerçek filo telemetrisine genellenemez.
+- Nominal ampirik aralık güvenlik garantisi değildir.
+- Nokta tahmininin kritik-RUL recall değeri sabit test setinde yalnızca `%48`'dir.
+- Proje bakım kaynağı, maliyet veya uygulanabilir çizelge üretmez.
+
+## Lisans
+
+Proje kodu ve belgeleri MIT lisanslıdır. Bu lisans NASA kaynak verisini yeniden
+dağıtma hakkı vermez.

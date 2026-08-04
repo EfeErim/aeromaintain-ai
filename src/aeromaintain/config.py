@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 PROJECT_ROOT_ENV = "AEROMAINTAIN_PROJECT_ROOT"
-REQUIRED_CONFIG_FILES = ("project.yaml", "scenario.yaml")
+REQUIRED_CONFIG_FILES = ("project.yaml",)
 REQUIRED_LOCAL_DATA_DIRS = ("data/raw", "data/processed", "artifacts")
 
 

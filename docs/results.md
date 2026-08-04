@@ -2,17 +2,17 @@
 
 ## Run
 
-These results come from the local immutable run
-`m4-fd001-seed42-20260729`, produced on 2026-07-29.
+The local immutable run `m4-fd001-seed42-20260729` was produced on 2026-07-29.
+Its model/data-derived files are Git-ignored; sanitized aggregate evidence is
+stored in [`reference_evidence.json`](reference_evidence.json).
 
-The run is Git-ignored because it contains model and data-derived artefacts.
-Its final manifest status is `pipeline_complete`; report and source-manifest
-hashes are retained locally.
+## Development selection
 
-## RUL prediction
+Ridge remained champion under the fixed rule. The best XGBoost candidate reduced
+development RMSE by only `1.76396%`, below the required 5%, and had a worse
+motor-normalized NASA score. Official test results did not influence this choice.
 
-Ridge remained champion under the fixed selection rule. The independent M4 run
-reproduced the previously locked official-test metrics:
+## Locked official-test result
 
 | Metric | Result |
 |---|---:|
@@ -22,49 +22,30 @@ reproduced the previously locked official-test metrics:
 | Motor-normalized NASA score | 625.326953 |
 | Signed bias | -1.777402 |
 | Overprediction rate | 0.480000 |
-| Critical-RUL precision | 1.000000 |
-| Critical-RUL recall | 0.480000 |
-| Critical-RUL F1 | 0.648649 |
+| Point-threshold critical precision (`prediction <= 30`) | 1.000000 |
+| Point-threshold critical recall (`prediction <= 30`) | 0.480000 |
+| Point-threshold critical F1 (`prediction <= 30`) | 0.648649 |
 | Nominal interval coverage | 0.90 |
 | Observed official-test coverage | 0.89 |
 | Mean interval width | 60.623140 |
 
-The empirical interval is not a safety guarantee. Critical-RUL recall and the
-coverage shortfall are reported alongside the headline error metrics.
+The 0.48 critical recall means the point threshold missed 13 of 25 truly
+critical engines. The interface risk bands instead use the empirical interval
+lower bound. That interval is not a safety guarantee and its observed coverage
+was one percentage point below the nominal target.
 
-## Policy comparison
+## Active result boundary
 
-All operational and cost fields are synthetic. `cost_units` are not currency.
-
-| Policy | Scheduled | Due deferrals | Unplanned failures | Total synthetic cost |
-|---|---:|---:|---:|---:|
-| Reactive | 0 | 20 | 20 | 10,000 |
-| Fixed 90 | 13 | 7 | 18 | 10,349 |
-| Predicted RUL 30 | 16 | 4 | 18 | 10,662 |
-| CP-SAT | 17 | 3 | 13 | 8,287 |
-
-The base CP-SAT solver status was `FEASIBLE`; lexicographic optimality was
-unproven. It recorded zero operating-capacity shortfall, but still deferred
-three due jobs and retained 13 retrospective simulated failures.
-
-## Capacity sensitivity
-
-| Scenario | Bays | Minimum operating demand | Scheduled | Due deferrals | Unplanned failures | Total synthetic cost |
-|---|---:|---:|---:|---:|---:|---:|
-| Constrained | 1 | 90% | 10 | 10 | 17 | 9,542 |
-| Base | 2 | 80% | 17 | 3 | 13 | 8,287 |
-| Expanded | 3 | 70% | 19 | 1 | 12 | 8,081 |
-
-All three outcomes were `FEASIBLE` with unproven optimality. This table is a
-capacity sensitivity check, not a tuned policy recommendation.
+The repository no longer reports maintenance policies, synthetic costs,
+capacity sensitivity, or a CP-SAT schedule. No reviewed public source supplied
+the complete operational schema required to replace those invented values.
+See [`real_data_scope.md`](real_data_scope.md) for the source review and scope
+decision.
 
 ## Screenshots
 
 - [Overview](screenshots/overview.png)
 - [Engine risk](screenshots/engine-health.png)
-- [Maintenance plan](screenshots/maintenance-schedule.png)
-- [Policy analysis](screenshots/policy-comparison.png)
 
-All four pages were opened against the named run without browser-console
-errors. The Streamlit test fixture also covers every page and one validated
-capacity replan.
+Both pages load the named run through the same verified artefact loader used by
+the command-line smoke test.

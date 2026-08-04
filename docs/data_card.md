@@ -58,7 +58,6 @@ misordered, or schema-invalid rows.
 - educational RUL regression;
 - engine-grouped cross-validation and leakage-control demonstrations;
 - nominal empirical prediction-interval evaluation;
-- input to an explicitly synthetic maintenance-planning scenario; and
 - reproducible experiment runs.
 
 ## Out-of-scope and prohibited claims
@@ -68,7 +67,7 @@ misordered, or schema-invalid rows.
 - claims that model explanations identify physical causes;
 - claims that FD001 results generalize to other conditions, fault modes, engine
   types, or operational fleets; and
-- presenting synthetic costs or resources as company data.
+- maintenance resource, duration, parts, capacity, or cost decisions.
 
 ## Acquisition and integrity policy
 
@@ -108,8 +107,6 @@ does not relicense NASA data.
   hyperparameter search, and champion selection.
 - The evaluator may read official test labels only after `model_lock.json` is
   valid.
-- Optimizer inputs never contain true test RUL. True RUL is permitted only in a
-  retrospective evaluator after schedules are frozen.
 
 ## Target construction
 
@@ -130,5 +127,5 @@ scientific misuse and overclaiming rather than personal privacy.
 
 Known limitations include one operating condition, one modeled degradation
 mode, simulated sensor noise, a fixed historical benchmark, and no real
-maintenance resource or cost information. Every non-NASA operational field
-introduced later is synthetic and documented separately.
+maintenance resource or cost information. The active project does not invent
+those missing operational fields or produce a maintenance schedule.

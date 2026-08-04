@@ -9,7 +9,6 @@ from aeromaintain.cli import app, collect_doctor_checks
 from aeromaintain.data import DataPipelineError, PrepareResult
 from aeromaintain.models import ModelingError
 from aeromaintain.models.rul import EvaluationResult, TrainResult
-from aeromaintain.optimization import OptimizationError, OptimizationResult
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
@@ -147,44 +146,8 @@ def test_train_and_evaluate_report_modeling_failure(
     assert "Evaluation failed: fixture lock failure" in evaluated.output
 
 
-def test_optimize_reports_success(monkeypatch, tmp_path: Path) -> None:
-    result = OptimizationResult(
-        run_id="fixture",
-        output_dir=tmp_path / "runs" / "fixture" / "optimization",
-        policy_comparison=(
-            {
-                "policy": "cp_sat",
-                "solver_status": "FEASIBLE",
-                "due_deferrals": 1,
-                "late_days": 2,
-            },
-        ),
-        capacity_comparison=(),
-    )
-    monkeypatch.setattr(
-        "aeromaintain.cli.optimize_run",
-        lambda *args, **kwargs: result,
-    )
-
-    command = runner.invoke(
-        app,
-        ["optimize", "--run-id", "fixture", "--project-root", str(tmp_path)],
-    )
+def test_cli_does_not_expose_retired_optimization_command() -> None:
+    command = runner.invoke(app, ["--help"])
 
     assert command.exit_code == 0, command.output
-    assert "CP-SAT status=FEASIBLE; due deferrals=1; late days=2" in command.output
-
-
-def test_optimize_reports_failure(monkeypatch, tmp_path: Path) -> None:
-    def fail(*args, **kwargs):
-        raise OptimizationError("fixture optimization failure")
-
-    monkeypatch.setattr("aeromaintain.cli.optimize_run", fail)
-
-    command = runner.invoke(
-        app,
-        ["optimize", "--run-id", "fixture", "--project-root", str(tmp_path)],
-    )
-
-    assert command.exit_code == 1
-    assert "Optimization failed: fixture optimization failure" in command.output
+    assert "optimize" not in command.output.casefold()
