@@ -5,9 +5,8 @@ Checked: 2026-08-04
 ## Scope
 
 AeroMaintain AI evaluates RUL prediction on NASA's simulated C-MAPSS FD001
-benchmark. It does not convert predictions into an operational maintenance
-plan. The reason and real-data search are recorded in
-[`real_data_scope.md`](real_data_scope.md).
+benchmark through a reproducible, leakage-controlled model-selection and locked
+official-test workflow.
 
 ## Why FD001
 
@@ -42,4 +41,3 @@ but it does not represent real fleet telemetry.
 - Official test labels cannot influence selection, calibration, or thresholds.
 - Explanations are associational model descriptions.
 - The nominal interval is not a safety guarantee.
-- No operational maintenance data or decision is claimed.

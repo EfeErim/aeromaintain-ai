@@ -89,21 +89,10 @@
     "model_lock_sha256": "32e5e7a421ad8ccb81fff4e8b8c17957f49fa855954b27e4e4b16219634af829",
     "evaluation_manifest_sha256": "0bf55e414cb068b01e960d627ae3cc1c58183c9a46aae09738e0850e1d1c5a44"
   },
-  "retired_scope": {
-    "reason": "No reviewed public source supplied event-level maintenance duration, technicians, bays, parts, operating demand, and cost in one defensible aviation dataset.",
-    "removed": [
-      "invented operational scenario",
-      "maintenance policy and cost comparison",
-      "resource-constrained schedule",
-      "capacity what-if analysis"
-    ],
-    "research_record": "docs/real_data_scope.md"
-  },
   "boundaries": [
     "FD001 is a simulated benchmark, not operational fleet telemetry.",
     "Official test labels were opened only after the model lock was written and validated.",
     "Point-threshold critical metrics use prediction <= 30; interface risk bands use interval_low.",
-    "The public bundle contains aggregate evidence only; it does not redistribute NASA rows or model binaries.",
-    "The active project produces no operational maintenance schedule or cost result."
+    "The public bundle contains aggregate evidence only; it does not redistribute NASA rows or model binaries."
   ]
 }

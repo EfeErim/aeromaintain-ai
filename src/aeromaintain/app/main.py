@@ -125,8 +125,8 @@ def _overview(artifacts) -> None:
         )
     )
     st.info(
-        "FD001 is a simulated NASA benchmark. This application reviews model "
-        "results; it does not create a maintenance resource or cost schedule."
+        "FD001 is a simulated NASA benchmark. Metrics shown here come from the "
+        "locked official-test evaluation."
     )
 
     risk_counts = (
