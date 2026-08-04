@@ -1,0 +1,21 @@
+# Direct runtime and development dependencies used by the verified Python 3.11
+# environment. Install through pyproject.toml with this file as a constraint;
+# transitive packages remain resolver-managed and are recorded in each run.
+joblib==1.5.3
+numpy==2.4.6
+ortools==9.15.6755
+pandas==3.0.5
+plotly==6.9.0
+pyarrow==24.0.0
+pydantic==2.13.4
+PyYAML==6.0.3
+scikit-learn==1.9.0
+shap==0.51.0
+streamlit==1.60.0
+typer==0.27.0
+xgboost==3.2.0
+
+# Development gate
+pytest==9.1.1
+pytest-cov==7.1.0
+ruff==0.16.0

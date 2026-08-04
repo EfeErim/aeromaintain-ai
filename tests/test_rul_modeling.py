@@ -58,6 +58,12 @@ def _sensor_frame(
 
 
 def _write_phase1_fixture(root: Path) -> None:
+    constraints = root / "constraints"
+    constraints.mkdir(parents=True)
+    (constraints / "python311-tested.txt").write_text(
+        "numpy==2.4.6\nscikit-learn==1.9.0\n",
+        encoding="utf-8",
+    )
     config_dir = root / "configs"
     config_dir.mkdir(parents=True)
     config = {
@@ -207,6 +213,15 @@ def test_train_lock_and_official_evaluation_are_reproducible(
     assert lock["official_test_evaluation"].startswith("not opened")
     assert lock["features"]["order"] == list(FEATURE_NAMES)
     assert lock["calibration"]["score_count"] == 2
+    assert lock["environment"]["python"]["version"].startswith("3.11")
+    assert lock["environment"]["packages"]["numpy"] == np.__version__
+    assert lock["environment"]["constraints"]["sha256"] == sha256_file(
+        tmp_path / "constraints" / "python311-tested.txt"
+    )
+    run_manifest = json.loads(
+        (result.run_dir / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert run_manifest["environment"] == lock["environment"]
     assert set(lock["development_engine_ids"]).isdisjoint(
         lock["calibration_engine_ids"]
     )

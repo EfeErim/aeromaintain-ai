@@ -1,5 +1,7 @@
 # AeroMaintain AI
 
+[![CI](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml)
+
 RUL prediction and synthetic maintenance scheduling with NASA C-MAPSS FD001.
 
 AeroMaintain AI is an educational decision-support prototype built on NASA's
@@ -35,7 +37,7 @@ plan, and policy/capacity comparison.
 
 ## Reference run
 
-The release-candidate run `m4-fd001-seed42-20260729` completed the full
+The reference run `m4-fd001-seed42-20260729` completed the full
 prediction-to-decision pipeline. Ridge remained the champion under the
 predefined selection rule.
 
@@ -106,6 +108,8 @@ visible in the interface.
 - CP-SAT models team, bay, parts, operating-demand, duration, and horizon
   constraints. No-solution states return no schedule.
 - The app loads one named completed run and checks its artefact hashes.
+- Each new model lock records the Python, platform, installed distribution
+  versions, and tested-constraints hash used to create it.
 
 ## Repository contents
 
@@ -137,10 +141,11 @@ results only.
 
 ## Run locally
 
-With Python `>=3.11,<3.12`, install the package and launch a named run:
+With Python `>=3.11,<3.12`, install the tested direct-dependency versions, then
+launch a named run:
 
 ```powershell
-python -m pip install -e .
+python -m pip install -c constraints/python311-tested.txt -e .
 aeromaintain pipeline --run-id fd001-demo
 aeromaintain app --run-id fd001-demo
 ```
@@ -149,6 +154,11 @@ The pipeline verifies and prepares FD001, trains and locks the model, performs
 official evaluation, builds the synthetic optimization scenario, solves the
 maintenance policies, and writes the final report. Existing run directories
 are never overwritten.
+
+The constraints pin the project's direct dependencies without turning this
+portfolio prototype into a platform-specific deployment bundle. Every run
+records the versions actually imported, so transitive resolver changes remain
+visible in its manifest.
 
 ## License
 

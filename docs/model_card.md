@@ -3,7 +3,7 @@
 ## Model summary
 
 AeroMaintain AI predicts remaining useful life (RUL) for the simulated NASA
-C-MAPSS FD001 test engines. The locked release-candidate champion is a Ridge
+C-MAPSS FD001 test engines. The locked reference champion is a Ridge
 regression pipeline trained with engine-equal sample weights and fold-local
 preprocessing over 403 causal features.
 
@@ -49,9 +49,9 @@ Features use the current row and earlier rows only:
 Imputation, constant-column removal, and Ridge scaling are fitted inside the
 active training fold. XGBoost can replace Ridge only when development RMSE
 improves by at least 5% without worsening the motor-normalized NASA score. The
-release candidate did not meet that fixed rule, so Ridge remained champion.
+reference run did not meet that fixed rule, so Ridge remained champion.
 
-## Release-candidate evaluation
+## Reference-run evaluation
 
 Run: `m4-fd001-seed42-20260729`
 
@@ -85,12 +85,12 @@ component diagnosis, or proof that a sensor causes degradation.
 - The nominal interval missed its nominal 0.90 coverage by 0.01 on this fixed
   test set.
 - Planning fields, resource limits, duration, demand, and costs are synthetic.
-- The CP-SAT release-candidate schedules are feasible but not proven optimal.
+- The CP-SAT reference-run schedules are feasible but not proven optimal.
 - The model does not estimate uncertainty under real distribution shift.
 
 ## Reproducibility and integrity
 
-The release-candidate model lock SHA-256 is
+The reference-run model lock SHA-256 is
 `32e5e7a421ad8ccb81fff4e8b8c17957f49fa855954b27e4e4b16219634af829`.
 `model_lock.json` records data, split, config, feature order, model, calibration,
 and artefact hashes. The official evaluator refuses a missing or changed lock.
