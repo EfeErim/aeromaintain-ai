@@ -1,6 +1,7 @@
 # AeroMaintain AI
 
 [![CI](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml)
+[![Open demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromaintain-ai-demo.streamlit.app/)
 
 AeroMaintain AI is a reproducible remaining-useful-life (RUL) evaluation project
 on NASA's simulated C-MAPSS turbofan benchmark. It turns multivariate engine sensor
@@ -72,7 +73,8 @@ The Streamlit application opens one explicitly selected, hash-verified run.
 - **Engine risk** presents the ranked engine list, RUL interval, sensor history, and
   model explanation.
 
-The hosted demo reads a [row-free bundle](demo/): NASA's dataset page specifies no
+The [hosted demo](https://aeromaintain-ai-demo.streamlit.app/) reads a
+[row-free bundle](demo/): NASA's dataset page specifies no
 license, so the bundle holds aggregate metrics and model outputs only, without
 source rows or true RUL.
 

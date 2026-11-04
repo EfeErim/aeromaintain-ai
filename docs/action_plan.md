@@ -16,17 +16,12 @@ Tarih: 2026-11-04
 | 5. Aralık | Tamam, hedef tutmadı | Kapsama korunuyor; genişlik 55,4 (hedef 45); CQR geçemedi |
 | 6. Belirsizlik | Tamam | 10 seed, bootstrap; lock hash farkının sebebi kanıtlandı |
 | 7. FD003 | Tamam | Temiz test RMSE 15,07 (12,61–17,50), tek açılış |
-| 8. Sunum | Kısmen | Bkz. aşağıdaki kalan işler |
+| 8. Sunum | Tamam | [Release](https://github.com/EfeErim/aeromaintain-ai/releases/tag/v0.2.0) ve [demo](https://aeromaintain-ai-demo.streamlit.app/) yayında |
 
 ### Sıradan sapma
 
 Plan 4. adımı 5. adımdan önce gösteriyordu, ama risk eşiği aralığa bağlı olduğu için
 ikisi birlikte belirlendi.
-
-### Kalan işler
-
-Bu işler hesap yetkisi gerektiriyor: commit ve `v0.2.0` etiketi, GitHub açıklaması,
-release ve Streamlit Community Cloud kurulumu.
 
 ## Amaç
 
