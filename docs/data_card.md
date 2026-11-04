@@ -1,10 +1,10 @@
-# FD001 Data Card
+# C-MAPSS Data Card
 
-Checked: 2026-07-29
+Checked: 2026-11-04. The project uses subsets FD001 and FD003.
 
 ## Dataset identity
 
-- Name: C-MAPSS Jet Engine Simulated Data, subset FD001
+- Name: C-MAPSS Jet Engine Simulated Data, subsets FD001 and FD003
 - Publisher: NASA Prognostics Center of Excellence
 - Dataset page:
   <https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data>
@@ -39,6 +39,13 @@ Each trajectory starts under normal operation with unknown initial wear and
 manufacturing variation. Training trajectories continue to simulated failure.
 Test trajectories stop earlier, and the separate label file records remaining
 cycles after the final observed test cycle.
+
+NASA characterizes FD003 as one operating condition and two degradation modes
+(high-pressure compressor and fan), with 100 training and 100 test engines. The pipeline
+requires 24,720 training rows, 16,596 test rows, and 100 official test RUL labels.
+
+FD001 test labels were seen before protocol v2 was designed. FD003 test labels opened
+once, by `fd003-v2-clean`, after the protocol was frozen.
 
 ## Schema
 
@@ -89,11 +96,16 @@ the test feature table.
 
 ## License and redistribution
 
-The NASA Open Data page currently displays `License not specified`. Therefore,
-the project does not grant redistribution rights for the source archive or
-extracted NASA members. Raw NASA data must not be committed to Git, attached to
-releases, or copied into test fixtures. Users acquire the archive directly from
-NASA and retain responsibility for confirming applicable terms.
+The NASA Open Data page displayed `License not specified` and access level `public`
+when rechecked on 2026-11-04. Therefore, the project does not grant redistribution
+rights for the source archive or extracted NASA members. Raw NASA data must not be
+committed to Git, attached to releases, or copied into test fixtures. Users acquire the
+archive directly from NASA and retain responsibility for confirming applicable terms.
+
+The hosted demo's `demo/` bundle holds aggregate metrics, model explanations, and
+model outputs per engine. It holds no sensor rows, settings, or true RUL values. It
+does list each test engine's observed cycle count, which derives from the data. This
+is a project judgment and not legal advice.
 
 The repository's MIT license applies to project code and documentation only; it
 does not relicense NASA data.
@@ -117,14 +129,15 @@ rul_true = engine_max_cycle - cycle
 rul_target = min(rul_true, 125)
 ```
 
-The `125` cap is a modeling assumption for the early healthy period, not a
-physical truth. Official test metrics use NASA's original uncapped labels.
+The `125` cap is a modeling assumption for the early healthy period, not a physical
+truth. Protocol v2 also tries `130` on development engines; `fd003-v2-clean` selected
+it. Official test metrics use NASA's original uncapped labels.
 
 ## Privacy, sensitivity, and known limitations
 
 The dataset is simulated and contains no personal data. Its principal risks are
 scientific misuse and overclaiming rather than personal privacy.
 
-Known limitations include one operating condition, one modeled degradation
-mode, simulated sensor noise, a fixed historical benchmark, and no real
+Known limitations include one operating condition per subset, one or two modeled
+degradation modes, simulated sensor noise, a fixed historical benchmark, and no real
 maintenance resource or cost information.

@@ -11,11 +11,26 @@ data:
   rul_cap: 125
   development_engines: 80
   calibration_engines: 20
+  datasets:
+    FD001:
+      test_status: previously_seen
+    FD003:
+      test_status: clean_single_open
 
 modeling:
   group_folds: 5
   critical_rul_threshold: 30
   nominal_interval_coverage: 0.90
+  xgboost_n_jobs: 8
+  scoring_draws: 200
+  scoring_rul_window: 150
+  sensitivity_windows: [130, 175, null]
+  inner_validation_fraction: 0.2
+  rul_cap_candidates: [125, 130]
+  cross_fit_folds: 10
+  interval_band_edges: [30, 60, 100]
+  interval_min_band_engines: 20
+  risk_recall_target: 0.95
 
 run:
   root: runs

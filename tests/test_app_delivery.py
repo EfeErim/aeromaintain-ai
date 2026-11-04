@@ -3,14 +3,21 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from aeromaintain.app import ArtifactValidationError, load_verified_run
+from aeromaintain.app import (
+    ArtifactValidationError,
+    export_public_bundle,
+    load_public_bundle,
+    load_verified_run,
+)
 from aeromaintain.data import PrepareResult
 from aeromaintain.data.pipeline import SENSOR_COLUMNS, sha256_file
 from aeromaintain.delivery import DeliveryError, run_pipeline
+from aeromaintain.evaluation import alert_rule_metrics
 from aeromaintain.models.rul import EvaluationResult, TrainResult
 
 
@@ -51,7 +58,14 @@ def _build_verified_run(root: Path, run_id: str = "fixture") -> Path:
     }
     _write_json(run_dir / "explanation.json", explanation)
     lock = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "protocol": {
+            "version": 2,
+            "document": "docs/protocol_v2.md",
+            "sha256": None,
+            "test_status": "previously_seen",
+            "label": "protocol v2, test previously seen",
+        },
         "run_id": run_id,
         "dataset": "FD001",
         "seed": 42,
@@ -72,7 +86,17 @@ def _build_verified_run(root: Path, run_id: str = "fixture") -> Path:
         "calibration": {
             "label": "nominal empirical interval; not a safety guarantee",
             "coverage": 0.9,
-            "q": 5.0,
+            "bands": [
+                {
+                    "upper_predicted_rul": None,
+                    "engines": 1,
+                    "rows": 1,
+                    "q_low": -5.0,
+                    "q_high": 5.0,
+                }
+            ],
+            "risk_threshold": 30.0,
+            "elevated_threshold": 60.0,
         },
         "artifacts": {
             "explanation.json": sha256_file(run_dir / "explanation.json"),
@@ -101,18 +125,26 @@ def _build_verified_run(root: Path, run_id: str = "fixture") -> Path:
             "risk_band": ["critical"],
         }
     ).to_parquet(official / "predictions.parquet", index=False)
+    fixture_rule = alert_rule_metrics(np.array([10.0]), np.array([9.5]))
     metrics = {
         "engines": 1,
         "mae": 0.5,
         "rmse": 0.5,
         "nasa_score_motor_normalized": 0.1,
         "critical_rul": {"precision": 1.0, "recall": 1.0, "f1": 1.0},
+        "alert_rules": {
+            "point_prediction": fixture_rule,
+            "interval_low": fixture_rule,
+        },
         "nominal_empirical_interval": {
             "nominal_coverage": 0.9,
             "observed_official_test_coverage": 1.0,
             "mean_width": 10.0,
+            "by_predicted_rul": {},
+            "by_true_rul": {},
             "label": "empirical prediction interval; not a safety guarantee",
         },
+        "bootstrap": {"intervals_95": {"rmse": [0.5, 0.5]}},
     }
     _write_json(official / "metrics.json", metrics)
     _write_json(official / "error_analysis.json", {"largest_absolute_errors": []})
@@ -188,16 +220,67 @@ def test_streamlit_small_fixture_renders_active_pages(
     assert tested.header[0].value == "Engine risk"
 
 
+def test_public_bundle_has_no_rows_or_truth_and_renders(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    _build_verified_run(tmp_path)
+    bundle = tmp_path / "bundle"
+    export_public_bundle(tmp_path, "fixture", bundle)
+
+    exported = (bundle / "risk_ranking.csv").read_text(encoding="utf-8")
+    run_payload = (bundle / "run.json").read_text(encoding="utf-8")
+    assert "rul_true" not in exported
+    assert "sensor_" not in exported
+    assert "sensor_history" not in run_payload
+    assert load_public_bundle(bundle).sensor_history.empty
+
+    monkeypatch.delenv("AEROMAINTAIN_RUN_ID", raising=False)
+    monkeypatch.setenv("AEROMAINTAIN_PUBLIC_BUNDLE", str(bundle))
+    script = (
+        Path(__file__).resolve().parents[1] / "src" / "aeromaintain" / "app" / "main.py"
+    )
+    tested = AppTest.from_file(str(script), default_timeout=30).run()
+    assert not tested.exception
+    tested.sidebar.radio[0].set_value("Engine risk")
+    tested.run()
+    assert not tested.exception
+    assert any("local-only" in item.value for item in tested.caption)
+
+    (bundle / "run.json").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(ArtifactValidationError, match="SHA-256 mismatch"):
+        load_public_bundle(bundle)
+
+
+def test_tracked_demo_entrypoint_renders_without_nasa_rows(monkeypatch) -> None:
+    root = Path(__file__).resolve().parents[1]
+    monkeypatch.delenv("AEROMAINTAIN_RUN_ID", raising=False)
+    monkeypatch.delenv("AEROMAINTAIN_PUBLIC_BUNDLE", raising=False)
+    tracked = "\n".join(
+        path.read_text(encoding="utf-8") for path in sorted((root / "demo").iterdir())
+    )
+    assert "rul_true" not in tracked
+    assert "sensor_history" not in tracked
+    assert "setting_1," not in tracked
+
+    tested = AppTest.from_file(str(root / "streamlit_app.py"), default_timeout=30).run()
+    assert not tested.exception
+    assert tested.header[0].value == "Overview"
+    tested.sidebar.radio[0].set_value("Engine risk")
+    tested.run()
+    assert not tested.exception
+
+
 def test_small_fixture_pipeline_completes_evaluation_and_report(
     tmp_path: Path,
 ) -> None:
     calls = []
 
-    def prepare(root, *, archive_path=None):
+    def prepare(root, *, dataset, archive_path=None):
         calls.append(("prepare", archive_path))
         return PrepareResult(root, 1, 1, 1, 0, {})
 
-    def train(root, *, run_id):
+    def train(root, *, run_id, dataset):
         calls.append(("train", run_id))
         run_dir = _build_verified_run(root, run_id)
         return TrainResult(run_id, run_dir, "ridge", 5.0, run_dir / "model_lock.json")
@@ -241,10 +324,10 @@ def test_pipeline_refuses_overwrite_and_does_not_mark_partial_complete(
     with pytest.raises(DeliveryError, match="already exists"):
         run_pipeline(tmp_path, run_id="existing")
 
-    def prepare(root, *, archive_path=None):
+    def prepare(root, *, dataset, archive_path=None):
         return PrepareResult(root, 1, 1, 1, 0, {})
 
-    def train(root, *, run_id):
+    def train(root, *, run_id, dataset):
         run_dir = root / "runs" / run_id
         run_dir.mkdir(parents=True)
         _write_json(

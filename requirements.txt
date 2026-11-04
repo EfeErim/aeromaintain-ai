@@ -1,0 +1,8 @@
+# Hosted demo only. Local work installs through pyproject.toml.
+numpy==2.4.6
+pandas==3.0.5
+plotly==6.9.0
+pyarrow==24.0.0
+PyYAML==6.0.3
+scikit-learn==1.9.0
+streamlit==1.60.0

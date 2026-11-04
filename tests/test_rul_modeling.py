@@ -8,9 +8,15 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
+from streamlit.testing.v1 import AppTest
 
 from aeromaintain.data.pipeline import SCHEMA, sha256_file
-from aeromaintain.evaluation import nasa_score, prediction_metrics
+from aeromaintain.evaluation import (
+    alert_rule_metrics,
+    nasa_score,
+    prediction_metrics,
+    wilson_interval,
+)
 from aeromaintain.features import (
     FEATURE_NAMES,
     FoldPreprocessor,
@@ -18,11 +24,12 @@ from aeromaintain.features import (
 )
 from aeromaintain.features.causal import FeatureContractError
 from aeromaintain.models.rul import (
+    RISK_THRESHOLD_GRID,
     ModelingConfig,
     ModelingError,
+    _select_champion,
     engine_equal_weights,
     evaluate_locked,
-    finite_sample_quantile,
     train_and_lock,
 )
 
@@ -188,9 +195,30 @@ def test_metrics_weights_and_finite_sample_interval_contract() -> None:
     weights = engine_equal_weights(np.array([1, 1, 2]))
     assert weights[:2].sum() == pytest.approx(weights[2:].sum())
     assert weights.mean() == pytest.approx(1.0)
-    assert finite_sample_quantile(np.arange(1, 21), 0.9) == 19
-    with pytest.raises(ModelingError, match="at least one"):
-        finite_sample_quantile(np.array([]), 0.9)
+
+
+def test_alert_rule_reports_both_error_costs_with_wilson_intervals() -> None:
+    truth = np.array([10.0, 25.0, 30.0, 31.0, 80.0, 120.0])
+    interval_low = np.array([0.0, 20.0, 45.0, 25.0, 70.0, 90.0])
+
+    rule = alert_rule_metrics(truth, interval_low)
+
+    assert (rule["true_positive"], rule["false_negative"]) == (2, 1)
+    assert (rule["false_positive"], rule["true_negative"]) == (1, 2)
+    assert rule["precision"] == pytest.approx(2 / 3)
+    assert rule["recall"] == pytest.approx(2 / 3)
+    assert rule["false_alarm_rate"] == pytest.approx(1 / 3)
+    assert (
+        rule["wilson_95"]["recall"]["low"] < 2 / 3 < rule["wilson_95"]["recall"]["high"]
+    )
+
+    # The published 25/25 reference recall has a lower bound near 87%, not 100%.
+    perfect = wilson_interval(25, 25)
+    assert perfect == {"low": pytest.approx(0.8668, abs=1e-4), "high": 1.0}
+    assert wilson_interval(0, 0) is None
+    assert wilson_interval(0, 10)["low"] == 0.0
+    with pytest.raises(ValueError, match="between zero"):
+        wilson_interval(3, 2)
 
 
 def test_train_lock_and_official_evaluation_are_reproducible(
@@ -206,13 +234,20 @@ def test_train_lock_and_official_evaluation_are_reproducible(
         xgboost_max_trees=20,
         xgboost_early_stopping_rounds=5,
         xgboost_n_jobs=1,
+        scoring_draws=5,
+        sensitivity_windows=(None,),
+        interval_min_band_engines=2,
+        bootstrap_resamples=50,
     )
     result = train_and_lock(tmp_path, run_id="fixture-m2", config=config)
     assert result.model_lock.is_file()
     lock = json.loads(result.model_lock.read_text(encoding="utf-8"))
     assert lock["official_test_evaluation"].startswith("not opened")
-    assert lock["features"]["order"] == list(FEATURE_NAMES)
-    assert lock["calibration"]["score_count"] == 2
+    assert set(lock["features"]["order"]) <= set(FEATURE_NAMES)
+    assert lock["schema_version"] == 2
+    assert lock["protocol"]["test_status"] == "previously_seen"
+    assert lock["calibration"]["engines"] == 8
+    assert lock["calibration"]["risk_threshold"] in RISK_THRESHOLD_GRID
     assert lock["environment"]["python"]["version"].startswith("3.11")
     assert lock["environment"]["packages"]["numpy"] == np.__version__
     assert lock["environment"]["constraints"]["sha256"] == sha256_file(
@@ -233,7 +268,7 @@ def test_train_lock_and_official_evaluation_are_reproducible(
         len(
             json.loads(
                 (result.run_dir / "model_comparison.json").read_text(encoding="utf-8")
-            )["xgboost_candidates"]
+            )["xgboost_stages"]["models"]
         )
         == 1
     )
@@ -257,6 +292,9 @@ def test_train_lock_and_official_evaluation_are_reproducible(
         "elevated",
         "routine",
     }
+    rules = first.metrics["alert_rules"]
+    assert set(rules) == {"scope", "point_prediction", "interval_low"}
+    assert rules["interval_low"]["recall"] >= rules["point_prediction"]["recall"]
 
     with pytest.raises(ModelingError, match="already exists"):
         train_and_lock(tmp_path, run_id="fixture-m2", config=config)
@@ -275,3 +313,90 @@ def test_evaluation_requires_lock_before_official_label_access(
 ) -> None:
     with pytest.raises(ModelingError, match="requires model_lock"):
         evaluate_locked(tmp_path, run_id="missing")
+
+
+def _small_config() -> ModelingConfig:
+    return ModelingConfig(
+        seed=42,
+        group_folds=2,
+        critical_rul_threshold=30,
+        nominal_interval_coverage=0.9,
+        xgboost_candidates=1,
+        xgboost_max_trees=20,
+        xgboost_early_stopping_rounds=5,
+        xgboost_n_jobs=1,
+        scoring_draws=5,
+        sensitivity_windows=(None,),
+        interval_min_band_engines=2,
+        bootstrap_resamples=50,
+    )
+
+
+def test_evaluation_refuses_changed_or_unanchored_lock(tmp_path: Path) -> None:
+    _write_phase1_fixture(tmp_path)
+    result = train_and_lock(tmp_path, run_id="fixture-lock", config=_small_config())
+    official_dir = result.run_dir / "official_test"
+    original_lock = result.model_lock.read_bytes()
+
+    changed = json.loads(original_lock)
+    changed["calibration"]["risk_threshold"] = 9999.0
+    result.model_lock.write_text(json.dumps(changed), encoding="utf-8")
+    with pytest.raises(ModelingError, match="Model lock SHA-256 mismatch"):
+        evaluate_locked(tmp_path, run_id="fixture-lock")
+    assert not official_dir.exists()
+
+    result.model_lock.write_bytes(original_lock)
+    manifest_path = result.run_dir / "manifest.json"
+    original_manifest = manifest_path.read_bytes()
+    manifest_path.unlink()
+    with pytest.raises(ModelingError, match="requires the run manifest"):
+        evaluate_locked(tmp_path, run_id="fixture-lock")
+    assert not official_dir.exists()
+
+    manifest_path.write_bytes(original_manifest)
+    assert evaluate_locked(tmp_path, run_id="fixture-lock").output_dir == official_dir
+
+
+def test_evaluation_reports_missing_locked_input_as_modeling_error(
+    tmp_path: Path,
+) -> None:
+    _write_phase1_fixture(tmp_path)
+    train_and_lock(tmp_path, run_id="fixture-input", config=_small_config())
+    (tmp_path / "data" / "processed" / "fd001" / "test.parquet").unlink()
+
+    with pytest.raises(ModelingError, match="Locked input is missing"):
+        evaluate_locked(tmp_path, run_id="fixture-input")
+
+
+def test_xgboost_champion_runs_through_evaluation_and_application(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    def force_xgboost(ridge, xgboost, config):
+        decision = _select_champion(ridge, xgboost, config)
+        return {**decision, "champion": "xgboost"}
+
+    monkeypatch.setattr("aeromaintain.models.rul._select_champion", force_xgboost)
+    _write_phase1_fixture(tmp_path)
+    result = train_and_lock(tmp_path, run_id="fixture-xgb", config=_small_config())
+    evaluate_locked(tmp_path, run_id="fixture-xgb")
+
+    lock = json.loads(result.model_lock.read_text(encoding="utf-8"))
+    explanation = json.loads(
+        (result.run_dir / "explanation.json").read_text(encoding="utf-8")
+    )
+    assert lock["champion"]["kind"] == "xgboost"
+    assert explanation["method"] == "SHAP TreeExplainer"
+    assert "mean_abs_shap" in explanation["global_importance"][0]
+
+    monkeypatch.setenv("AEROMAINTAIN_RUN_ID", "fixture-xgb")
+    monkeypatch.setenv("AEROMAINTAIN_PROJECT_ROOT", str(tmp_path))
+    script = (
+        Path(__file__).resolve().parents[1] / "src" / "aeromaintain" / "app" / "main.py"
+    )
+    tested = AppTest.from_file(str(script), default_timeout=30).run()
+    assert not tested.exception
+    tested.sidebar.radio[0].set_value("Engine risk")
+    tested.run()
+    assert not tested.exception
+    assert tested.expander[0].label == "Model SHAP review"

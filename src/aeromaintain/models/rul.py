@@ -1,4 +1,4 @@
-"""Leakage-safe RUL training, calibration, locking, and official evaluation."""
+"""Protocol v2 RUL selection, calibration, locking, and official evaluation."""
 
 from __future__ import annotations
 
@@ -20,26 +20,44 @@ from sklearn.model_selection import GroupKFold, ParameterSampler
 from xgboost import XGBRegressor
 
 from aeromaintain.data.pipeline import sha256_file
-from aeromaintain.evaluation import prediction_metrics
+from aeromaintain.evaluation.protocol import (
+    draw_engine_rows,
+    eligible_rows,
+    fit_mondrian_interval,
+    leave_engines_out_interval,
+    risk_threshold_table,
+    select_risk_threshold,
+    summarize_draws,
+    summarize_interval_draws,
+)
 from aeromaintain.features import (
-    FEATURE_NAMES,
+    FEATURE_SETS,
     FoldPreprocessor,
     build_causal_features,
 )
 from aeromaintain.runtime import runtime_fingerprint
 
-RIDGE_ALPHAS = (0.1, 1.0, 10.0, 100.0)
-CALIBRATION_CUTOFFS = (20, 60, 100, 126)
-MODEL_SCHEMA_VERSION = 1
+RIDGE_ALPHAS = (1.0, 10.0, 100.0, 1_000.0, 10_000.0)
+RISK_THRESHOLD_GRID = tuple(float(value) for value in range(0, 65, 5))
+ELEVATED_BAND_MARGIN = 30.0
+MODEL_SCHEMA_VERSION = 2
+PROTOCOL_DOCUMENT = "docs/protocol_v2.md"
+SELECTION_SCOPE = "development engines only"
+TEST_PREVIOUSLY_SEEN = "previously_seen"
+TEST_CLEAN_SINGLE_OPEN = "clean_single_open"
+TEST_STATUS_LABELS = {
+    TEST_PREVIOUSLY_SEEN: "protocol v2, test previously seen",
+    TEST_CLEAN_SINGLE_OPEN: "protocol v2, clean single-open test",
+}
 
 
 class ModelingError(RuntimeError):
-    """Raised when an M2 modeling or lock contract fails."""
+    """Raised when a modeling or lock contract fails."""
 
 
 @dataclass(frozen=True)
 class ModelingConfig:
-    """Fixed M2 experiment values loaded from the project contract."""
+    """Fixed protocol v2 values loaded from the project contract."""
 
     seed: int = 42
     group_folds: int = 5
@@ -48,7 +66,20 @@ class ModelingConfig:
     xgboost_candidates: int = 12
     xgboost_max_trees: int = 1500
     xgboost_early_stopping_rounds: int = 75
-    xgboost_n_jobs: int = 4
+    xgboost_n_jobs: int = 8
+    scoring_draws: int = 200
+    scoring_rul_window: int | None = 150
+    sensitivity_windows: tuple[int | None, ...] = (130, 175, None)
+    inner_validation_fraction: float = 0.2
+    rul_cap_candidates: tuple[int, ...] = (125, 130)
+    stage_min_improvement: float = 0.01
+    champion_min_improvement: float = 0.05
+    rmse_target: float = 16.6
+    cross_fit_folds: int = 10
+    interval_band_edges: tuple[float, ...] = (30.0, 60.0, 100.0)
+    interval_min_band_engines: int = 20
+    risk_recall_target: float = 0.95
+    bootstrap_resamples: int = 2_000
 
 
 @dataclass
@@ -71,7 +102,7 @@ class TrainResult:
     run_id: str
     run_dir: Path
     champion: str
-    calibration_q: float
+    interval_half_width: float
     model_lock: Path
 
 
@@ -119,21 +150,77 @@ def _safe_json_value(value: Any) -> Any:
     return value
 
 
-def load_modeling_config(project_root: Path) -> ModelingConfig:
-    """Load the shared seed, folds, threshold, and nominal coverage."""
+def _load_project_config(project_root: Path) -> dict[str, Any]:
     config_path = project_root / "configs" / "project.yaml"
     try:
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError) as exc:
+        raise ModelingError(f"Invalid modeling configuration: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ModelingError("Invalid modeling configuration: expected a mapping")
+    return payload
+
+
+def load_modeling_config(project_root: Path) -> ModelingConfig:
+    """Load the shared seed, folds, threshold, and protocol v2 parameters."""
+    payload = _load_project_config(project_root)
+    defaults = ModelingConfig()
+    try:
         project = payload["project"]
         modeling = payload["modeling"]
+        windows = modeling.get("sensitivity_windows", defaults.sensitivity_windows)
         return ModelingConfig(
             seed=int(project["seed"]),
             group_folds=int(modeling["group_folds"]),
             critical_rul_threshold=int(modeling["critical_rul_threshold"]),
             nominal_interval_coverage=float(modeling["nominal_interval_coverage"]),
+            xgboost_n_jobs=int(modeling.get("xgboost_n_jobs", defaults.xgboost_n_jobs)),
+            scoring_draws=int(modeling.get("scoring_draws", defaults.scoring_draws)),
+            scoring_rul_window=modeling.get(
+                "scoring_rul_window", defaults.scoring_rul_window
+            ),
+            sensitivity_windows=tuple(windows),
+            inner_validation_fraction=float(
+                modeling.get(
+                    "inner_validation_fraction", defaults.inner_validation_fraction
+                )
+            ),
+            rul_cap_candidates=tuple(
+                int(value)
+                for value in modeling.get(
+                    "rul_cap_candidates", defaults.rul_cap_candidates
+                )
+            ),
+            cross_fit_folds=int(
+                modeling.get("cross_fit_folds", defaults.cross_fit_folds)
+            ),
+            interval_band_edges=tuple(
+                float(value)
+                for value in modeling.get(
+                    "interval_band_edges", defaults.interval_band_edges
+                )
+            ),
+            interval_min_band_engines=int(
+                modeling.get(
+                    "interval_min_band_engines", defaults.interval_min_band_engines
+                )
+            ),
+            risk_recall_target=float(
+                modeling.get("risk_recall_target", defaults.risk_recall_target)
+            ),
         )
-    except (KeyError, TypeError, ValueError, OSError, yaml.YAMLError) as exc:
+    except (KeyError, TypeError, ValueError) as exc:
         raise ModelingError(f"Invalid modeling configuration: {exc}") from exc
+
+
+def load_test_status(project_root: Path, dataset: str) -> str:
+    """Return whether a subset's test labels were already seen."""
+    payload = _load_project_config(project_root)
+    datasets = payload.get("data", {}).get("datasets", {})
+    status = datasets.get(dataset, {}).get("test_status", TEST_PREVIOUSLY_SEEN)
+    if status not in TEST_STATUS_LABELS:
+        raise ModelingError(f"Unknown test status for {dataset}: {status}")
+    return status
 
 
 def engine_equal_weights(engine_ids: np.ndarray) -> np.ndarray:
@@ -143,10 +230,15 @@ def engine_equal_weights(engine_ids: np.ndarray) -> np.ndarray:
     return len(engines) / (engines.nunique() * counts)
 
 
+def _processed_dir(project_root: Path, dataset: str) -> Path:
+    return project_root / "data" / "processed" / dataset.lower()
+
+
 def _load_and_validate_training_inputs(
     project_root: Path,
+    dataset: str,
 ) -> tuple[pd.DataFrame, dict[str, Any], dict[str, Any]]:
-    processed = project_root / "data" / "processed" / "fd001"
+    processed = _processed_dir(project_root, dataset)
     manifest_path = processed / "manifest.json"
     split_path = processed / "split_manifest.json"
     train_path = processed / "train.parquet"
@@ -170,7 +262,7 @@ def _load_and_validate_training_inputs(
     train = pd.read_parquet(train_path)
     required = {"unit_id", "cycle", "rul_true", "rul_target", "role"}
     if not required.issubset(train.columns):
-        raise ModelingError("Prepared train table is missing M2 contract columns")
+        raise ModelingError("Prepared train table is missing model contract columns")
     development = set(split["development_engine_ids"])
     calibration = set(split["calibration_engine_ids"])
     if development & calibration:
@@ -186,45 +278,42 @@ def _load_and_validate_training_inputs(
     return train, manifest, split
 
 
-def _fold_plan(
-    development: pd.DataFrame,
-    config: ModelingConfig,
-) -> tuple[list[tuple[np.ndarray, np.ndarray]], list[dict[str, Any]]]:
-    groups = development["unit_id"].to_numpy()
+def group_fold_plan(
+    engine_ids: np.ndarray,
+    *,
+    folds: int,
+    seed: int,
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Return shuffled engine-grouped train/validation row positions."""
+    engines = np.asarray(engine_ids)
     splitter = GroupKFold(
-        n_splits=config.group_folds,
+        n_splits=min(folds, int(pd.Series(engines).nunique())),
         shuffle=True,
-        random_state=config.seed,
+        random_state=seed,
     )
-    folds: list[tuple[np.ndarray, np.ndarray]] = []
-    records: list[dict[str, Any]] = []
-    for fold_index, (train_index, validation_index) in enumerate(
-        splitter.split(development, groups=groups),
-        start=1,
-    ):
-        train_engines = sorted(int(value) for value in np.unique(groups[train_index]))
-        validation_engines = sorted(
-            int(value) for value in np.unique(groups[validation_index])
-        )
-        if set(train_engines) & set(validation_engines):
-            raise ModelingError(f"Engine leakage detected in fold {fold_index}")
-        folds.append((train_index, validation_index))
-        records.append(
-            {
-                "fold": fold_index,
-                "train_engine_ids": train_engines,
-                "validation_engine_ids": validation_engines,
-            }
-        )
-    return folds, records
+    plan = list(splitter.split(engines, groups=engines))
+    for train_index, validation_index in plan:
+        if set(engines[train_index]) & set(engines[validation_index]):
+            raise ModelingError("Engine leakage detected in a grouped fold")
+    return plan
 
 
-def _metric_rank(record: dict[str, Any]) -> tuple[float, float]:
-    metrics = record["metrics"]
-    return (
-        float(metrics["nasa_score_motor_normalized"]),
-        float(metrics["rmse"]),
-    )
+def inner_engine_split(
+    engine_ids: np.ndarray,
+    *,
+    fraction: float,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Hold out whole engines for early stopping inside one training fold."""
+    engines = np.asarray(engine_ids)
+    unique = np.unique(engines)
+    if len(unique) < 2:
+        raise ModelingError("Early stopping requires at least two training engines")
+    generator = np.random.default_rng(seed)
+    count = min(len(unique) - 1, max(1, math.ceil(fraction * len(unique))))
+    held_out = generator.choice(unique, size=count, replace=False)
+    mask = np.isin(engines, held_out)
+    return np.flatnonzero(~mask), np.flatnonzero(mask)
 
 
 def _xgboost_parameter_candidates(config: ModelingConfig) -> list[dict[str, Any]]:
@@ -247,112 +336,11 @@ def _xgboost_parameter_candidates(config: ModelingConfig) -> list[dict[str, Any]
     ]
 
 
-def _fit_ridge_cv(
-    features: pd.DataFrame,
-    development: pd.DataFrame,
-    folds: list[tuple[np.ndarray, np.ndarray]],
-    config: ModelingConfig,
-) -> tuple[list[dict[str, Any]], dict[float, np.ndarray]]:
-    records: list[dict[str, Any]] = []
-    predictions_by_alpha: dict[float, np.ndarray] = {}
-    target = development["rul_target"].to_numpy(dtype=np.float64)
-    truth = development["rul_true"].to_numpy(dtype=np.float64)
-    engines = development["unit_id"].to_numpy()
-    for alpha in RIDGE_ALPHAS:
-        oof = np.empty(len(development), dtype=np.float64)
-        fold_records: list[dict[str, Any]] = []
-        for fold_index, (train_index, validation_index) in enumerate(folds, start=1):
-            preprocessor = FoldPreprocessor(scale=True).fit(features.iloc[train_index])
-            estimator = Ridge(alpha=alpha)
-            estimator.fit(
-                preprocessor.transform(features.iloc[train_index]),
-                target[train_index],
-                sample_weight=engine_equal_weights(engines[train_index]),
-            )
-            fold_prediction = np.maximum(
-                0.0,
-                estimator.predict(
-                    preprocessor.transform(features.iloc[validation_index])
-                ),
-            )
-            oof[validation_index] = fold_prediction
-            fold_records.append(
-                {
-                    "fold": fold_index,
-                    "metrics": prediction_metrics(
-                        truth[validation_index],
-                        fold_prediction,
-                        engines[validation_index],
-                        critical_threshold=config.critical_rul_threshold,
-                    ),
-                    "preprocessing": preprocessor.manifest(),
-                }
-            )
-        record = {
-            "model": "ridge",
-            "alpha": alpha,
-            "folds": fold_records,
-            "metrics": prediction_metrics(
-                truth,
-                oof,
-                engines,
-                critical_threshold=config.critical_rul_threshold,
-            ),
-        }
-        records.append(record)
-        predictions_by_alpha[alpha] = oof
-    return records, predictions_by_alpha
-
-
-def _fit_mean_cv(
-    development: pd.DataFrame,
-    folds: list[tuple[np.ndarray, np.ndarray]],
-    config: ModelingConfig,
-) -> tuple[dict[str, Any], np.ndarray]:
-    target = development["rul_target"].to_numpy(dtype=np.float64)
-    truth = development["rul_true"].to_numpy(dtype=np.float64)
-    engines = development["unit_id"].to_numpy()
-    oof = np.empty(len(development), dtype=np.float64)
-    fold_records: list[dict[str, Any]] = []
-    for fold_index, (train_index, validation_index) in enumerate(folds, start=1):
-        mean = float(
-            np.average(
-                target[train_index],
-                weights=engine_equal_weights(engines[train_index]),
-            )
-        )
-        oof[validation_index] = mean
-        fold_records.append(
-            {
-                "fold": fold_index,
-                "target_mean": mean,
-                "metrics": prediction_metrics(
-                    truth[validation_index],
-                    oof[validation_index],
-                    engines[validation_index],
-                    critical_threshold=config.critical_rul_threshold,
-                ),
-            }
-        )
-    return (
-        {
-            "model": "development_target_mean",
-            "folds": fold_records,
-            "metrics": prediction_metrics(
-                truth,
-                oof,
-                engines,
-                critical_threshold=config.critical_rul_threshold,
-            ),
-        },
-        oof,
-    )
-
-
 def _new_xgboost(
     params: dict[str, Any],
     config: ModelingConfig,
     *,
+    seed: int,
     n_estimators: int,
     early_stopping: bool,
 ) -> XGBRegressor:
@@ -361,7 +349,7 @@ def _new_xgboost(
         objective="reg:squarederror",
         n_estimators=n_estimators,
         tree_method="hist",
-        random_state=config.seed,
+        random_state=seed,
         n_jobs=config.xgboost_n_jobs,
         eval_metric="rmse",
         early_stopping_rounds=(
@@ -370,179 +358,393 @@ def _new_xgboost(
     )
 
 
-def _fit_xgboost_cv(
+def _capped_target(frame: pd.DataFrame, cap: int) -> np.ndarray:
+    return frame["rul_true"].clip(upper=cap).to_numpy(dtype=np.float64)
+
+
+def _feature_view(features: pd.DataFrame, feature_set: str) -> pd.DataFrame:
+    return features.loc[:, list(FEATURE_SETS[feature_set])]
+
+
+def _new_preprocessor(spec: dict[str, Any]) -> FoldPreprocessor:
+    return FoldPreprocessor(
+        scale=spec["family"] == "ridge",
+        input_features=FEATURE_SETS[spec["feature_set"]],
+    )
+
+
+def _fit_ridge(
+    spec: dict[str, Any],
     features: pd.DataFrame,
-    development: pd.DataFrame,
-    folds: list[tuple[np.ndarray, np.ndarray]],
-    config: ModelingConfig,
-) -> tuple[list[dict[str, Any]], dict[int, np.ndarray]]:
-    records: list[dict[str, Any]] = []
-    predictions_by_candidate: dict[int, np.ndarray] = {}
-    target = development["rul_target"].to_numpy(dtype=np.float64)
-    truth = development["rul_true"].to_numpy(dtype=np.float64)
-    engines = development["unit_id"].to_numpy()
-    for candidate_index, params in enumerate(
-        _xgboost_parameter_candidates(config), start=1
-    ):
-        oof = np.empty(len(development), dtype=np.float64)
-        fold_records: list[dict[str, Any]] = []
-        for fold_index, (train_index, validation_index) in enumerate(folds, start=1):
-            preprocessor = FoldPreprocessor(scale=False).fit(features.iloc[train_index])
-            train_features = preprocessor.transform(features.iloc[train_index])
-            validation_features = preprocessor.transform(
-                features.iloc[validation_index]
-            )
-            estimator = _new_xgboost(
-                params,
-                config,
-                n_estimators=config.xgboost_max_trees,
-                early_stopping=True,
-            )
-            estimator.fit(
-                train_features,
-                target[train_index],
-                sample_weight=engine_equal_weights(engines[train_index]),
-                eval_set=[(validation_features, target[validation_index])],
-                sample_weight_eval_set=[
-                    engine_equal_weights(engines[validation_index])
-                ],
-                verbose=False,
-            )
-            fold_prediction = np.maximum(0.0, estimator.predict(validation_features))
-            oof[validation_index] = fold_prediction
-            fold_records.append(
-                {
-                    "fold": fold_index,
-                    "best_iteration": int(estimator.best_iteration),
-                    "best_tree_count": int(estimator.best_iteration) + 1,
-                    "best_score": float(estimator.best_score),
-                    "metrics": prediction_metrics(
-                        truth[validation_index],
-                        fold_prediction,
-                        engines[validation_index],
-                        critical_threshold=config.critical_rul_threshold,
-                    ),
-                    "preprocessing": preprocessor.manifest(),
-                }
-            )
-        records.append(
-            {
-                "model": "xgboost",
-                "candidate": candidate_index,
-                "parameters": params,
-                "folds": fold_records,
-                "metrics": prediction_metrics(
-                    truth,
-                    oof,
-                    engines,
-                    critical_threshold=config.critical_rul_threshold,
-                ),
-            }
-        )
-        predictions_by_candidate[candidate_index] = oof
-    return records, predictions_by_candidate
+    target: np.ndarray,
+    engines: np.ndarray,
+) -> RidgeBundle:
+    preprocessor = _new_preprocessor(spec).fit(features)
+    estimator = Ridge(alpha=float(spec["alpha"]))
+    estimator.fit(
+        preprocessor.transform(features),
+        target,
+        sample_weight=engine_equal_weights(engines),
+    )
+    return RidgeBundle(preprocessor=preprocessor, estimator=estimator)
 
 
-def _select_champion(
-    ridge_records: list[dict[str, Any]],
-    xgboost_records: list[dict[str, Any]],
-) -> dict[str, Any]:
-    best_ridge = min(ridge_records, key=_metric_rank)
-    best_xgboost = min(xgboost_records, key=_metric_rank)
-    ridge_rmse = float(best_ridge["metrics"]["rmse"])
-    xgboost_rmse = float(best_xgboost["metrics"]["rmse"])
-    improvement = (ridge_rmse - xgboost_rmse) / ridge_rmse
-    nasa_not_worse = float(
-        best_xgboost["metrics"]["nasa_score_motor_normalized"]
-    ) <= float(best_ridge["metrics"]["nasa_score_motor_normalized"])
-    xgboost_qualifies = improvement >= 0.05 and nasa_not_worse
-    return {
-        "rule": (
-            "XGBoost only if development RMSE improves over Ridge by at least "
-            "5% and motor-normalized NASA score does not worsen"
-        ),
-        "ridge": {
-            "alpha": best_ridge["alpha"],
-            "metrics": best_ridge["metrics"],
-        },
-        "xgboost": {
-            "candidate": best_xgboost["candidate"],
-            "parameters": best_xgboost["parameters"],
-            "metrics": best_xgboost["metrics"],
-            "fold_best_tree_counts": [
-                fold["best_tree_count"] for fold in best_xgboost["folds"]
-            ],
-        },
-        "xgboost_rmse_improvement_fraction": improvement,
-        "xgboost_nasa_not_worse": nasa_not_worse,
-        "xgboost_qualifies": xgboost_qualifies,
-        "champion": "xgboost" if xgboost_qualifies else "ridge",
-    }
-
-
-def _fit_final_model(
+def _fit_early_stopped_xgboost(
+    spec: dict[str, Any],
     features: pd.DataFrame,
-    development: pd.DataFrame,
-    decision: dict[str, Any],
+    target: np.ndarray,
+    engines: np.ndarray,
     config: ModelingConfig,
-    run_dir: Path,
-) -> tuple[Any, FoldPreprocessor, dict[str, str], dict[str, Any]]:
-    target = development["rul_target"].to_numpy(dtype=np.float64)
-    engines = development["unit_id"].to_numpy()
-    weights = engine_equal_weights(engines)
-    artifact_hashes: dict[str, str] = {}
-    if decision["champion"] == "ridge":
-        preprocessor = FoldPreprocessor(scale=True).fit(features)
-        estimator = Ridge(alpha=float(decision["ridge"]["alpha"]))
-        estimator.fit(
-            preprocessor.transform(features),
-            target,
-            sample_weight=weights,
-        )
-        bundle = RidgeBundle(preprocessor=preprocessor, estimator=estimator)
-        model_path = run_dir / "model.joblib"
-        joblib.dump(bundle, model_path)
-        artifact_hashes["model.joblib"] = sha256_file(model_path)
-        model_spec = {
-            "kind": "ridge",
-            "format": "trusted-local-joblib",
-            "path": "model.joblib",
-            "parameters": {"alpha": float(decision["ridge"]["alpha"])},
-        }
-        return bundle, preprocessor, artifact_hashes, model_spec
-
-    preprocessor = FoldPreprocessor(scale=False).fit(features)
-    tree_counts = decision["xgboost"]["fold_best_tree_counts"]
-    final_tree_count = int(np.median(np.asarray(tree_counts, dtype=np.int64)))
+    *,
+    seed: int,
+) -> tuple[XGBRegressor, FoldPreprocessor, int]:
+    fit_rows, stop_rows = inner_engine_split(
+        engines,
+        fraction=config.inner_validation_fraction,
+        seed=seed,
+    )
+    preprocessor = _new_preprocessor(spec).fit(features.iloc[fit_rows])
     estimator = _new_xgboost(
-        decision["xgboost"]["parameters"],
+        spec["parameters"],
         config,
-        n_estimators=final_tree_count,
+        seed=seed,
+        n_estimators=config.xgboost_max_trees,
+        early_stopping=True,
+    )
+    estimator.fit(
+        preprocessor.transform(features.iloc[fit_rows]),
+        target[fit_rows],
+        sample_weight=engine_equal_weights(engines[fit_rows]),
+        eval_set=[
+            (preprocessor.transform(features.iloc[stop_rows]), target[stop_rows])
+        ],
+        sample_weight_eval_set=[engine_equal_weights(engines[stop_rows])],
+        verbose=False,
+    )
+    return estimator, preprocessor, int(estimator.best_iteration) + 1
+
+
+def _fit_fixed_xgboost(
+    spec: dict[str, Any],
+    features: pd.DataFrame,
+    target: np.ndarray,
+    engines: np.ndarray,
+    config: ModelingConfig,
+    *,
+    seed: int,
+) -> tuple[XGBRegressor, FoldPreprocessor]:
+    preprocessor = _new_preprocessor(spec).fit(features)
+    estimator = _new_xgboost(
+        spec["parameters"],
+        config,
+        seed=seed,
+        n_estimators=int(spec["tree_count"]),
         early_stopping=False,
     )
     estimator.fit(
         preprocessor.transform(features),
         target,
-        sample_weight=weights,
+        sample_weight=engine_equal_weights(engines),
         verbose=False,
     )
+    return estimator, preprocessor
+
+
+@dataclass
+class _SelectionData:
+    """Development engines shared by every candidate in one selection run."""
+
+    frame: pd.DataFrame
+    features: pd.DataFrame
+    folds: list[tuple[np.ndarray, np.ndarray]]
+    plan: np.ndarray
+    config: ModelingConfig
+
+    @property
+    def truth(self) -> np.ndarray:
+        return self.frame["rul_true"].to_numpy(dtype=np.float64)
+
+    @property
+    def engines(self) -> np.ndarray:
+        return self.frame["unit_id"].to_numpy()
+
+
+def _candidate_oof(
+    spec: dict[str, Any],
+    data: _SelectionData,
+) -> tuple[np.ndarray, list[int]]:
+    features = _feature_view(data.features, spec["feature_set"])
+    target = _capped_target(data.frame, int(spec["cap"]))
+    engines = data.engines
+    oof = np.empty(len(features), dtype=np.float64)
+    tree_counts: list[int] = []
+    for fold_index, (train_index, validation_index) in enumerate(data.folds):
+        train_features = features.iloc[train_index]
+        validation_features = features.iloc[validation_index]
+        if spec["family"] == "ridge":
+            bundle = _fit_ridge(
+                spec, train_features, target[train_index], engines[train_index]
+            )
+            oof[validation_index] = bundle.predict(validation_features)
+            continue
+        estimator, preprocessor, tree_count = _fit_early_stopped_xgboost(
+            spec,
+            train_features,
+            target[train_index],
+            engines[train_index],
+            data.config,
+            seed=data.config.seed + fold_index,
+        )
+        tree_counts.append(tree_count)
+        oof[validation_index] = np.maximum(
+            0.0, estimator.predict(preprocessor.transform(validation_features))
+        )
+    return oof, tree_counts
+
+
+def _evaluate_candidate(spec: dict[str, Any], data: _SelectionData) -> dict[str, Any]:
+    oof, tree_counts = _candidate_oof(spec, data)
+    summary, rmse_by_draw = summarize_draws(
+        data.truth,
+        oof,
+        data.engines,
+        data.plan,
+        critical_threshold=data.config.critical_rul_threshold,
+    )
+    record: dict[str, Any] = {
+        "spec": dict(spec),
+        "metrics": summary,
+        "fold_tree_counts": tree_counts,
+    }
+    if tree_counts:
+        record["spec"]["tree_count"] = int(np.median(tree_counts))
+    # Kept out of the persisted comparison; used for pairing candidates.
+    record["_oof"] = oof
+    record["_rmse_by_draw"] = rmse_by_draw
+    return record
+
+
+def _rank(record: dict[str, Any]) -> tuple[float, float]:
+    metrics = record["metrics"]
+    return (
+        metrics["rmse"]["median"],
+        metrics["nasa_score_motor_normalized"]["median"],
+    )
+
+
+def _public_record(record: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in record.items() if not key.startswith("_")}
+
+
+def _run_stage(
+    current: dict[str, Any],
+    alternatives: list[dict[str, Any]],
+    data: _SelectionData,
+    stage: str,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Replace the simpler earlier choice only for a required RMSE improvement."""
+    required = 1.0 - data.config.stage_min_improvement
+    evaluated = [_evaluate_candidate(spec, data) for spec in alternatives]
+    log: list[dict[str, Any]] = []
+    baseline = current["metrics"]["rmse"]["median"]
+    best = current
+    for record in sorted(evaluated, key=_rank):
+        improves = record["metrics"]["rmse"]["median"] <= baseline * required
+        accepted = improves and best is current
+        log.append(
+            {
+                "stage": stage,
+                **_public_record(record),
+                "baseline_rmse": baseline,
+                "accepted": accepted,
+            }
+        )
+        if accepted:
+            best = record
+    return best, log
+
+
+def _select_family(
+    candidates: list[dict[str, Any]],
+    data: _SelectionData,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Run the three protocol stages for one model family."""
+    records = [_evaluate_candidate(spec, data) for spec in candidates]
+    best = min(records, key=_rank)
+    stages: dict[str, Any] = {
+        "models": [_public_record(record) for record in records],
+    }
+    feature_specs = [
+        {**best["spec"], "feature_set": name}
+        for name in FEATURE_SETS
+        if name != best["spec"]["feature_set"]
+    ]
+    best, stages["features"] = _run_stage(best, feature_specs, data, "features")
+    cap_specs = [
+        {**best["spec"], "cap": cap}
+        for cap in data.config.rul_cap_candidates
+        if cap != best["spec"]["cap"]
+    ]
+    best, stages["cap"] = _run_stage(best, cap_specs, data, "cap")
+    return best, stages
+
+
+def _select_champion(
+    ridge: dict[str, Any],
+    xgboost: dict[str, Any],
+    config: ModelingConfig,
+) -> dict[str, Any]:
+    ridge_rmse = ridge["metrics"]["rmse"]["median"]
+    xgboost_rmse = xgboost["metrics"]["rmse"]["median"]
+    improvement = (ridge_rmse - xgboost_rmse) / ridge_rmse
+    nasa_not_worse = (
+        xgboost["metrics"]["nasa_score_motor_normalized"]["median"]
+        <= ridge["metrics"]["nasa_score_motor_normalized"]["median"]
+    )
+    qualifies = improvement >= config.champion_min_improvement and nasa_not_worse
+    champion = "xgboost" if qualifies else "ridge"
+    chosen = xgboost if qualifies else ridge
+    return {
+        "rule": (
+            "XGBoost only if median development RMSE improves over Ridge by at "
+            f"least {config.champion_min_improvement:.0%} and median NASA score "
+            "does not worsen"
+        ),
+        "ridge": _public_record(ridge),
+        "xgboost": _public_record(xgboost),
+        "xgboost_rmse_improvement_fraction": improvement,
+        "xgboost_nasa_not_worse": nasa_not_worse,
+        "xgboost_qualifies": qualifies,
+        "xgboost_win_rate_over_paired_draws": float(
+            np.mean(xgboost["_rmse_by_draw"] < ridge["_rmse_by_draw"])
+        ),
+        "champion": champion,
+        "rmse_target": config.rmse_target,
+        "rmse_target_met": chosen["metrics"]["rmse"]["median"] <= config.rmse_target,
+    }
+
+
+def _window_sensitivity(
+    ridge: dict[str, Any],
+    xgboost: dict[str, Any],
+    data: _SelectionData,
+) -> list[dict[str, Any]]:
+    """Recheck the champion under other eligibility windows, without acting on it."""
+    config = data.config
+    rows: list[dict[str, Any]] = []
+    for window in config.sensitivity_windows:
+        plan = draw_engine_rows(
+            data.engines,
+            eligible_rows(data.truth, window),
+            draws=config.scoring_draws,
+            seed=config.seed,
+        )
+        records = []
+        for record in (ridge, xgboost):
+            summary, rmse_by_draw = summarize_draws(
+                data.truth,
+                record["_oof"],
+                data.engines,
+                plan,
+                critical_threshold=config.critical_rul_threshold,
+            )
+            records.append({"metrics": summary, "_rmse_by_draw": rmse_by_draw})
+        decision = _select_champion(records[0], records[1], config)
+        rows.append(
+            {
+                "window": window,
+                "champion": decision["champion"],
+                "ridge_median_rmse": records[0]["metrics"]["rmse"]["median"],
+                "xgboost_median_rmse": records[1]["metrics"]["rmse"]["median"],
+                "ridge_median_nasa": records[0]["metrics"][
+                    "nasa_score_motor_normalized"
+                ]["median"],
+                "xgboost_median_nasa": records[1]["metrics"][
+                    "nasa_score_motor_normalized"
+                ]["median"],
+            }
+        )
+    return rows
+
+
+def _mean_baseline(data: _SelectionData) -> dict[str, Any]:
+    target = _capped_target(data.frame, data.config.rul_cap_candidates[0])
+    oof = np.empty(len(target), dtype=np.float64)
+    for train_index, validation_index in data.folds:
+        oof[validation_index] = np.average(
+            target[train_index],
+            weights=engine_equal_weights(data.engines[train_index]),
+        )
+    summary, _ = summarize_draws(
+        data.truth,
+        oof,
+        data.engines,
+        data.plan,
+        critical_threshold=data.config.critical_rul_threshold,
+    )
+    return {"spec": {"family": "development_target_mean"}, "metrics": summary}
+
+
+def fit_final_model(
+    spec: dict[str, Any],
+    features: pd.DataFrame,
+    frame: pd.DataFrame,
+    config: ModelingConfig,
+    *,
+    seed: int,
+) -> tuple[Any, FoldPreprocessor]:
+    """Fit locked settings on the given engines."""
+    view = _feature_view(features, spec["feature_set"])
+    target = _capped_target(frame, int(spec["cap"]))
+    engines = frame["unit_id"].to_numpy()
+    if spec["family"] == "ridge":
+        bundle = _fit_ridge(spec, view, target, engines)
+        return bundle, bundle.preprocessor
+    return _fit_fixed_xgboost(spec, view, target, engines, config, seed=seed)
+
+
+def _persist_model(
+    spec: dict[str, Any],
+    model: Any,
+    preprocessor: FoldPreprocessor,
+    run_dir: Path,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    if spec["family"] == "ridge":
+        model_path = run_dir / "model.joblib"
+        joblib.dump(model, model_path)
+        return (
+            {"model.joblib": sha256_file(model_path)},
+            {
+                "kind": "ridge",
+                "format": "trusted-local-joblib",
+                "path": "model.joblib",
+                "parameters": {"alpha": float(spec["alpha"])},
+                "feature_set": spec["feature_set"],
+                "cap": int(spec["cap"]),
+            },
+        )
     model_path = run_dir / "model.json"
     preprocessor_path = run_dir / "preprocessor.joblib"
-    estimator.save_model(model_path)
+    model.save_model(model_path)
     joblib.dump(preprocessor, preprocessor_path)
-    artifact_hashes["model.json"] = sha256_file(model_path)
-    artifact_hashes["preprocessor.joblib"] = sha256_file(preprocessor_path)
-    model_spec = {
-        "kind": "xgboost",
-        "format": "xgboost-json-with-trusted-local-joblib-preprocessor",
-        "path": "model.json",
-        "preprocessor_path": "preprocessor.joblib",
-        "parameters": {
-            **decision["xgboost"]["parameters"],
-            "n_estimators": final_tree_count,
+    return (
+        {
+            "model.json": sha256_file(model_path),
+            "preprocessor.joblib": sha256_file(preprocessor_path),
         },
-    }
-    return estimator, preprocessor, artifact_hashes, model_spec
+        {
+            "kind": "xgboost",
+            "format": "xgboost-json-with-trusted-local-joblib-preprocessor",
+            "path": "model.json",
+            "preprocessor_path": "preprocessor.joblib",
+            "parameters": {
+                **spec["parameters"],
+                "n_estimators": int(spec["tree_count"]),
+            },
+            "feature_set": spec["feature_set"],
+            "cap": int(spec["cap"]),
+        },
+    )
 
 
 def _predict_model(
@@ -551,35 +753,114 @@ def _predict_model(
     features: pd.DataFrame,
     champion: str,
 ) -> np.ndarray:
+    view = features.loc[:, list(preprocessor.input_features)]
     if champion == "ridge":
-        return model.predict(features)
-    return np.maximum(0.0, model.predict(preprocessor.transform(features)))
+        return model.predict(view)
+    return np.maximum(0.0, model.predict(preprocessor.transform(view)))
 
 
-def _calibration_rows(calibration: pd.DataFrame) -> pd.DataFrame:
-    selected: list[pd.Series] = []
-    for index, unit_id in enumerate(sorted(calibration["unit_id"].unique())):
-        cutoff = CALIBRATION_CUTOFFS[index % len(CALIBRATION_CUTOFFS)]
-        engine = calibration.loc[calibration["unit_id"].eq(unit_id)].copy()
-        distance = (engine["rul_true"] - cutoff).abs()
-        row = (
-            engine.loc[distance.eq(distance.min())]
-            .sort_values("cycle", ascending=False)
-            .iloc[0]
+def cross_fit_predictions(
+    spec: dict[str, Any],
+    features: pd.DataFrame,
+    frame: pd.DataFrame,
+    config: ModelingConfig,
+    *,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return out-of-fold predictions and fold IDs over all training engines."""
+    engines = frame["unit_id"].to_numpy()
+    prediction = np.empty(len(frame), dtype=np.float64)
+    fold_ids = np.empty(len(frame), dtype=np.int64)
+    for fold_index, (train_index, validation_index) in enumerate(
+        group_fold_plan(engines, folds=config.cross_fit_folds, seed=seed)
+    ):
+        model, preprocessor = fit_final_model(
+            spec,
+            features.iloc[train_index],
+            frame.iloc[train_index],
+            config,
+            seed=seed + fold_index,
         )
-        row = row.copy()
-        row["calibration_cutoff"] = cutoff
-        selected.append(row)
-    return pd.DataFrame(selected).reset_index(drop=True)
+        prediction[validation_index] = _predict_model(
+            model,
+            preprocessor,
+            features.iloc[validation_index],
+            spec["family"],
+        )
+        fold_ids[validation_index] = fold_index
+    return prediction, fold_ids
 
 
-def finite_sample_quantile(scores: np.ndarray, coverage: float) -> float:
-    """Return the finite-sample ascending order statistic."""
-    observed = np.sort(np.asarray(scores, dtype=np.float64))
-    if not len(observed):
-        raise ModelingError("Calibration requires at least one engine score")
-    rank = min(len(observed), math.ceil((len(observed) + 1) * coverage))
-    return float(observed[rank - 1])
+def calibrate_interval(
+    prediction: np.ndarray,
+    fold_ids: np.ndarray,
+    frame: pd.DataFrame,
+    config: ModelingConfig,
+    *,
+    seed: int,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Fit the Mondrian interval and choose the risk threshold from train engines."""
+    truth = frame["rul_true"].to_numpy(dtype=np.float64)
+    engines = frame["unit_id"].to_numpy()
+    eligible = eligible_rows(truth, config.scoring_rul_window)
+    interval = fit_mondrian_interval(
+        prediction[eligible],
+        truth[eligible],
+        engines[eligible],
+        coverage=config.nominal_interval_coverage,
+        edges=config.interval_band_edges,
+        min_engines=config.interval_min_band_engines,
+    )
+    low, high = leave_engines_out_interval(
+        prediction,
+        truth,
+        engines,
+        eligible,
+        fold_ids,
+        coverage=config.nominal_interval_coverage,
+        edges=config.interval_band_edges,
+        min_engines=config.interval_min_band_engines,
+    )
+    plan = draw_engine_rows(
+        engines,
+        eligible,
+        draws=config.scoring_draws,
+        seed=seed + 1,
+    )
+    table = risk_threshold_table(
+        truth,
+        low,
+        plan,
+        critical_threshold=config.critical_rul_threshold,
+        thresholds=RISK_THRESHOLD_GRID,
+    )
+    selected = select_risk_threshold(table, recall_target=config.risk_recall_target)
+    analysis = {
+        "scope": "leave-engines-out over all training engines",
+        "interval": summarize_interval_draws(
+            truth,
+            prediction,
+            low,
+            high,
+            plan,
+            edges=config.interval_band_edges,
+        ),
+        "risk_threshold_table": table,
+        "selected_risk_threshold": selected,
+    }
+    half_widths = [(band["q_high"] - band["q_low"]) / 2 for band in interval["bands"]]
+    calibration = {
+        "method": "mondrian-signed-residual-cross-fit",
+        "label": "nominal empirical interval; not a safety guarantee",
+        "coverage": config.nominal_interval_coverage,
+        "bands": interval["bands"],
+        "engines": int(pd.Series(engines[eligible]).nunique()),
+        "max_half_width": float(max(half_widths)),
+        "risk_threshold": selected["threshold"],
+        "elevated_threshold": selected["threshold"] + ELEVATED_BAND_MARGIN,
+        "critical_rul_threshold": float(config.critical_rul_threshold),
+    }
+    return calibration, analysis
 
 
 def _build_explanation(
@@ -649,13 +930,17 @@ def train_and_lock(
     *,
     run_id: str,
     config: ModelingConfig | None = None,
+    dataset: str = "FD001",
 ) -> TrainResult:
-    """Train on development engines, calibrate once, and atomically lock a run."""
+    """Select on development engines, calibrate, and atomically lock a run."""
     root = project_root.resolve()
     if not run_id or Path(run_id).name != run_id:
         raise ModelingError("run_id must be one safe path component")
     active_config = config or load_modeling_config(root)
-    train, data_manifest, split_manifest = _load_and_validate_training_inputs(root)
+    test_status = load_test_status(root, dataset)
+    train, data_manifest, split_manifest = _load_and_validate_training_inputs(
+        root, dataset
+    )
     runs_root = root / "runs"
     final_run_dir = runs_root / run_id
     if final_run_dir.exists():
@@ -664,93 +949,95 @@ def train_and_lock(
     temporary = Path(tempfile.mkdtemp(prefix=f".{run_id}-", dir=runs_root))
 
     try:
-        development = train.loc[train["role"].eq("development")].reset_index(drop=True)
-        calibration = train.loc[train["role"].eq("calibration")].reset_index(drop=True)
-        development_features = build_causal_features(development)
-        folds, fold_records = _fold_plan(development, active_config)
-        mean_record, mean_oof = _fit_mean_cv(development, folds, active_config)
-        ridge_records, ridge_predictions = _fit_ridge_cv(
-            development_features, development, folds, active_config
+        all_frame = train.reset_index(drop=True)
+        all_features = build_causal_features(all_frame)
+        development_mask = all_frame["role"].eq("development").to_numpy()
+        development = all_frame.loc[development_mask].reset_index(drop=True)
+        development_features = all_features.loc[development_mask].reset_index(drop=True)
+        engines = development["unit_id"].to_numpy()
+        truth = development["rul_true"].to_numpy(dtype=np.float64)
+        folds = group_fold_plan(
+            engines, folds=active_config.group_folds, seed=active_config.seed
         )
-        xgboost_records, xgboost_predictions = _fit_xgboost_cv(
-            development_features, development, folds, active_config
+        plan = draw_engine_rows(
+            engines,
+            eligible_rows(truth, active_config.scoring_rul_window),
+            draws=active_config.scoring_draws,
+            seed=active_config.seed,
         )
-        decision = _select_champion(ridge_records, xgboost_records)
+        data = _SelectionData(
+            development, development_features, folds, plan, active_config
+        )
 
-        best_ridge = min(ridge_records, key=_metric_rank)
-        best_xgboost = min(xgboost_records, key=_metric_rank)
-        selected_predictions = {
-            "development_target_mean": mean_oof,
-            "ridge": ridge_predictions[float(best_ridge["alpha"])],
-            "xgboost": xgboost_predictions[int(best_xgboost["candidate"])],
+        base = {
+            "feature_set": "all",
+            "cap": active_config.rul_cap_candidates[0],
         }
-        oof = pd.DataFrame(
-            {
-                "unit_id": development["unit_id"],
-                "cycle": development["cycle"],
-                "rul_true": development["rul_true"],
-                "rul_target": development["rul_target"],
-                **{
-                    f"{name}_prediction": values
-                    for name, values in selected_predictions.items()
-                },
-            }
+        best_ridge, ridge_stages = _select_family(
+            [{**base, "family": "ridge", "alpha": alpha} for alpha in RIDGE_ALPHAS],
+            data,
         )
+        best_xgboost, xgboost_stages = _select_family(
+            [
+                {
+                    **base,
+                    "family": "xgboost",
+                    "candidate": index,
+                    "parameters": parameters,
+                }
+                for index, parameters in enumerate(
+                    _xgboost_parameter_candidates(active_config), start=1
+                )
+            ],
+            data,
+        )
+        decision = _select_champion(best_ridge, best_xgboost, active_config)
+        decision["window_sensitivity"] = _window_sensitivity(
+            best_ridge, best_xgboost, data
+        )
+        locked_spec = (
+            best_xgboost if decision["champion"] == "xgboost" else best_ridge
+        )["spec"]
 
-        model, preprocessor, model_hashes, model_spec = _fit_final_model(
-            development_features,
-            development,
-            decision,
+        cross_fit, fold_ids = cross_fit_predictions(
+            locked_spec,
+            all_features,
+            all_frame,
             active_config,
-            temporary,
+            seed=active_config.seed,
         )
-        calibration_selected = _calibration_rows(calibration)
-        calibration_features = build_causal_features(calibration)
-        selected_indices = calibration_selected.set_index(["unit_id", "cycle"]).index
-        calibration_index = pd.MultiIndex.from_frame(calibration[["unit_id", "cycle"]])
-        selected_mask = calibration_index.isin(selected_indices)
-        selected_features = calibration_features.loc[selected_mask].reset_index(
-            drop=True
+        calibration, calibration_analysis = calibrate_interval(
+            cross_fit,
+            fold_ids,
+            all_frame,
+            active_config,
+            seed=active_config.seed,
         )
-        calibration_selected = (
-            calibration.loc[selected_mask].copy().reset_index(drop=True)
+        model, preprocessor = fit_final_model(
+            locked_spec,
+            all_features,
+            all_frame,
+            active_config,
+            seed=active_config.seed,
         )
-        cutoff_by_engine = {
-            int(unit_id): CALIBRATION_CUTOFFS[index % len(CALIBRATION_CUTOFFS)]
-            for index, unit_id in enumerate(
-                sorted(calibration_selected["unit_id"].unique())
-            )
-        }
-        calibration_selected["calibration_cutoff"] = calibration_selected[
-            "unit_id"
-        ].map(cutoff_by_engine)
-        calibration_prediction = _predict_model(
-            model,
-            preprocessor,
-            selected_features,
-            decision["champion"],
+        model_hashes, model_spec = _persist_model(
+            locked_spec, model, preprocessor, temporary
         )
-        scores = np.abs(
-            calibration_prediction
-            - calibration_selected["rul_true"].to_numpy(dtype=np.float64)
-        )
-        q = finite_sample_quantile(scores, active_config.nominal_interval_coverage)
-        calibration_output = calibration_selected.loc[
-            :,
-            ["unit_id", "cycle", "rul_true", "calibration_cutoff"],
-        ].copy()
-        calibration_output["prediction"] = calibration_prediction
-        calibration_output["absolute_error"] = scores
-        calibration_output["interval_low"] = np.maximum(0.0, calibration_prediction - q)
-        calibration_output["interval_high"] = calibration_prediction + q
 
-        explanation_sample = selected_features.iloc[: min(200, len(selected_features))]
+        last_rows = (
+            all_frame.groupby("unit_id", sort=False)["cycle"]
+            .transform("max")
+            .eq(all_frame["cycle"])
+        )
+        explanation_features = all_features.loc[
+            last_rows, list(preprocessor.input_features)
+        ].reset_index(drop=True)
         explanation = _build_explanation(
             model,
             preprocessor,
-            explanation_sample,
-            calibration_selected.iloc[0],
-            decision["champion"],
+            explanation_features,
+            all_frame.loc[last_rows].iloc[0],
+            locked_spec["family"],
         )
         feature_manifest = {
             "schema_version": MODEL_SCHEMA_VERSION,
@@ -764,62 +1051,57 @@ def train_and_lock(
                 "linear slope",
                 "last minus mean",
             ],
-            "feature_count": len(FEATURE_NAMES),
-            "feature_order": list(FEATURE_NAMES),
+            "feature_set": locked_spec["feature_set"],
+            "feature_count": len(preprocessor.input_features),
+            "feature_order": list(preprocessor.input_features),
             "final_preprocessing": preprocessor.manifest(),
         }
         comparison = {
             "shared_protocol": {
-                "selection_scope": "development engines only",
+                "selection_scope": SELECTION_SCOPE,
                 "folds": active_config.group_folds,
                 "seed": active_config.seed,
-                "engine_equal_total_sample_weight": True,
-                "metrics": [
-                    "MAE",
-                    "RMSE",
-                    "motor-normalized NASA score",
-                    "signed bias",
-                    "overprediction rate",
-                    "critical RUL precision/recall/F1",
-                    "RUL-band MAE",
-                ],
+                "scoring": (
+                    f"{active_config.scoring_draws} seeded draws of one eligible "
+                    "row per engine, scored with the official metric function"
+                ),
+                "rul_window": active_config.scoring_rul_window,
+                "early_stopping": "inner engine split inside each training fold",
             },
-            "development_target_mean": mean_record,
-            "ridge_candidates": ridge_records,
-            "xgboost_candidates": xgboost_records,
+            "development_target_mean": _mean_baseline(data),
+            "ridge_stages": ridge_stages,
+            "xgboost_stages": xgboost_stages,
             "champion_decision": decision,
         }
-        calibration_summary = {
-            "scope": "20 calibration engines only; one score per engine",
-            "coverage_label": (
-                f"nominal {active_config.nominal_interval_coverage:.0%} "
-                "empirical prediction interval; not a safety guarantee"
-            ),
-            "coverage": active_config.nominal_interval_coverage,
-            "scores": len(scores),
-            "finite_sample_rank": min(
-                len(scores),
-                math.ceil((len(scores) + 1) * active_config.nominal_interval_coverage),
-            ),
-            "q": q,
-            "risk_band_source": "interval_low",
-            "risk_bands": {
-                "critical": "<=30",
-                "elevated": "31-60",
-                "routine": ">60",
-            },
-        }
+        oof = pd.DataFrame(
+            {
+                "unit_id": development["unit_id"],
+                "cycle": development["cycle"],
+                "rul_true": development["rul_true"],
+                "ridge_prediction": best_ridge["_oof"],
+                "xgboost_prediction": best_xgboost["_oof"],
+            }
+        )
+        cross_fit_output = pd.DataFrame(
+            {
+                "unit_id": all_frame["unit_id"],
+                "cycle": all_frame["cycle"],
+                "rul_true": all_frame["rul_true"],
+                "role": all_frame["role"],
+                "fold": fold_ids,
+                "prediction": cross_fit,
+            }
+        )
 
-        _write_json(temporary / "cv_folds.json", fold_records)
         _write_json(temporary / "feature_manifest.json", feature_manifest)
         _write_json(temporary / "model_comparison.json", comparison)
         _write_json(temporary / "champion_decision.json", decision)
         _write_new_bytes(temporary / "oof_predictions.parquet", _parquet_bytes(oof))
         _write_new_bytes(
-            temporary / "calibration_scores.parquet",
-            _parquet_bytes(calibration_output),
+            temporary / "cross_fit_predictions.parquet",
+            _parquet_bytes(cross_fit_output),
         )
-        _write_json(temporary / "calibration_summary.json", calibration_summary)
+        _write_json(temporary / "calibration_analysis.json", calibration_analysis)
         _write_json(temporary / "explanation.json", explanation)
 
         generated_hashes = {
@@ -828,15 +1110,25 @@ def train_and_lock(
             if path.is_file() and path.name != "model_lock.json"
         }
         generated_hashes.update(model_hashes)
-        processed = root / "data" / "processed" / "fd001"
+        processed = _processed_dir(root, dataset)
         config_path = root / "configs" / "project.yaml"
+        protocol_path = root / PROTOCOL_DOCUMENT
         environment = runtime_fingerprint(root)
         lock = {
             "schema_version": MODEL_SCHEMA_VERSION,
+            "protocol": {
+                "version": 2,
+                "document": PROTOCOL_DOCUMENT,
+                "sha256": (
+                    sha256_file(protocol_path) if protocol_path.is_file() else None
+                ),
+                "test_status": test_status,
+                "label": TEST_STATUS_LABELS[test_status],
+            },
             "run_id": run_id,
-            "dataset": "FD001",
+            "dataset": dataset,
             "seed": active_config.seed,
-            "selection_scope": "development engines only",
+            "selection_scope": SELECTION_SCOPE,
             "development_engine_ids": split_manifest["development_engine_ids"],
             "calibration_engine_ids": split_manifest["calibration_engine_ids"],
             "data": {
@@ -854,18 +1146,13 @@ def train_and_lock(
                 "modeling": asdict(active_config),
             },
             "features": {
-                "order": list(FEATURE_NAMES),
+                "set": locked_spec["feature_set"],
+                "order": list(preprocessor.input_features),
                 "feature_manifest_sha256": generated_hashes["feature_manifest.json"],
             },
             "champion": model_spec,
             "champion_rule_evidence": decision,
-            "calibration": {
-                "coverage": active_config.nominal_interval_coverage,
-                "label": "nominal empirical interval; not a safety guarantee",
-                "q": q,
-                "score_count": len(scores),
-                "scores_sha256": generated_hashes["calibration_scores.parquet"],
-            },
+            "calibration": calibration,
             "environment": environment,
             "artifacts": generated_hashes,
             "official_test_evaluation": "not opened during training or calibration",
@@ -873,6 +1160,7 @@ def train_and_lock(
         _write_json(temporary / "model_lock.json", lock)
         run_manifest = {
             "run_id": run_id,
+            "dataset": dataset,
             "status": "model_locked",
             "seed": active_config.seed,
             "data_manifest_sha256": lock["data"]["manifest_sha256"],
@@ -880,7 +1168,7 @@ def train_and_lock(
             "model_lock_sha256": sha256_file(temporary / "model_lock.json"),
             "champion": decision["champion"],
             "development_metrics": decision[decision["champion"]]["metrics"],
-            "calibration_q": q,
+            "interval_max_half_width": calibration["max_half_width"],
             "environment": environment,
         }
         _write_json(temporary / "manifest.json", run_manifest)
@@ -893,7 +1181,7 @@ def train_and_lock(
         run_id=run_id,
         run_dir=final_run_dir,
         champion=decision["champion"],
-        calibration_q=q,
+        interval_half_width=calibration["max_half_width"],
         model_lock=final_run_dir / "model_lock.json",
     )
 

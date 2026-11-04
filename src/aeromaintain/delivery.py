@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from aeromaintain.app import AppArtifacts, load_verified_run
-from aeromaintain.data import PrepareResult, prepare_fd001
+from aeromaintain.data import PrepareResult, prepare_dataset
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.models import evaluate_locked, train_and_lock
 from aeromaintain.models.rul import EvaluationResult, TrainResult
@@ -67,13 +67,16 @@ def _atomic_replace(path: Path, payload: bytes) -> None:
 
 def _report_payload(artifacts: AppArtifacts) -> dict[str, Any]:
     metrics = artifacts.metrics
+    dataset = artifacts.model_lock["dataset"]
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "run_id": artifacts.run_id,
+        "dataset": dataset,
+        "protocol": artifacts.model_lock["protocol"],
         "status": "pipeline_complete",
         "scope": (
-            "Educational evaluation on NASA's simulated C-MAPSS FD001 benchmark; "
-            "not an airworthiness or production-fleet system."
+            f"Educational evaluation on NASA's simulated C-MAPSS {dataset} "
+            "benchmark; not an airworthiness or production-fleet system."
         ),
         "model": {
             "champion": artifacts.model_lock["champion"]["kind"],
@@ -87,7 +90,9 @@ def _report_payload(artifacts: AppArtifacts) -> dict[str, Any]:
             "rmse": metrics["rmse"],
             "nasa_score_motor_normalized": metrics["nasa_score_motor_normalized"],
             "critical_rul": metrics["critical_rul"],
+            "alert_rules": metrics["alert_rules"],
             "nominal_empirical_interval": metrics["nominal_empirical_interval"],
+            "bootstrap": metrics["bootstrap"],
         },
         "label_boundary": (
             "Official test RUL is opened only after model lock and is excluded "
@@ -98,7 +103,8 @@ def _report_payload(artifacts: AppArtifacts) -> dict[str, Any]:
 
 def _report_html(report: dict[str, Any]) -> bytes:
     official = report["official_test"]
-    critical = official["critical_rul"]
+    point_rule = official["alert_rules"]["point_prediction"]
+    risk_rule = official["alert_rules"]["interval_low"]
     interval = official["nominal_empirical_interval"]
     html = f"""<!doctype html>
 <html lang="en">
@@ -115,6 +121,7 @@ def _report_html(report: dict[str, Any]) -> bytes:
 <body>
   <h1>AeroMaintain AI — {escape(report["run_id"])}</h1>
   <p class="warning">{escape(report["scope"])}</p>
+  <p>{escape(report["protocol"]["label"])}</p>
   <h2>Locked official-test result</h2>
   <table>
     <tbody>
@@ -123,7 +130,10 @@ def _report_html(report: dict[str, Any]) -> bytes:
       <tr><th>RMSE</th><td>{official["rmse"]:.6f}</td></tr>
       <tr><th>Motor-normalized NASA score</th>
         <td>{official["nasa_score_motor_normalized"]:.6f}</td></tr>
-      <tr><th>Critical recall</th><td>{critical["recall"]:.2%}</td></tr>
+      <tr><th>Point rule recall / precision</th>
+        <td>{point_rule["recall"]:.2%} / {point_rule["precision"]:.2%}</td></tr>
+      <tr><th>Interval-low rule recall / precision</th>
+        <td>{risk_rule["recall"]:.2%} / {risk_rule["precision"]:.2%}</td></tr>
       <tr><th>Observed interval coverage</th>
         <td>{interval["observed_official_test_coverage"]:.2%}</td></tr>
     </tbody>
@@ -157,7 +167,7 @@ def _finalize_run(
 
     manifest["status"] = "pipeline_complete"
     manifest["pipeline"] = {
-        "schema_version": 2,
+        "schema_version": 3,
         "status": "complete",
         "stages": ["prepare", "train_and_lock", "evaluate_locked", "report"],
         "artifacts": {
@@ -181,8 +191,9 @@ def run_pipeline(
     project_root: Path,
     *,
     run_id: str,
+    dataset: str = "FD001",
     archive_path: Path | None = None,
-    prepare_step: PrepareStep = prepare_fd001,
+    prepare_step: PrepareStep = prepare_dataset,
     train_step: TrainStep = train_and_lock,
     evaluation_step: EvaluationStep = evaluate_locked,
     load_step: LoadStep = load_verified_run,
@@ -195,8 +206,8 @@ def run_pipeline(
     if run_dir.exists():
         raise DeliveryError(f"Run directory already exists: {run_dir}")
     try:
-        prepare_step(root, archive_path=archive_path)
-        train_step(root, run_id=run_id)
+        prepare_step(root, dataset=dataset, archive_path=archive_path)
+        train_step(root, run_id=run_id, dataset=dataset)
         evaluation_step(root, run_id=run_id)
         return _finalize_run(root, run_id, load_step=load_step)
     except DeliveryError:

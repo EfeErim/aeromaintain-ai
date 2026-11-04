@@ -8,7 +8,7 @@ from aeromaintain.runtime import runtime_fingerprint
 
 
 def test_package_has_a_version() -> None:
-    assert __version__ == "0.1.0"
+    assert __version__ == "0.2.0"
 
 
 def test_runtime_fingerprint_requires_tested_constraints(tmp_path: Path) -> None:
@@ -22,7 +22,14 @@ def test_public_reference_evidence_is_sanitized_and_self_consistent() -> None:
         (root / "docs" / "reference_evidence.json").read_text(encoding="utf-8")
     )
 
-    assert evidence["schema_version"] == 2
+    assert evidence["schema_version"] == 3
+    runs = {run["run_id"]: run for run in evidence["protocol_v2"]["runs"]}
+    assert runs["fd003-v2-clean"]["test_status"] == "clean_single_open"
+    assert runs["fd001-v2"]["test_status"] == "previously_seen"
+    for run in runs.values():
+        assert run["development"]["rmse_target_met"] is False
+        assert run["calibration"]["width_target_met"] is False
+        assert run["official_test"]["rmse_ci95"][0] < run["official_test"]["rmse"]
     assert evidence["run"]["status"] == "pipeline_complete"
     assert evidence["run"]["stages"] == [
         "prepare",

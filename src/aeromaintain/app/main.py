@@ -9,7 +9,11 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from aeromaintain.app.artifacts import ArtifactValidationError, load_verified_run
+from aeromaintain.app.artifacts import (
+    ArtifactValidationError,
+    load_public_bundle,
+    load_verified_run,
+)
 
 APP_CSS = """
 <style>
@@ -95,17 +99,45 @@ def _metric_row(items: tuple[tuple[str, str, str], ...]) -> None:
         column.metric(label, value, help=help_text)
 
 
+def _rate_with_interval(rule: dict, name: str) -> str:
+    interval = rule["wilson_95"][name]
+    if interval is None:
+        return "n/a"
+    return f"{rule[name]:.1%} ({interval['low']:.1%} to {interval['high']:.1%})"
+
+
+def _alert_rule_table(point_rule: dict, risk_rule: dict) -> pd.DataFrame:
+    rows = []
+    for label, column, rule in (
+        ("Point prediction", "prediction", point_rule),
+        ("Interval lower bound", "interval_low", risk_rule),
+    ):
+        rows.append(
+            {
+                "Rule": f"{label} ({column} <= {rule['alert_threshold']:.0f})",
+                "Recall": _rate_with_interval(rule, "recall"),
+                "Precision": _rate_with_interval(rule, "precision"),
+                "False-alarm rate": _rate_with_interval(rule, "false_alarm_rate"),
+                "Missed": rule["false_negative"],
+                "False alarms": rule["false_positive"],
+            }
+        )
+    return pd.DataFrame(rows)
+
+
 def _overview(artifacts) -> None:
     _page_header("Overview")
     metrics = artifacts.metrics
     interval = metrics["nominal_empirical_interval"]
-    critical = metrics["critical_rul"]
+    point_rule = metrics["alert_rules"]["point_prediction"]
+    risk_rule = metrics["alert_rules"]["interval_low"]
+    dataset = artifacts.model_lock["dataset"]
     _metric_row(
         (
             (
                 "Test MAE",
                 f"{metrics['mae']:.2f}",
-                "Mean absolute error over 100 official FD001 test engines.",
+                f"Mean absolute error over official {dataset} test engines.",
             ),
             (
                 "Test RMSE",
@@ -118,15 +150,15 @@ def _overview(artifacts) -> None:
                 "Observed coverage for the nominal 90% empirical interval.",
             ),
             (
-                "Critical recall",
-                f"{critical['recall']:.0%}",
-                "Recall when point RUL prediction is at or below 30 cycles.",
+                "Interval-low recall",
+                f"{risk_rule['recall']:.0%}",
+                "Share of truly critical engines flagged by the interface risk rule.",
             ),
         )
     )
     st.info(
-        "FD001 is a simulated NASA benchmark. Metrics shown here come from the "
-        "locked official-test evaluation."
+        f"{dataset} is a simulated NASA benchmark. Metrics shown here come from "
+        "the locked official-test evaluation."
     )
 
     risk_counts = (
@@ -164,8 +196,13 @@ def _overview(artifacts) -> None:
             [
                 ("Test engines", int(metrics["engines"])),
                 ("NASA score", f"{metrics['nasa_score_motor_normalized']:.2f}"),
-                ("Critical precision", f"{critical['precision']:.0%}"),
-                ("Critical recall", f"{critical['recall']:.0%}"),
+                (
+                    "RMSE 95% range",
+                    "{:.2f} to {:.2f}".format(
+                        *metrics["bootstrap"]["intervals_95"]["rmse"]
+                    ),
+                ),
+                ("Mean interval width", f"{interval['mean_width']:.1f}"),
                 (
                     "Interval target",
                     f"{interval['nominal_coverage']:.0%}",
@@ -178,13 +215,26 @@ def _overview(artifacts) -> None:
             columns=["Measure", "Value"],
         )
         summary["Value"] = summary["Value"].astype(str)
-        st.dataframe(summary, hide_index=True, width="stretch", height=270)
+        st.dataframe(summary, hide_index=True, width="stretch")
+
+    st.subheader("Critical-engine alert rules")
+    st.dataframe(
+        _alert_rule_table(point_rule, risk_rule),
+        hide_index=True,
+        width="stretch",
+    )
+    st.caption(
+        "A truly critical engine has at most "
+        f"{risk_rule['critical_threshold']:.0f} remaining cycles. Ranges are "
+        "two-sided Wilson 95% intervals over one row per engine."
+    )
 
     with st.expander("Run details"):
         identity = pd.DataFrame(
             [
                 ("Run", artifacts.run_id),
                 ("Dataset", artifacts.model_lock["dataset"]),
+                ("Protocol", artifacts.model_lock["protocol"]["label"]),
                 ("Champion model", artifacts.model_lock["champion"]["kind"]),
                 ("Seed", artifacts.model_lock["seed"]),
                 ("Interval", artifacts.model_lock["calibration"]["label"]),
@@ -203,23 +253,30 @@ def _engine_risk(artifacts) -> None:
     _page_header("Engine risk")
     ranking = artifacts.risk_ranking.copy()
     counts = ranking["risk_band"].value_counts()
+    calibration = artifacts.model_lock["calibration"]
+    risk_threshold = float(calibration["risk_threshold"])
+    elevated_threshold = float(calibration["elevated_threshold"])
     _metric_row(
         (
-            ("Engines", str(len(ranking)), "Official FD001 test engines."),
+            (
+                "Engines",
+                str(len(ranking)),
+                f"Official {artifacts.model_lock['dataset']} test engines.",
+            ),
             (
                 "Critical",
                 str(int(counts.get("critical", 0))),
-                "Interval lower bound at or below 30 cycles.",
+                f"Interval lower bound at or below {risk_threshold:.0f} cycles.",
             ),
             (
                 "Elevated",
                 str(int(counts.get("elevated", 0))),
-                "Interval lower bound from 31 to 60 cycles.",
+                f"Interval lower bound up to {elevated_threshold:.0f} cycles.",
             ),
             (
                 "Routine",
                 str(int(counts.get("routine", 0))),
-                "Interval lower bound above 60 cycles.",
+                f"Interval lower bound above {elevated_threshold:.0f} cycles.",
             ),
         )
     )
@@ -269,20 +326,27 @@ def _engine_risk(artifacts) -> None:
         low.metric("Interval low", f"{selected['interval_low']:.1f}")
         high.metric("Interval high", f"{selected['interval_high']:.1f}")
         st.caption(f"Risk band: {str(selected['risk_band']).title()}")
-        sensors = st.multiselect(
-            "Sensor channels",
-            [
-                column
-                for column in artifacts.sensor_history.columns
-                if column.startswith("sensor_")
-            ],
-            default=["sensor_2", "sensor_7", "sensor_12"],
-            max_selections=5,
-        )
-        history = artifacts.sensor_history.loc[
-            artifacts.sensor_history["unit_id"].eq(engine_id)
-        ]
+        if artifacts.sensor_history.empty:
+            st.caption(
+                "Sensor history is local-only: NASA's dataset page specifies no "
+                "license, so this demo does not redistribute its rows."
+            )
+            sensors = []
+        else:
+            sensors = st.multiselect(
+                "Sensor channels",
+                [
+                    column
+                    for column in artifacts.sensor_history.columns
+                    if column.startswith("sensor_")
+                ],
+                default=["sensor_2", "sensor_7", "sensor_12"],
+                max_selections=5,
+            )
         if sensors:
+            history = artifacts.sensor_history.loc[
+                artifacts.sensor_history["unit_id"].eq(engine_id)
+            ]
             chart_data = history.loc[:, ["cycle", *sensors]].melt(
                 id_vars="cycle",
                 var_name="Sensor",
@@ -300,22 +364,33 @@ def _engine_risk(artifacts) -> None:
                 width="stretch",
             )
 
-    with st.expander("Model coefficient review"):
-        st.caption("Model coefficients describe model behavior, not causal effects.")
-        importance = pd.DataFrame(artifacts.explanation["global_importance"]).head(12)
-        coefficient_chart = px.bar(
-            importance.sort_values("coefficient"),
-            x="coefficient",
+    importance = pd.DataFrame(artifacts.explanation["global_importance"]).head(12)
+    if "coefficient" in importance.columns:
+        value_column = "coefficient"
+        section_title = "Model coefficient review"
+        caption = "Model coefficients describe model behavior, not causal effects."
+        axis_title = "Standardized coefficient"
+    else:
+        value_column = "mean_abs_shap"
+        section_title = "Model SHAP review"
+        caption = "SHAP values describe model behavior, not causal effects."
+        axis_title = "Mean absolute SHAP value"
+
+    with st.expander(section_title):
+        st.caption(caption)
+        importance_chart = px.bar(
+            importance.sort_values(value_column),
+            x=value_column,
             y="feature",
             orientation="h",
         )
-        coefficient_chart.update_traces(marker_color="#315C4C")
-        coefficient_chart.update_layout(
-            xaxis_title="Standardized coefficient",
+        importance_chart.update_traces(marker_color="#315C4C")
+        importance_chart.update_layout(
+            xaxis_title=axis_title,
             yaxis_title="",
         )
         st.plotly_chart(
-            _plot_style(coefficient_chart, height=420),
+            _plot_style(importance_chart, height=420),
             width="stretch",
         )
 
@@ -328,13 +403,18 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
     st.markdown(APP_CSS, unsafe_allow_html=True)
+    public_bundle = os.environ.get("AEROMAINTAIN_PUBLIC_BUNDLE", "")
     run_id = os.environ.get("AEROMAINTAIN_RUN_ID", "")
     project_root = Path(os.environ.get("AEROMAINTAIN_PROJECT_ROOT", ".")).resolve()
-    if not run_id:
+    if not run_id and not public_bundle:
         st.error("AEROMAINTAIN_RUN_ID is required. Launch with aeromaintain app.")
         st.stop()
     try:
-        artifacts = load_verified_run(project_root, run_id)
+        artifacts = (
+            load_public_bundle(Path(public_bundle))
+            if public_bundle
+            else load_verified_run(project_root, run_id)
+        )
     except ArtifactValidationError as exc:
         st.error(str(exc))
         st.stop()
@@ -345,7 +425,8 @@ def main() -> None:
     st.sidebar.divider()
     st.sidebar.caption("Run")
     st.sidebar.write(artifacts.run_id)
-    st.sidebar.caption("FD001 · simulated benchmark")
+    st.sidebar.caption(f"{artifacts.model_lock['dataset']} · simulated benchmark")
+    st.sidebar.caption(artifacts.model_lock["protocol"]["label"])
 
     if page == "Overview":
         _overview(artifacts)
