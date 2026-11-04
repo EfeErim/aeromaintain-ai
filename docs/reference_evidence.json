@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "active_scope": "rul_evaluation_only",
   "run": {
     "run_id": "m4-fd001-seed42-20260729",
@@ -82,6 +82,56 @@
       "target_coverage": 0.9,
       "observed_coverage": 0.89,
       "mean_width": 60.62313979736193
+    },
+    "alert_rules": {
+      "source": "Recomputed from the byte-identical fd001-repro predictions; the 2026-07-29 lock already fixed the interval_low risk band source.",
+      "interval_method": "two-sided Wilson 95% over one row per engine",
+      "critical_engines": 25,
+      "non_critical_engines": 75,
+      "point_prediction": {
+        "rule": "prediction <= 30",
+        "true_positive": 12,
+        "false_positive": 0,
+        "false_negative": 13,
+        "true_negative": 75,
+        "recall": 0.48,
+        "recall_wilson_95": [
+          0.30031285954112974,
+          0.6650148304964322
+        ],
+        "precision": 1.0,
+        "precision_wilson_95": [
+          0.7575059933447592,
+          1.0
+        ],
+        "false_alarm_rate": 0.0,
+        "false_alarm_rate_wilson_95": [
+          0.0,
+          0.04872384248280587
+        ]
+      },
+      "interval_low": {
+        "rule": "interval_low <= 30",
+        "true_positive": 25,
+        "false_positive": 9,
+        "false_negative": 0,
+        "true_negative": 66,
+        "recall": 1.0,
+        "recall_wilson_95": [
+          0.8668077490609515,
+          1.0
+        ],
+        "precision": 0.7352941176470589,
+        "precision_wilson_95": [
+          0.5688285871705534,
+          0.8539880932278825
+        ],
+        "false_alarm_rate": 0.12,
+        "false_alarm_rate_wilson_95": [
+          0.06443371823944515,
+          0.2125964020474873
+        ]
+      }
     }
   },
   "integrity": {
@@ -93,6 +143,992 @@
     "FD001 is a simulated benchmark, not operational fleet telemetry.",
     "Official test labels were opened only after the model lock was written and validated.",
     "Point-threshold critical metrics use prediction <= 30; interface risk bands use interval_low.",
-    "The public bundle contains aggregate evidence only; it does not redistribute NASA rows or model binaries."
-  ]
+    "The public bundle contains aggregate evidence only; it does not redistribute NASA rows or model binaries.",
+    "FD001 protocol v2 test labels had been seen before v2 was designed; only the FD003 result is a clean single-open test of the frozen protocol."
+  ],
+  "protocol_v2": {
+    "document": "docs/protocol_v2.md",
+    "runs": [
+      {
+        "run_id": "fd001-v2",
+        "dataset": "FD001",
+        "status": "pipeline_complete",
+        "seed": 42,
+        "label": "protocol v2, test previously seen",
+        "test_status": "previously_seen",
+        "development": {
+          "ridge": {
+            "spec": {
+              "alpha": 1.0,
+              "cap": 125,
+              "feature_set": "all"
+            },
+            "median_rmse": 21.006011025981266,
+            "rmse_p05_p95": [
+              18.20064446919547,
+              23.782399609794783
+            ],
+            "median_mae": 16.746044716294413,
+            "median_nasa": 625.8869415624088,
+            "median_point_rule_recall": 0.7
+          },
+          "xgboost": {
+            "spec": {
+              "candidate": 7,
+              "cap": 125,
+              "feature_set": "all",
+              "tree_count": 123
+            },
+            "median_rmse": 18.56533839683449,
+            "rmse_p05_p95": [
+              16.361487502673977,
+              21.256896610245686
+            ],
+            "median_mae": 14.399079895019531,
+            "median_nasa": 501.10929774340184,
+            "median_point_rule_recall": 0.8480769230769231
+          },
+          "champion": "xgboost",
+          "xgboost_rmse_improvement_fraction": 0.11618924821699994,
+          "xgboost_win_rate_over_paired_draws": 0.99,
+          "rmse_target": 16.6,
+          "rmse_target_met": false,
+          "window_sensitivity": [
+            {
+              "champion": "xgboost",
+              "ridge_median_nasa": 479.2956782212069,
+              "ridge_median_rmse": 18.348958887214252,
+              "window": 130,
+              "xgboost_median_nasa": 421.5182289880835,
+              "xgboost_median_rmse": 16.35226112587496
+            },
+            {
+              "champion": "xgboost",
+              "ridge_median_nasa": 1317.0034581191585,
+              "ridge_median_rmse": 26.32137619539145,
+              "window": 175,
+              "xgboost_median_nasa": 1056.8503801227143,
+              "xgboost_median_rmse": 24.151282729719547
+            },
+            {
+              "champion": "ridge",
+              "ridge_median_nasa": 362653.84731954604,
+              "ridge_median_rmse": 44.86128551872639,
+              "window": null,
+              "xgboost_median_nasa": 473465.2833127831,
+              "xgboost_median_rmse": 43.784030703151174
+            }
+          ]
+        },
+        "calibration": {
+          "method": "mondrian-signed-residual-cross-fit",
+          "bands": [
+            {
+              "engines": 100,
+              "q_high": 10.638481140136719,
+              "q_low": -9.529182434082031,
+              "rows": 2943,
+              "upper_predicted_rul": 30.0
+            },
+            {
+              "engines": 100,
+              "q_high": 19.078277587890625,
+              "q_low": -21.038238525390625,
+              "rows": 2505,
+              "upper_predicted_rul": 60.0
+            },
+            {
+              "engines": 100,
+              "q_high": 41.03038787841797,
+              "q_low": -33.75836181640625,
+              "rows": 4849,
+              "upper_predicted_rul": 100.0
+            },
+            {
+              "engines": 95,
+              "q_high": 39.639366149902344,
+              "q_low": -27.817672729492188,
+              "rows": 4727,
+              "upper_predicted_rul": null
+            }
+          ],
+          "risk_threshold": 20.0,
+          "elevated_threshold": 50.0,
+          "leave_engines_out_median_coverage": 0.91,
+          "leave_engines_out_median_mean_width": 55.67903527826071,
+          "width_target": 45,
+          "width_target_met": false,
+          "by_predicted_rul": {
+            "31-60": {
+              "median_coverage": 0.9148550724637681,
+              "median_mean_width": 40.59376333024767,
+              "median_rows": 17.0
+            },
+            "61-100": {
+              "median_coverage": 0.9080338266384778,
+              "median_mean_width": 75.00962514143724,
+              "median_rows": 32.0
+            },
+            "<=30": {
+              "median_coverage": 0.9166666666666666,
+              "median_mean_width": 18.833845542711124,
+              "median_rows": 19.0
+            },
+            ">100": {
+              "median_coverage": 0.9245014245014245,
+              "median_mean_width": 67.53663290352084,
+              "median_rows": 32.0
+            }
+          },
+          "by_true_rul": {
+            "0-30": {
+              "median_coverage": 0.9486842105263158,
+              "median_mean_width": 21.346685923836493,
+              "median_rows": 21.5
+            },
+            "31-60": {
+              "median_coverage": 0.9023809523809524,
+              "median_mean_width": 51.21053968369961,
+              "median_rows": 20.0
+            },
+            "61-125": {
+              "median_coverage": 0.9175170068027211,
+              "median_mean_width": 70.00781862666604,
+              "median_rows": 43.0
+            },
+            ">125": {
+              "median_coverage": 0.8823529411764706,
+              "median_mean_width": 68.50698135659422,
+              "median_rows": 16.0
+            }
+          },
+          "risk_threshold_table": [
+            {
+              "median_false_alarm_rate": 0.0,
+              "median_false_alarms": 0.0,
+              "median_missed": 14.0,
+              "median_precision": 1.0,
+              "median_recall": 0.3333333333333333,
+              "threshold": 0.0
+            },
+            {
+              "median_false_alarm_rate": 0.0,
+              "median_false_alarms": 0.0,
+              "median_missed": 11.0,
+              "median_precision": 1.0,
+              "median_recall": 0.4913793103448276,
+              "threshold": 5.0
+            },
+            {
+              "median_false_alarm_rate": 0.0,
+              "median_false_alarms": 0.0,
+              "median_missed": 7.0,
+              "median_precision": 1.0,
+              "median_recall": 0.6470588235294118,
+              "threshold": 10.0
+            },
+            {
+              "median_false_alarm_rate": 0.02666666666666667,
+              "median_false_alarms": 2.0,
+              "median_missed": 4.0,
+              "median_precision": 0.8823529411764706,
+              "median_recall": 0.8260869565217391,
+              "threshold": 15.0
+            },
+            {
+              "median_false_alarm_rate": 0.0641025641025641,
+              "median_false_alarms": 5.0,
+              "median_missed": 1.0,
+              "median_precision": 0.8076923076923077,
+              "median_recall": 0.9615384615384616,
+              "threshold": 20.0
+            },
+            {
+              "median_false_alarm_rate": 0.09256425948592412,
+              "median_false_alarms": 7.0,
+              "median_missed": 0.0,
+              "median_precision": 0.75,
+              "median_recall": 1.0,
+              "threshold": 25.0
+            },
+            {
+              "median_false_alarm_rate": 0.15384615384615385,
+              "median_false_alarms": 12.0,
+              "median_missed": 0.0,
+              "median_precision": 0.641941391941392,
+              "median_recall": 1.0,
+              "threshold": 30.0
+            },
+            {
+              "median_false_alarm_rate": 0.224937343358396,
+              "median_false_alarms": 18.0,
+              "median_missed": 0.0,
+              "median_precision": 0.55,
+              "median_recall": 1.0,
+              "threshold": 35.0
+            },
+            {
+              "median_false_alarm_rate": 0.2972972972972973,
+              "median_false_alarms": 23.0,
+              "median_missed": 0.0,
+              "median_precision": 0.475,
+              "median_recall": 1.0,
+              "threshold": 40.0
+            },
+            {
+              "median_false_alarm_rate": 0.351000351000351,
+              "median_false_alarms": 27.0,
+              "median_missed": 0.0,
+              "median_precision": 0.43478260869565216,
+              "median_recall": 1.0,
+              "threshold": 45.0
+            },
+            {
+              "median_false_alarm_rate": 0.40360046457607435,
+              "median_false_alarms": 32.0,
+              "median_missed": 0.0,
+              "median_precision": 0.40336728919071874,
+              "median_recall": 1.0,
+              "threshold": 50.0
+            },
+            {
+              "median_false_alarm_rate": 0.4605263157894737,
+              "median_false_alarms": 36.0,
+              "median_missed": 0.0,
+              "median_precision": 0.37037037037037035,
+              "median_recall": 1.0,
+              "threshold": 55.0
+            },
+            {
+              "median_false_alarm_rate": 0.524390243902439,
+              "median_false_alarms": 41.0,
+              "median_missed": 0.0,
+              "median_precision": 0.3388463641334062,
+              "median_recall": 1.0,
+              "threshold": 60.0
+            }
+          ]
+        },
+        "official_test": {
+          "engines": 100,
+          "mae": 11.154422445297241,
+          "mae_ci95": [
+            9.099515436053276,
+            13.431291957736015
+          ],
+          "rmse": 15.795547328093768,
+          "rmse_ci95": [
+            12.866960173973196,
+            18.781198385034187
+          ],
+          "nasa_score_motor_normalized": 398.3093549744923,
+          "nasa_ci95": [
+            232.97509843985677,
+            624.6703768017946
+          ],
+          "signed_bias": -1.5933013820648194,
+          "signed_bias_ci95": [
+            -4.607977868795395,
+            1.2795755923986398
+          ],
+          "rul_band_mae": {
+            "0-30": {
+              "mae": 4.749244499206543,
+              "rows": 25
+            },
+            "31-60": {
+              "mae": 6.695230211530413,
+              "rows": 14
+            },
+            "61-125": {
+              "mae": 12.21041374206543,
+              "rows": 50
+            },
+            ">125": {
+              "mae": 26.587020180442117,
+              "rows": 11
+            }
+          },
+          "point_rule": {
+            "alert_threshold": 30.0,
+            "true_positive": 20,
+            "false_positive": 0,
+            "false_negative": 5,
+            "true_negative": 75,
+            "precision": 1.0,
+            "recall": 0.8,
+            "false_alarm_rate": 0.0,
+            "wilson_95": {
+              "false_alarm_rate": {
+                "high": 0.04872384248280587,
+                "low": 0.0
+              },
+              "precision": {
+                "high": 1.0,
+                "low": 0.8388748419471806
+              },
+              "recall": {
+                "high": 0.9113941531319742,
+                "low": 0.6086904963045967
+              }
+            }
+          },
+          "interval_low_rule": {
+            "alert_threshold": 20.0,
+            "true_positive": 24,
+            "false_positive": 4,
+            "false_negative": 1,
+            "true_negative": 71,
+            "precision": 0.8571428571428571,
+            "recall": 0.96,
+            "false_alarm_rate": 0.05333333333333334,
+            "wilson_95": {
+              "false_alarm_rate": {
+                "high": 0.12925987153798557,
+                "low": 0.02093342774665434
+              },
+              "precision": {
+                "high": 0.9430099468025059,
+                "low": 0.685101978364747
+              },
+              "recall": {
+                "high": 0.9929037664980127,
+                "low": 0.8045593626380625
+              }
+            }
+          },
+          "interval": {
+            "nominal_coverage": 0.9,
+            "observed_coverage": 0.94,
+            "coverage_ci95": [
+              0.89,
+              0.98
+            ],
+            "mean_width": 55.42194278717041,
+            "mean_width_ci95": [
+              51.18967044079304,
+              59.443210437178614
+            ],
+            "by_predicted_rul": {
+              "31-60": {
+                "coverage": 0.7647058823529411,
+                "mean_width": 40.11651611328125,
+                "rows": 17
+              },
+              "61-100": {
+                "coverage": 0.9666666666666667,
+                "mean_width": 74.78874969482422,
+                "rows": 30
+              },
+              "<=30": {
+                "coverage": 1.0,
+                "mean_width": 19.523436546325684,
+                "rows": 20
+              },
+              ">100": {
+                "coverage": 0.9696969696969697,
+                "mean_width": 67.45703887939453,
+                "rows": 33
+              }
+            },
+            "by_true_rul": {
+              "0-30": {
+                "coverage": 0.96,
+                "mean_width": 23.642052459716798,
+                "rows": 25
+              },
+              "31-60": {
+                "coverage": 1.0,
+                "mean_width": 52.49945667811802,
+                "rows": 14
+              },
+              "61-125": {
+                "coverage": 0.92,
+                "mean_width": 68.8959260559082,
+                "rows": 50
+              },
+              ">125": {
+                "coverage": 0.9090909090909091,
+                "mean_width": 70.12311553955078,
+                "rows": 11
+              }
+            }
+          }
+        },
+        "integrity": {
+          "data_manifest_sha256": "d2dbe20974f22600ef24955531a06007bb5356beacaa1270cd44f76fc93bf48f",
+          "train_sha256": "85fdcb9bcd821cbdaf993e02698fcc2a20bd39ac57d3fa7e7a5db6e46191bc7b",
+          "test_sha256": "245e6e002199f5ea52d718e2ef2c320934321c93ee7509ca3df312bf697e6479",
+          "model_lock_sha256": "9c5af0ded502c396df454f2fbc468d839b5bdd680da8f0abc9a416859c05e5da",
+          "protocol_document_sha256": "85327c89caef077b80ec3bd38fc655eee1c64d71500228c861176f4849e9e923",
+          "evaluation_manifest_sha256": "12a326a70624752d32b4980718a8a33c4f4faff1b8900af82701e6caccd56d41"
+        }
+      },
+      {
+        "run_id": "fd003-v2-clean",
+        "dataset": "FD003",
+        "status": "pipeline_complete",
+        "seed": 42,
+        "label": "protocol v2, clean single-open test",
+        "test_status": "clean_single_open",
+        "development": {
+          "ridge": {
+            "spec": {
+              "alpha": 100.0,
+              "cap": 125,
+              "feature_set": "no_age"
+            },
+            "median_rmse": 21.58251197901165,
+            "rmse_p05_p95": [
+              18.686952069884214,
+              23.52764230115764
+            ],
+            "median_mae": 17.113656921518306,
+            "median_nasa": 702.2359543336831,
+            "median_point_rule_recall": 0.7
+          },
+          "xgboost": {
+            "spec": {
+              "candidate": 12,
+              "cap": 130,
+              "feature_set": "compact",
+              "tree_count": 347
+            },
+            "median_rmse": 17.62158608834895,
+            "rmse_p05_p95": [
+              14.449529556050129,
+              20.20987080072948
+            ],
+            "median_mae": 12.600668986514211,
+            "median_nasa": 514.8303843349638,
+            "median_point_rule_recall": 0.8888888888888888
+          },
+          "champion": "xgboost",
+          "xgboost_rmse_improvement_fraction": 0.18352478592457555,
+          "xgboost_win_rate_over_paired_draws": 0.99,
+          "rmse_target": 16.6,
+          "rmse_target_met": false,
+          "window_sensitivity": [
+            {
+              "champion": "xgboost",
+              "ridge_median_nasa": 556.156141343501,
+              "ridge_median_rmse": 18.32896786191963,
+              "window": 130,
+              "xgboost_median_nasa": 419.3242542354466,
+              "xgboost_median_rmse": 15.591248024628744
+            },
+            {
+              "champion": "xgboost",
+              "ridge_median_nasa": 1462.5854339018474,
+              "ridge_median_rmse": 27.357316934223235,
+              "window": 175,
+              "xgboost_median_nasa": 1022.4973714703583,
+              "xgboost_median_rmse": 22.25422319035289
+            },
+            {
+              "champion": "ridge",
+              "ridge_median_nasa": 13814228805.745945,
+              "ridge_median_rmse": 72.34111695946672,
+              "window": null,
+              "xgboost_median_nasa": 10646442432.962383,
+              "xgboost_median_rmse": 69.27092373642083
+            }
+          ]
+        },
+        "calibration": {
+          "method": "mondrian-signed-residual-cross-fit",
+          "bands": [
+            {
+              "engines": 100,
+              "q_high": 8.492624282836914,
+              "q_low": -7.906913757324219,
+              "rows": 2942,
+              "upper_predicted_rul": 30.0
+            },
+            {
+              "engines": 100,
+              "q_high": 17.12900161743164,
+              "q_low": -17.725021362304688,
+              "rows": 2764,
+              "upper_predicted_rul": 60.0
+            },
+            {
+              "engines": 100,
+              "q_high": 39.1519775390625,
+              "q_low": -30.174423217773438,
+              "rows": 4158,
+              "upper_predicted_rul": 100.0
+            },
+            {
+              "engines": 96,
+              "q_high": 38.370643615722656,
+              "q_low": -29.604698181152344,
+              "rows": 5226,
+              "upper_predicted_rul": null
+            }
+          ],
+          "risk_threshold": 25.0,
+          "elevated_threshold": 55.0,
+          "leave_engines_out_median_coverage": 0.91,
+          "leave_engines_out_median_mean_width": 52.0235658814013,
+          "width_target": 45,
+          "width_target_met": false,
+          "by_predicted_rul": {
+            "31-60": {
+              "median_coverage": 0.9047619047619048,
+              "median_mean_width": 34.972014483283544,
+              "median_rows": 18.0
+            },
+            "61-100": {
+              "median_coverage": 0.8888888888888888,
+              "median_mean_width": 69.29039347031537,
+              "median_rows": 28.0
+            },
+            "<=30": {
+              "median_coverage": 0.9183333333333333,
+              "median_mean_width": 15.668011312758114,
+              "median_rows": 20.0
+            },
+            ">100": {
+              "median_coverage": 0.9333333333333333,
+              "median_mean_width": 68.55805802956606,
+              "median_rows": 34.0
+            }
+          },
+          "by_true_rul": {
+            "0-30": {
+              "median_coverage": 0.9444444444444444,
+              "median_mean_width": 17.565506748145538,
+              "median_rows": 21.0
+            },
+            "31-60": {
+              "median_coverage": 0.9166666666666666,
+              "median_mean_width": 42.6622250402001,
+              "median_rows": 20.0
+            },
+            "61-125": {
+              "median_coverage": 0.9024390243902439,
+              "median_mean_width": 67.31965427855633,
+              "median_rows": 43.0
+            },
+            ">125": {
+              "median_coverage": 0.8918128654970761,
+              "median_mean_width": 68.24137223595605,
+              "median_rows": 16.5
+            }
+          },
+          "risk_threshold_table": [
+            {
+              "median_false_alarm_rate": 0.0,
+              "median_false_alarms": 0.0,
+              "median_missed": 16.0,
+              "median_precision": 1.0,
+              "median_recall": 0.25,
+              "threshold": 0.0
+            },
+            {
+              "median_false_alarm_rate": 0.0,
+              "median_false_alarms": 0.0,
+              "median_missed": 12.0,
+              "median_precision": 1.0,
+              "median_recall": 0.4230769230769231,
+              "threshold": 5.0
+            },
+            {
+              "median_false_alarm_rate": 0.0,
+              "median_false_alarms": 0.0,
+              "median_missed": 8.5,
+              "median_precision": 1.0,
+              "median_recall": 0.5779352226720648,
+              "threshold": 10.0
+            },
+            {
+              "median_false_alarm_rate": 0.012658227848101266,
+              "median_false_alarms": 1.0,
+              "median_missed": 5.0,
+              "median_precision": 0.9444444444444444,
+              "median_recall": 0.7647058823529411,
+              "threshold": 15.0
+            },
+            {
+              "median_false_alarm_rate": 0.05063291139240506,
+              "median_false_alarms": 4.0,
+              "median_missed": 1.0,
+              "median_precision": 0.8235294117647058,
+              "median_recall": 0.9411764705882353,
+              "threshold": 20.0
+            },
+            {
+              "median_false_alarm_rate": 0.08964791427477994,
+              "median_false_alarms": 7.0,
+              "median_missed": 0.0,
+              "median_precision": 0.75,
+              "median_recall": 1.0,
+              "threshold": 25.0
+            },
+            {
+              "median_false_alarm_rate": 0.12658227848101267,
+              "median_false_alarms": 10.0,
+              "median_missed": 0.0,
+              "median_precision": 0.6774193548387096,
+              "median_recall": 1.0,
+              "threshold": 30.0
+            },
+            {
+              "median_false_alarm_rate": 0.2,
+              "median_false_alarms": 16.0,
+              "median_missed": 0.0,
+              "median_precision": 0.5729483282674772,
+              "median_recall": 1.0,
+              "threshold": 35.0
+            },
+            {
+              "median_false_alarm_rate": 0.2804878048780488,
+              "median_false_alarms": 22.0,
+              "median_missed": 0.0,
+              "median_precision": 0.48957881024750327,
+              "median_recall": 1.0,
+              "threshold": 40.0
+            },
+            {
+              "median_false_alarm_rate": 0.3396023198011599,
+              "median_false_alarms": 27.0,
+              "median_missed": 0.0,
+              "median_precision": 0.4444444444444444,
+              "median_recall": 1.0,
+              "threshold": 45.0
+            },
+            {
+              "median_false_alarm_rate": 0.3815789473684211,
+              "median_false_alarms": 30.0,
+              "median_missed": 0.0,
+              "median_precision": 0.41818181818181815,
+              "median_recall": 1.0,
+              "threshold": 50.0
+            },
+            {
+              "median_false_alarm_rate": 0.42857142857142855,
+              "median_false_alarms": 34.0,
+              "median_missed": 0.0,
+              "median_precision": 0.3888888888888889,
+              "median_recall": 1.0,
+              "threshold": 55.0
+            },
+            {
+              "median_false_alarm_rate": 0.48214032600992207,
+              "median_false_alarms": 37.0,
+              "median_missed": 0.0,
+              "median_precision": 0.36065573770491804,
+              "median_recall": 1.0,
+              "threshold": 60.0
+            }
+          ]
+        },
+        "official_test": {
+          "engines": 100,
+          "mae": 11.22672492980957,
+          "mae_ci95": [
+            9.338568518638612,
+            13.275662846803664
+          ],
+          "rmse": 15.065603674652284,
+          "rmse_ci95": [
+            12.606865307083229,
+            17.50301439803387
+          ],
+          "nasa_score_motor_normalized": 398.5600591622947,
+          "nasa_ci95": [
+            239.62231929885488,
+            619.9662787382003
+          ],
+          "signed_bias": 0.38374961853027345,
+          "signed_bias_ci95": [
+            -2.547232461690903,
+            3.2838602449893948
+          ],
+          "rul_band_mae": {
+            "0-30": {
+              "mae": 4.0114562034606935,
+              "rows": 20
+            },
+            "31-60": {
+              "mae": 7.735444295974005,
+              "rows": 21
+            },
+            "61-125": {
+              "mae": 13.420870000665838,
+              "rows": 44
+            },
+            ">125": {
+              "mae": 19.298717244466147,
+              "rows": 15
+            }
+          },
+          "point_rule": {
+            "alert_threshold": 30.0,
+            "true_positive": 16,
+            "false_positive": 1,
+            "false_negative": 4,
+            "true_negative": 79,
+            "precision": 0.9411764705882353,
+            "recall": 0.8,
+            "false_alarm_rate": 0.0125,
+            "wilson_95": {
+              "false_alarm_rate": {
+                "high": 0.06746270077668665,
+                "low": 0.0022099755204522745
+              },
+              "precision": {
+                "high": 0.9895395990150025,
+                "low": 0.7301796936242461
+              },
+              "recall": {
+                "high": 0.919342337420202,
+                "low": 0.5839825677481064
+              }
+            }
+          },
+          "interval_low_rule": {
+            "alert_threshold": 25.0,
+            "true_positive": 20,
+            "false_positive": 8,
+            "false_negative": 0,
+            "true_negative": 72,
+            "precision": 0.7142857142857143,
+            "recall": 1.0,
+            "false_alarm_rate": 0.1,
+            "wilson_95": {
+              "false_alarm_rate": {
+                "high": 0.18510688806104086,
+                "low": 0.05154761556738083
+              },
+              "precision": {
+                "high": 0.8474600394333092,
+                "low": 0.5294071156670428
+              },
+              "recall": {
+                "high": 1.0,
+                "low": 0.8388748419471806
+              }
+            }
+          },
+          "interval": {
+            "nominal_coverage": 0.9,
+            "observed_coverage": 0.92,
+            "coverage_ci95": [
+              0.86,
+              0.97
+            ],
+            "mean_width": 53.28524117469787,
+            "mean_width_ci95": [
+              49.27879370951652,
+              57.27761257171631
+            ],
+            "by_predicted_rul": {
+              "31-60": {
+                "coverage": 0.9473684210526315,
+                "mean_width": 34.85402297973633,
+                "rows": 19
+              },
+              "61-100": {
+                "coverage": 1.0,
+                "mean_width": 69.32640075683594,
+                "rows": 29
+              },
+              "<=30": {
+                "coverage": 0.8823529411764706,
+                "mean_width": 16.276182118584128,
+                "rows": 17
+              },
+              ">100": {
+                "coverage": 0.8571428571428571,
+                "mean_width": 67.975341796875,
+                "rows": 35
+              }
+            },
+            "by_true_rul": {
+              "0-30": {
+                "coverage": 0.9,
+                "mean_width": 19.985582494735716,
+                "rows": 20
+              },
+              "31-60": {
+                "coverage": 1.0,
+                "mean_width": 43.82448877607073,
+                "rows": 21
+              },
+              "61-125": {
+                "coverage": 0.8863636363636364,
+                "mean_width": 67.86740814555775,
+                "rows": 44
+              },
+              ">125": {
+                "coverage": 0.9333333333333333,
+                "mean_width": 68.15548299153646,
+                "rows": 15
+              }
+            }
+          }
+        },
+        "integrity": {
+          "data_manifest_sha256": "39e633dc8a32bafbc9a77351045603393249e24dfbd56148a38612279d251cc6",
+          "train_sha256": "7006af50b14c2e954761e61a91775b34ccbfc1a5a140f892e4cedc79ca0f1d12",
+          "test_sha256": "1fc03806730db8b59134efbd4d0d96eabcfb0c3ff769eee1b20ba4e953ce8ab5",
+          "model_lock_sha256": "bcd2acda16f5a60497725543879d033eca0d83932a7f62525581e44172bfba33",
+          "protocol_document_sha256": "85327c89caef077b80ec3bd38fc655eee1c64d71500228c861176f4849e9e923",
+          "evaluation_manifest_sha256": "0609286925380e9f1f6bac700b7e973d843b6077e58d0536ff8c280ea1a39577"
+        }
+      }
+    ],
+    "fd001_seed_sweep": {
+      "scope": "Seeds vary cross-fit folds, model randomness, draws, and the final fit. Selection is not rerun, so spread excludes selection variance.",
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51
+      ],
+      "summary": {
+        "interval_coverage": {
+          "max": 0.95,
+          "mean": 0.942,
+          "min": 0.93,
+          "std": 0.009189365834726773
+        },
+        "interval_low_rule_false_alarms": {
+          "max": 4.0,
+          "mean": 3.2,
+          "min": 2.0,
+          "std": 0.7888106377466155
+        },
+        "interval_low_rule_precision": {
+          "max": 0.9230769230769231,
+          "mean": 0.8831824765273041,
+          "min": 0.8571428571428571,
+          "std": 0.024917288194386624
+        },
+        "interval_low_rule_recall": {
+          "max": 1.0,
+          "mean": 0.96,
+          "min": 0.92,
+          "std": 0.026666666666666655
+        },
+        "interval_mean_width": {
+          "max": 57.426772742271424,
+          "mean": 56.31182720863818,
+          "min": 55.42194278717041,
+          "std": 0.6481794177053284
+        },
+        "mae": {
+          "max": 11.901726956367492,
+          "mean": 11.622979448795318,
+          "min": 11.154422445297241,
+          "std": 0.20506349888046313
+        },
+        "nasa_score_motor_normalized": {
+          "max": 442.412616831478,
+          "mean": 419.41507042634913,
+          "min": 398.3093549744923,
+          "std": 13.318935204870414
+        },
+        "point_rule_precision": {
+          "max": 1.0,
+          "mean": 0.9897368421052631,
+          "min": 0.9473684210526315,
+          "std": 0.02164552559042089
+        },
+        "point_rule_recall": {
+          "max": 0.8,
+          "mean": 0.76,
+          "min": 0.72,
+          "std": 0.026666666666666693
+        },
+        "risk_threshold": {
+          "max": 20.0,
+          "mean": 20.0,
+          "min": 20.0,
+          "std": 0.0
+        },
+        "rmse": {
+          "max": 16.205289432412602,
+          "mean": 16.034284543727104,
+          "min": 15.795547328093768,
+          "std": 0.13474511904735828
+        }
+      },
+      "note": "The locked seed 42 has the lowest RMSE, MAE, and NASA score of the ten seeds."
+    },
+    "fd001_challengers": {
+      "scope": "training engines only, run on fd001-v2-selection, which shares settings with fd001-v2",
+      "lstm": {
+        "replaces_xgboost": false,
+        "best_configuration": {
+          "dropout": 0.0,
+          "hidden_size": 64,
+          "layers": 1
+        },
+        "median_rmse_by_configuration": [
+          18.388450415512875,
+          18.533494548233072,
+          18.403981395729794
+        ],
+        "median_nasa_by_configuration": [
+          545.8161768259013,
+          544.3164734607416,
+          563.2239921407431
+        ],
+        "rmse_improvement_fraction": 0.009527861951160404,
+        "nasa_not_worse": false
+      },
+      "cqr": {
+        "replaces_mondrian": false,
+        "median_coverage": 0.91,
+        "median_mean_width": 98.6205645942688,
+        "width_reduction_fraction": -0.7712333574280543,
+        "note": "Quantile models reused a tree count tuned for squared error, so this bounded trial may underfit; it does not show that CQR is worse in general."
+      }
+    },
+    "reproducibility": {
+      "repeat_run": {
+        "first": "fd001-v2",
+        "second": "fd001-v2-repeat",
+        "byte_identical_files": [
+          "calibration_analysis.json",
+          "champion_decision.json",
+          "cross_fit_predictions.parquet",
+          "explanation.json",
+          "feature_manifest.json",
+          "model.json",
+          "model_comparison.json",
+          "official_test/error_analysis.json",
+          "official_test/metrics.json",
+          "official_test/predictions.parquet",
+          "oof_predictions.parquet",
+          "preprocessor.joblib"
+        ],
+        "different_files": [
+          "manifest.json",
+          "model_lock.json",
+          "official_test/evaluation_manifest.json",
+          "report.html",
+          "report.json"
+        ],
+        "reason": "Each different file carries the run ID or a hash of a file that does.",
+        "changed_lock_fields_ignoring_run_id": [],
+        "same_machine": true
+      },
+      "v1_lock_hash_difference": {
+        "reference_model_lock_sha256": "32e5e7a421ad8ccb81fff4e8b8c17957f49fa855954b27e4e4b16219634af829",
+        "repro_model_lock_sha256": "e66d7599a1f82941b61e27ac92b3330d3538b4875c9e7de7f012ec75b9d22c1b",
+        "cause": "The repro lock adds the environment field introduced by commit 5f69de1 and has a different run_id.",
+        "verification": "Removing environment from the repro lock and restoring the reference run_id reproduces the reference hash exactly, so all locked data, model, and artifact hashes match."
+      }
+    }
+  }
 }

@@ -1,4 +1,4 @@
-"""Deterministic, fail-closed preparation of NASA C-MAPSS FD001."""
+"""Deterministic, fail-closed preparation of NASA C-MAPSS subsets."""
 
 from __future__ import annotations
 
@@ -26,6 +26,22 @@ EXPECTED_MEMBERS = {
     "test": "test_FD001.txt",
     "test_rul": "RUL_FD001.txt",
 }
+DATASET_SHAPES = {
+    "FD001": {
+        "train_rows": 20_631,
+        "test_rows": 13_096,
+        "train_engines": 100,
+        "test_engines": 100,
+        "test_labels": 100,
+    },
+    "FD003": {
+        "train_rows": 24_720,
+        "test_rows": 16_596,
+        "train_engines": 100,
+        "test_engines": 100,
+        "test_labels": 100,
+    },
+}
 SCHEMA = (
     "unit_id",
     "cycle",
@@ -42,7 +58,7 @@ class DataPipelineError(RuntimeError):
 
 @dataclass(frozen=True)
 class DataContract:
-    """Frozen acquisition and FD001 validation values."""
+    """Frozen acquisition and per-subset validation values."""
 
     source_url: str
     archive_size_bytes: int
@@ -56,6 +72,7 @@ class DataContract:
     calibration_engines: int = 20
     rul_cap: int = 125
     seed: int = 42
+    dataset: str = "FD001"
 
 
 @dataclass(frozen=True)
@@ -79,8 +96,22 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_data_contract(project_root: Path) -> DataContract:
+def expected_members(dataset: str = "FD001") -> dict[str, str]:
+    """Return the three archive members that belong to one C-MAPSS subset."""
+    return {
+        "train": f"train_{dataset}.txt",
+        "test": f"test_{dataset}.txt",
+        "test_rul": f"RUL_{dataset}.txt",
+    }
+
+
+def load_data_contract(
+    project_root: Path,
+    dataset: str = "FD001",
+) -> DataContract:
     """Load the fixed data contract from the project configuration."""
+    if dataset not in DATASET_SHAPES:
+        raise DataPipelineError(f"Unsupported C-MAPSS subset: {dataset}")
     config_path = project_root / "configs" / "project.yaml"
     try:
         config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
@@ -94,6 +125,8 @@ def load_data_contract(project_root: Path) -> DataContract:
             calibration_engines=int(data["calibration_engines"]),
             rul_cap=int(data["rul_cap"]),
             seed=int(project["seed"]),
+            dataset=dataset,
+            **DATASET_SHAPES[dataset],
         )
     except (KeyError, TypeError, ValueError, OSError, yaml.YAMLError) as exc:
         raise DataPipelineError(f"Invalid project data configuration: {exc}") from exc
@@ -204,8 +237,13 @@ def _write_bytes_idempotently(path: Path, payload: bytes) -> None:
     path.write_bytes(payload)
 
 
-def extract_fd001_members(archive_path: Path, destination: Path) -> dict[str, Path]:
-    """Safely select and materialize only the three FD001 source members."""
+def extract_members(
+    archive_path: Path,
+    destination: Path,
+    dataset: str = "FD001",
+) -> dict[str, Path]:
+    """Safely select and materialize only one subset's three source members."""
+    members = expected_members(dataset)
     selected: dict[str, zipfile.ZipInfo] = {}
     try:
         with zipfile.ZipFile(archive_path) as archive:
@@ -217,32 +255,36 @@ def extract_fd001_members(archive_path: Path, destination: Path) -> dict[str, Pa
                         f"Symbolic-link ZIP member is not allowed: {info.filename!r}"
                     )
                 basename = member_path.name
-                for role, expected_basename in EXPECTED_MEMBERS.items():
+                for role, expected_basename in members.items():
                     if basename == expected_basename:
                         if role in selected:
                             raise DataPipelineError(
-                                f"Duplicate FD001 ZIP member: {expected_basename}"
+                                f"Duplicate {dataset} ZIP member: {expected_basename}"
                             )
                         selected[role] = info
 
             missing = [
-                basename
-                for role, basename in EXPECTED_MEMBERS.items()
-                if role not in selected
+                basename for role, basename in members.items() if role not in selected
             ]
             if missing:
                 raise DataPipelineError(
-                    f"Archive is missing required FD001 members: {', '.join(missing)}"
+                    f"Archive is missing required {dataset} members: "
+                    f"{', '.join(missing)}"
                 )
 
             extracted: dict[str, Path] = {}
             for role, info in selected.items():
-                target = destination / EXPECTED_MEMBERS[role]
+                target = destination / members[role]
                 _write_bytes_idempotently(target, archive.read(info))
                 extracted[role] = target
             return extracted
     except (OSError, zipfile.BadZipFile) as exc:
         raise DataPipelineError(f"Invalid ZIP archive {archive_path}: {exc}") from exc
+
+
+def extract_fd001_members(archive_path: Path, destination: Path) -> dict[str, Path]:
+    """Safely select and materialize only the three FD001 source members."""
+    return extract_members(archive_path, destination, "FD001")
 
 
 def parse_sensor_table(path: Path) -> pd.DataFrame:
@@ -462,6 +504,7 @@ def build_eda_summary(development: pd.DataFrame) -> dict[str, Any]:
 def build_eda_html(
     development: pd.DataFrame,
     summary: dict[str, Any],
+    dataset: str = "FD001",
 ) -> str:
     """Create a deterministic interactive sensor-trend report."""
     sample_engine_ids = sorted(development["unit_id"].unique())[:5]
@@ -483,20 +526,20 @@ def build_eda_html(
         y="value",
         color="unit_id",
         facet_row="sensor",
-        title="FD001 development-only selected sensor trends",
+        title=f"{dataset} development-only selected sensor trends",
         labels={"unit_id": "Engine", "cycle": "Cycle", "value": "Sensor value"},
     )
     figure.update_yaxes(matches=None)
     chart = figure.to_html(
         full_html=False,
         include_plotlyjs="cdn",
-        div_id="fd001-development-sensor-trends",
+        div_id=f"{dataset.lower()}-development-sensor-trends",
     )
     summary_json = json.dumps(summary, indent=2, sort_keys=True)
     return (
         '<!doctype html>\n<html lang="en"><head><meta charset="utf-8">'
-        "<title>FD001 EDA report</title></head><body>"
-        "<h1>FD001 EDA report</h1>"
+        f"<title>{dataset} EDA report</title></head><body>"
+        f"<h1>{dataset} EDA report</h1>"
         "<p>This report uses development engines only. The source is simulated "
         "NASA C-MAPSS data and is not operational fleet telemetry.</p>"
         f"{chart}<h2>Machine-readable summary</h2><pre>{summary_json}</pre>"
@@ -543,7 +586,7 @@ def _write_outputs(
         artifact_hashes[relative_path] = hashlib.sha256(payload).hexdigest()
 
     manifest = {
-        "dataset": "FD001",
+        "dataset": contract.dataset,
         "archive": {
             "filename": ARCHIVE_NAME,
             "sha256": archive_hash,
@@ -562,21 +605,23 @@ def _write_outputs(
     return artifact_hashes
 
 
-def prepare_fd001(
+def prepare_dataset(
     project_root: Path,
     *,
+    dataset: str = "FD001",
     archive_path: Path | None = None,
     contract: DataContract | None = None,
 ) -> PrepareResult:
     """Run acquisition, parsing, validation, splitting, EDA, and persistence."""
     project_root = project_root.resolve()
-    active_contract = contract or load_data_contract(project_root)
+    active_contract = contract or load_data_contract(project_root, dataset)
+    dataset = active_contract.dataset
     config_path = project_root / "configs" / "project.yaml"
     config_hash = sha256_file(config_path) if config_path.is_file() else "test-contract"
 
     raw_dir = project_root / "data" / "raw"
     archive = acquire_archive(raw_dir, active_contract, archive_path)
-    extracted = extract_fd001_members(archive, raw_dir / "fd001")
+    extracted = extract_members(archive, raw_dir / dataset.lower(), dataset)
 
     train = parse_sensor_table(extracted["train"])
     test = parse_sensor_table(extracted["test"])
@@ -605,9 +650,9 @@ def prepare_fd001(
     )
     development = train.loc[train["role"].eq("development")].copy()
     eda_summary = build_eda_summary(development)
-    eda_html = build_eda_html(development, eda_summary)
+    eda_html = build_eda_html(development, eda_summary, dataset)
     quality_report = {
-        "dataset": "FD001",
+        "dataset": dataset,
         "train": train_quality,
         "test": test_quality,
         "test_rul": {
@@ -624,7 +669,7 @@ def prepare_fd001(
             "negative_values": int(train[["rul_true", "rul_target"]].lt(0).sum().sum()),
         },
     }
-    output_dir = project_root / "data" / "processed" / "fd001"
+    output_dir = project_root / "data" / "processed" / dataset.lower()
     artifact_hashes = _write_outputs(
         output_dir,
         train=train,
@@ -645,4 +690,19 @@ def prepare_fd001(
         development_engines=len(split_manifest["development_engine_ids"]),
         calibration_engines=len(split_manifest["calibration_engine_ids"]),
         artifact_hashes=artifact_hashes,
+    )
+
+
+def prepare_fd001(
+    project_root: Path,
+    *,
+    archive_path: Path | None = None,
+    contract: DataContract | None = None,
+) -> PrepareResult:
+    """Prepare the FD001 subset."""
+    return prepare_dataset(
+        project_root,
+        dataset="FD001",
+        archive_path=archive_path,
+        contract=contract,
     )

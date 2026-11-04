@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aeromaintain-ai"
-version = "0.1.0"
-description = "Educational NASA FD001 remaining-useful-life evaluation prototype"
+version = "0.2.0"
+description = "Educational NASA C-MAPSS remaining-useful-life evaluation prototype"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 license = { file = "LICENSE" }
@@ -14,7 +14,6 @@ keywords = [
   "predictive-maintenance",
   "remaining-useful-life",
   "nasa-cmapss",
-  "constraint-programming",
   "streamlit",
 ]
 classifiers = [
@@ -43,6 +42,9 @@ dev = [
   "pytest>=8.3.4",
   "pytest-cov>=6.0.0",
   "ruff>=0.9.2",
+]
+lstm = [
+  "torch>=2.5",
 ]
 
 [project.scripts]

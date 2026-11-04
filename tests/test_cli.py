@@ -60,7 +60,7 @@ def test_prepare_reports_success(monkeypatch, tmp_path: Path) -> None:
         artifact_hashes={"train.parquet": "abc"},
     )
     monkeypatch.setattr(
-        "aeromaintain.cli.prepare_fd001", lambda *args, **kwargs: result
+        "aeromaintain.cli.prepare_dataset", lambda *args, **kwargs: result
     )
 
     command = runner.invoke(app, ["prepare", "--project-root", str(tmp_path)])
@@ -74,7 +74,7 @@ def test_prepare_reports_pipeline_failure(monkeypatch, tmp_path: Path) -> None:
     def fail(*args, **kwargs):
         raise DataPipelineError("fixture failure")
 
-    monkeypatch.setattr("aeromaintain.cli.prepare_fd001", fail)
+    monkeypatch.setattr("aeromaintain.cli.prepare_dataset", fail)
     command = runner.invoke(app, ["prepare", "--project-root", str(tmp_path)])
 
     assert command.exit_code == 1
@@ -86,7 +86,7 @@ def test_train_and_evaluate_report_success(monkeypatch, tmp_path: Path) -> None:
         run_id="fixture",
         run_dir=tmp_path / "runs" / "fixture",
         champion="ridge",
-        calibration_q=12.5,
+        interval_half_width=12.5,
         model_lock=tmp_path / "runs" / "fixture" / "model_lock.json",
     )
     evaluation_result = EvaluationResult(

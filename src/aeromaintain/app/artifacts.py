@@ -20,6 +20,10 @@ SAFE_PREDICTION_COLUMNS = (
     "risk_band",
 )
 
+PUBLIC_RUN_FILE = "run.json"
+PUBLIC_RANKING_FILE = "risk_ranking.csv"
+PUBLIC_MANIFEST_FILE = "manifest.json"
+
 
 class ArtifactValidationError(RuntimeError):
     """Raised when a run cannot be trusted by the review application."""
@@ -107,7 +111,7 @@ def _load_verified_run(project_root: Path, run_id: str) -> AppArtifacts:
     lock_path = run_dir / "model_lock.json"
     _require_hash(lock_path, run_manifest["model_lock_sha256"], "Model lock")
     lock = _read_json(lock_path)
-    if lock.get("run_id") != run_id or lock.get("schema_version") != 1:
+    if lock.get("run_id") != run_id or lock.get("schema_version") != 2:
         raise ArtifactValidationError("Model lock identity or schema mismatch")
     _verify_artifact_map(run_dir, lock.get("artifacts", {}), "Model artefact")
     _require_hash(
@@ -116,7 +120,7 @@ def _load_verified_run(project_root: Path, run_id: str) -> AppArtifacts:
         "Model config",
     )
 
-    processed_dir = root / "data" / "processed" / "fd001"
+    processed_dir = root / "data" / "processed" / str(lock["dataset"]).lower()
     for name, key in (
         ("manifest.json", "manifest_sha256"),
         ("split_manifest.json", "split_manifest_sha256"),
@@ -172,6 +176,76 @@ def _load_verified_run(project_root: Path, run_id: str) -> AppArtifacts:
         sensor_history=sensor_history,
         downloads=downloads,
     )
+
+
+def export_public_bundle(
+    project_root: Path,
+    run_id: str,
+    output_dir: Path,
+) -> Path:
+    """Write a hash-listed demo bundle holding no NASA rows or true RUL values."""
+    artifacts = load_verified_run(project_root, run_id)
+    lock = artifacts.model_lock
+    run_payload = {
+        "run_id": run_id,
+        "model_lock_sha256": artifacts.run_manifest["model_lock_sha256"],
+        "model_lock": {
+            "dataset": lock["dataset"],
+            "protocol": lock["protocol"],
+            "seed": lock["seed"],
+            "champion": {"kind": lock["champion"]["kind"]},
+            "calibration": lock["calibration"],
+        },
+        "metrics": artifacts.metrics,
+        "explanation": artifacts.explanation,
+    }
+    files = {
+        PUBLIC_RUN_FILE: (json.dumps(run_payload, indent=2, sort_keys=True) + "\n"),
+        PUBLIC_RANKING_FILE: artifacts.risk_ranking.to_csv(
+            index=False, lineterminator="\n"
+        ),
+    }
+    output_dir.mkdir(parents=True, exist_ok=True)
+    hashes: dict[str, str] = {}
+    for name, text in files.items():
+        path = output_dir / name
+        path.write_bytes(text.encode("utf-8"))
+        hashes[name] = sha256_file(path)
+    manifest = output_dir / PUBLIC_MANIFEST_FILE
+    manifest.write_bytes(
+        (json.dumps({"artifacts": hashes}, indent=2, sort_keys=True) + "\n").encode()
+    )
+    return manifest
+
+
+def load_public_bundle(bundle_dir: Path) -> AppArtifacts:
+    """Load a demo bundle after checking its listed hashes and row-free contract."""
+    manifest = _read_json(bundle_dir / PUBLIC_MANIFEST_FILE)
+    try:
+        _verify_artifact_map(bundle_dir, manifest["artifacts"], "Public bundle")
+        payload = _read_json(bundle_dir / PUBLIC_RUN_FILE)
+        ranking = pd.read_csv(bundle_dir / PUBLIC_RANKING_FILE)
+        if set(ranking.columns) != set(SAFE_PREDICTION_COLUMNS):
+            raise ArtifactValidationError(
+                "Public bundle ranking must hold review columns only"
+            )
+        return AppArtifacts(
+            run_id=payload["run_id"],
+            run_dir=bundle_dir,
+            run_manifest={"model_lock_sha256": payload["model_lock_sha256"]},
+            model_lock=payload["model_lock"],
+            metrics=payload["metrics"],
+            explanation=payload["explanation"],
+            risk_ranking=ranking,
+            sensor_history=pd.DataFrame(),
+            downloads={
+                "risk_ranking.csv": ranking.to_csv(index=False).encode("utf-8"),
+            },
+        )
+    except (KeyError, OSError, TypeError, ValueError) as exc:
+        raise ArtifactValidationError(
+            f"Public bundle structure is invalid: {exc}"
+        ) from exc
 
 
 def load_verified_run(project_root: Path, run_id: str) -> AppArtifacts:

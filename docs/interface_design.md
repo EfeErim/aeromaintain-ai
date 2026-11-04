@@ -9,14 +9,16 @@ simulated-data boundary easy to find.
 ## Applied decisions
 
 - Use two direct page names: `Overview` and `Engine risk`.
-- Lead with the weak result as well as headline error metrics: critical recall
-  remains visible beside MAE, RMSE, and interval coverage.
-- Keep FD001's simulated-benchmark status visible.
+- Show both alert rules side by side with their ranges, so the cost of the interval
+  rule stays visible beside its recall.
+- Keep each run's dataset, simulated-benchmark status, and protocol label visible, so
+  a previously seen test cannot pass as a clean one.
 - Use tables for engine priority and run details; charts support rather than
   replace exact values.
 - Limit alert colors to risk meaning and use standard Streamlit components.
 - Require an explicit verified run and expose only `risk_ranking.csv` for
   download; official true RUL is not part of the review table.
 
-The tracked screenshots are captured from the verified reference run after the
-page finishes rendering.
+The tracked screenshots are captured from the verified `fd003-v2-clean` run after
+the page finishes rendering. The hosted demo hides sensor history because NASA's
+dataset page specifies no license.

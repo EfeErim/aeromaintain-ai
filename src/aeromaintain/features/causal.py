@@ -32,6 +32,18 @@ def feature_names() -> tuple[str, ...]:
 
 
 FEATURE_NAMES = feature_names()
+FEATURE_SETS: dict[str, tuple[str, ...]] = {
+    "all": FEATURE_NAMES,
+    "no_age": tuple(name for name in FEATURE_NAMES if name != "engine_age"),
+    "no_settings": tuple(name for name in FEATURE_NAMES if name not in SETTING_COLUMNS),
+    "compact": tuple(
+        name
+        for name in FEATURE_NAMES
+        if name in SENSOR_COLUMNS
+        or name.endswith(("_w20_mean", "_w20_slope"))
+        or name == "engine_age"
+    ),
+}
 
 
 def _validate_source(frame: pd.DataFrame) -> pd.DataFrame:
@@ -53,7 +65,7 @@ def _validate_source(frame: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_causal_features(frame: pd.DataFrame) -> pd.DataFrame:
-    """Build current-and-past-only FD001 rolling features."""
+    """Build current-and-past-only rolling features."""
     source = _validate_source(frame)
     columns: dict[str, pd.Series] = {
         name: source[name].astype("float64")

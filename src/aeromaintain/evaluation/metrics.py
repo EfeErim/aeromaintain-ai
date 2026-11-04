@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+WILSON_Z_95 = 1.959963984540054
 RUL_BANDS = (
     ("0-30", 0, 30),
     ("31-60", 31, 60),
@@ -33,6 +35,84 @@ def nasa_score(
     )
     frame = pd.DataFrame({"engine": engines, "penalty": penalty})
     return float(frame.groupby("engine", sort=True)["penalty"].mean().sum())
+
+
+def wilson_interval(
+    successes: int,
+    trials: int,
+    *,
+    z: float = WILSON_Z_95,
+) -> dict[str, float] | None:
+    """Return the two-sided Wilson score interval for a proportion."""
+    if trials <= 0:
+        return None
+    if not 0 <= successes <= trials:
+        raise ValueError("Successes must be between zero and the trial count")
+    proportion = successes / trials
+    z_squared = z * z
+    denominator = 1.0 + z_squared / trials
+    center = (proportion + z_squared / (2.0 * trials)) / denominator
+    margin = (
+        z
+        * math.sqrt(
+            proportion * (1.0 - proportion) / trials
+            + z_squared / (4.0 * trials * trials)
+        )
+        / denominator
+    )
+    return {
+        "low": 0.0 if successes == 0 else max(0.0, center - margin),
+        "high": 1.0 if successes == trials else min(1.0, center + margin),
+    }
+
+
+def alert_rule_metrics(
+    y_true: np.ndarray,
+    alert_score: np.ndarray,
+    *,
+    critical_threshold: float = 30.0,
+    alert_threshold: float | None = None,
+) -> dict[str, Any]:
+    """Score an ``alert_score <= threshold`` rule against truly critical engines.
+
+    Each row must represent one engine, because the Wilson intervals treat rows as
+    independent trials.
+    """
+    truth = np.asarray(y_true, dtype=np.float64)
+    score = np.asarray(alert_score, dtype=np.float64)
+    if len(truth) != len(score):
+        raise ValueError("Alert rule arrays must have equal lengths")
+    threshold = critical_threshold if alert_threshold is None else alert_threshold
+    actual = truth <= critical_threshold
+    alerted = score <= threshold
+    true_positive = int(np.sum(actual & alerted))
+    false_positive = int(np.sum(~actual & alerted))
+    false_negative = int(np.sum(actual & ~alerted))
+    true_negative = int(np.sum(~actual & ~alerted))
+    alerts = true_positive + false_positive
+    critical = true_positive + false_negative
+    healthy = false_positive + true_negative
+    precision = true_positive / alerts if alerts else 0.0
+    recall = true_positive / critical if critical else 0.0
+    return {
+        "critical_threshold": float(critical_threshold),
+        "alert_threshold": float(threshold),
+        "true_positive": true_positive,
+        "false_positive": false_positive,
+        "false_negative": false_negative,
+        "true_negative": true_negative,
+        "precision": precision,
+        "recall": recall,
+        "f1": (
+            2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        ),
+        "false_alarm_rate": false_positive / healthy if healthy else 0.0,
+        "wilson_95": {
+            "precision": wilson_interval(true_positive, alerts),
+            "recall": wilson_interval(true_positive, critical),
+            "false_alarm_rate": wilson_interval(false_positive, healthy),
+        },
+    }
 
 
 def prediction_metrics(
