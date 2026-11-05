@@ -33,6 +33,17 @@ DATASET_SHAPES = {
         "train_engines": 100,
         "test_engines": 100,
         "test_labels": 100,
+        "development_engines": 80,
+        "calibration_engines": 20,
+    },
+    "FD002": {
+        "train_rows": 53_759,
+        "test_rows": 33_991,
+        "train_engines": 260,
+        "test_engines": 259,
+        "test_labels": 259,
+        "development_engines": 208,
+        "calibration_engines": 52,
     },
     "FD003": {
         "train_rows": 24_720,
@@ -40,6 +51,18 @@ DATASET_SHAPES = {
         "train_engines": 100,
         "test_engines": 100,
         "test_labels": 100,
+        "development_engines": 80,
+        "calibration_engines": 20,
+    },
+    # NASA's page reverses these engine counts; the verified archive holds these.
+    "FD004": {
+        "train_rows": 61_249,
+        "test_rows": 41_214,
+        "train_engines": 249,
+        "test_engines": 248,
+        "test_labels": 248,
+        "development_engines": 199,
+        "calibration_engines": 50,
     },
 }
 SCHEMA = (
@@ -121,8 +144,6 @@ def load_data_contract(
             source_url=str(data["source_url"]),
             archive_size_bytes=int(data["archive_size_bytes"]),
             archive_sha256=str(data["archive_sha256"]).lower(),
-            development_engines=int(data["development_engines"]),
-            calibration_engines=int(data["calibration_engines"]),
             rul_cap=int(data["rul_cap"]),
             seed=int(project["seed"]),
             dataset=dataset,

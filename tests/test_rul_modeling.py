@@ -244,7 +244,7 @@ def test_train_lock_and_official_evaluation_are_reproducible(
     lock = json.loads(result.model_lock.read_text(encoding="utf-8"))
     assert lock["official_test_evaluation"].startswith("not opened")
     assert set(lock["features"]["order"]) <= set(FEATURE_NAMES)
-    assert lock["schema_version"] == 2
+    assert lock["schema_version"] == 3
     assert lock["protocol"]["test_status"] == "previously_seen"
     assert lock["calibration"]["engines"] == 8
     assert lock["calibration"]["risk_threshold"] in RISK_THRESHOLD_GRID
@@ -329,6 +329,7 @@ def _small_config() -> ModelingConfig:
         sensitivity_windows=(None,),
         interval_min_band_engines=2,
         bootstrap_resamples=50,
+        ensemble_members=2,
     )
 
 

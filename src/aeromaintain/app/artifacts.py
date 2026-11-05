@@ -111,7 +111,7 @@ def _load_verified_run(project_root: Path, run_id: str) -> AppArtifacts:
     lock_path = run_dir / "model_lock.json"
     _require_hash(lock_path, run_manifest["model_lock_sha256"], "Model lock")
     lock = _read_json(lock_path)
-    if lock.get("run_id") != run_id or lock.get("schema_version") != 2:
+    if lock.get("run_id") != run_id or lock.get("schema_version") not in {2, 3}:
         raise ArtifactValidationError("Model lock identity or schema mismatch")
     _verify_artifact_map(run_dir, lock.get("artifacts", {}), "Model artefact")
     _require_hash(

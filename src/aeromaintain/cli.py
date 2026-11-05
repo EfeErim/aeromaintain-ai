@@ -18,7 +18,7 @@ from aeromaintain.config import (
     resolve_project_root,
 )
 from aeromaintain.data import DataPipelineError, prepare_dataset
-from aeromaintain.delivery import DeliveryError, run_pipeline
+from aeromaintain.delivery import DeliveryError, finish_locked_run, run_pipeline
 from aeromaintain.models import (
     ModelingError,
     compare_runs,
@@ -429,6 +429,34 @@ def pipeline(
     typer.echo("AeroMaintain end-to-end pipeline complete")
     typer.echo(f"Run: {result.run_id}")
     typer.echo(f"Manifest: {result.manifest_path}")
+    typer.echo(f"Report: {result.report_path}")
+
+
+@app.command()
+def finish(
+    run_id: Annotated[
+        str,
+        typer.Option("--run-id", help="Existing locked run to evaluate and report."),
+    ],
+    project_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--project-root",
+            help="Project root. Defaults to the current directory.",
+            file_okay=False,
+            dir_okay=True,
+            resolve_path=True,
+        ),
+    ] = None,
+) -> None:
+    """Open official labels for an existing lock and write its report."""
+    root = resolve_project_root(project_root)
+    try:
+        result = finish_locked_run(root, run_id=run_id)
+    except DeliveryError as exc:
+        typer.echo(f"Finish failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"Run complete: {result.run_id}")
     typer.echo(f"Report: {result.report_path}")
 
 

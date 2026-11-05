@@ -1,4 +1,4 @@
-"""Protocol v2 RUL selection, calibration, locking, and official evaluation."""
+"""Protocol v3 RUL selection, calibration, locking, and official evaluation."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 import math
 import shutil
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +23,9 @@ from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.evaluation.protocol import (
     draw_engine_rows,
     eligible_rows,
+    fit_mondrian_cqr,
     fit_mondrian_interval,
+    leave_engines_out_cqr,
     leave_engines_out_interval,
     risk_threshold_table,
     select_risk_threshold,
@@ -31,23 +33,34 @@ from aeromaintain.evaluation.protocol import (
     summarize_interval_draws,
 )
 from aeromaintain.features import (
+    CONDITION_FEATURE,
     FEATURE_SETS,
+    ConditionNormalizer,
     FoldPreprocessor,
     build_causal_features,
+    build_condition_features,
 )
 from aeromaintain.runtime import runtime_fingerprint
 
 RIDGE_ALPHAS = (1.0, 10.0, 100.0, 1_000.0, 10_000.0)
 RISK_THRESHOLD_GRID = tuple(float(value) for value in range(0, 65, 5))
 ELEVATED_BAND_MARGIN = 30.0
-MODEL_SCHEMA_VERSION = 2
-PROTOCOL_DOCUMENT = "docs/protocol_v2.md"
+MODEL_SCHEMA_VERSION = 3
+SUPPORTED_LOCK_SCHEMAS = (2, 3)
+PROTOCOL_VERSION = 3
+PROTOCOL_DOCUMENT = "docs/protocol_v3.md"
+PROTOCOL_CONFIG = "configs/protocol_v3.yaml"
+SIX_CONDITION_CONFIG = "configs/protocol_v3_six_conditions.yaml"
+SIX_CONDITION_SUBSETS = ("FD002", "FD004")
+BASE_CONFIG = "configs/project.yaml"
+MEMBER_SEED_STEP = 1_000
+QUANTILE_KINDS = ("capped", "uncapped")
 SELECTION_SCOPE = "development engines only"
 TEST_PREVIOUSLY_SEEN = "previously_seen"
 TEST_CLEAN_SINGLE_OPEN = "clean_single_open"
 TEST_STATUS_LABELS = {
-    TEST_PREVIOUSLY_SEEN: "protocol v2, test previously seen",
-    TEST_CLEAN_SINGLE_OPEN: "protocol v2, clean single-open test",
+    TEST_PREVIOUSLY_SEEN: f"protocol v{PROTOCOL_VERSION}, test previously seen",
+    TEST_CLEAN_SINGLE_OPEN: f"protocol v{PROTOCOL_VERSION}, clean single-open test",
 }
 
 
@@ -57,7 +70,7 @@ class ModelingError(RuntimeError):
 
 @dataclass(frozen=True)
 class ModelingConfig:
-    """Fixed protocol v2 values loaded from the project contract."""
+    """Fixed protocol values loaded from the project contract."""
 
     seed: int = 42
     group_folds: int = 5
@@ -74,7 +87,16 @@ class ModelingConfig:
     rul_cap_candidates: tuple[int, ...] = (125, 130)
     stage_min_improvement: float = 0.01
     champion_min_improvement: float = 0.05
-    rmse_target: float = 16.6
+    rmse_target: float | None = 16.6
+    baseline_rmse_reduction_target: float | None = None
+    interval_width_target: float | None = 45.0
+    operating_conditions: int = 1
+    condition_max_within_spread: float = 0.1
+    emphasis_weight: float = 0.25
+    ensemble_members: int = 5
+    cqr_enabled: bool = True
+    cqr_min_coverage: float = 0.89
+    cqr_min_width_reduction: float = 0.05
     cross_fit_folds: int = 10
     interval_band_edges: tuple[float, ...] = (30.0, 60.0, 100.0)
     interval_min_band_engines: int = 20
@@ -150,8 +172,18 @@ def _safe_json_value(value: Any) -> Any:
     return value
 
 
-def _load_project_config(project_root: Path) -> dict[str, Any]:
-    config_path = project_root / "configs" / "project.yaml"
+def protocol_config_path(project_root: Path, dataset: str = "FD001") -> Path:
+    """Return a subset's protocol config, or the base config where none exists."""
+    candidates = (SIX_CONDITION_CONFIG,) if dataset in SIX_CONDITION_SUBSETS else ()
+    for relative_path in (*candidates, PROTOCOL_CONFIG):
+        path = project_root / relative_path
+        if path.is_file():
+            return path
+    return project_root / BASE_CONFIG
+
+
+def _load_project_config(project_root: Path, dataset: str = "FD001") -> dict[str, Any]:
+    config_path = protocol_config_path(project_root, dataset)
     try:
         payload = yaml.safe_load(config_path.read_text(encoding="utf-8"))
     except (OSError, yaml.YAMLError) as exc:
@@ -161,13 +193,17 @@ def _load_project_config(project_root: Path) -> dict[str, Any]:
     return payload
 
 
-def load_modeling_config(project_root: Path) -> ModelingConfig:
-    """Load the shared seed, folds, threshold, and protocol v2 parameters."""
-    payload = _load_project_config(project_root)
+def load_modeling_config(
+    project_root: Path,
+    dataset: str = "FD001",
+) -> ModelingConfig:
+    """Load the shared seed, folds, threshold, and protocol parameters."""
+    payload = _load_project_config(project_root, dataset)
     defaults = ModelingConfig()
     try:
         project = payload["project"]
         modeling = payload["modeling"]
+        subset = payload.get("data", {}).get("datasets", {}).get(dataset, {})
         windows = modeling.get("sensitivity_windows", defaults.sensitivity_windows)
         return ModelingConfig(
             seed=int(project["seed"]),
@@ -175,6 +211,10 @@ def load_modeling_config(project_root: Path) -> ModelingConfig:
             critical_rul_threshold=int(modeling["critical_rul_threshold"]),
             nominal_interval_coverage=float(modeling["nominal_interval_coverage"]),
             xgboost_n_jobs=int(modeling.get("xgboost_n_jobs", defaults.xgboost_n_jobs)),
+            xgboost_candidates=int(
+                modeling.get("xgboost_candidates", defaults.xgboost_candidates)
+            ),
+            cqr_enabled=bool(modeling.get("cqr_enabled", defaults.cqr_enabled)),
             scoring_draws=int(modeling.get("scoring_draws", defaults.scoring_draws)),
             scoring_rul_window=modeling.get(
                 "scoring_rul_window", defaults.scoring_rul_window
@@ -208,6 +248,17 @@ def load_modeling_config(project_root: Path) -> ModelingConfig:
             risk_recall_target=float(
                 modeling.get("risk_recall_target", defaults.risk_recall_target)
             ),
+            rmse_target=subset.get("rmse_target", defaults.rmse_target),
+            baseline_rmse_reduction_target=subset.get(
+                "baseline_rmse_reduction_target",
+                defaults.baseline_rmse_reduction_target,
+            ),
+            interval_width_target=subset.get(
+                "interval_width_target", defaults.interval_width_target
+            ),
+            operating_conditions=int(
+                subset.get("operating_conditions", defaults.operating_conditions)
+            ),
         )
     except (KeyError, TypeError, ValueError) as exc:
         raise ModelingError(f"Invalid modeling configuration: {exc}") from exc
@@ -215,7 +266,7 @@ def load_modeling_config(project_root: Path) -> ModelingConfig:
 
 def load_test_status(project_root: Path, dataset: str) -> str:
     """Return whether a subset's test labels were already seen."""
-    payload = _load_project_config(project_root)
+    payload = _load_project_config(project_root, dataset)
     datasets = payload.get("data", {}).get("datasets", {})
     status = datasets.get(dataset, {}).get("test_status", TEST_PREVIOUSLY_SEEN)
     if status not in TEST_STATUS_LABELS:
@@ -362,29 +413,67 @@ def _capped_target(frame: pd.DataFrame, cap: int) -> np.ndarray:
     return frame["rul_true"].clip(upper=cap).to_numpy(dtype=np.float64)
 
 
-def _feature_view(features: pd.DataFrame, feature_set: str) -> pd.DataFrame:
-    return features.loc[:, list(FEATURE_SETS[feature_set])]
+def _feature_columns(spec: dict[str, Any]) -> tuple[str, ...]:
+    columns = FEATURE_SETS[spec["feature_set"]]
+    return (*columns, CONDITION_FEATURE) if spec.get("condition") else columns
+
+
+def _feature_view(features: pd.DataFrame, spec: dict[str, Any]) -> pd.DataFrame:
+    return features.loc[:, list(_feature_columns(spec))]
 
 
 def _new_preprocessor(spec: dict[str, Any]) -> FoldPreprocessor:
     return FoldPreprocessor(
         scale=spec["family"] == "ridge",
-        input_features=FEATURE_SETS[spec["feature_set"]],
+        input_features=_feature_columns(spec),
     )
+
+
+def partition_features(
+    spec: dict[str, Any],
+    frame: pd.DataFrame,
+    raw_features: pd.DataFrame,
+    train_rows: np.ndarray,
+    config: ModelingConfig,
+) -> tuple[pd.DataFrame, ConditionNormalizer | None]:
+    """Return features for all rows, with any scaling fitted on train rows only."""
+    if not spec.get("condition"):
+        return raw_features, None
+    normalizer = ConditionNormalizer(
+        conditions=config.operating_conditions,
+        seed=config.seed,
+        max_within_spread=config.condition_max_within_spread,
+    ).fit(frame.iloc[train_rows])
+    return build_condition_features(frame, normalizer), normalizer
+
+
+def row_weights(
+    spec: dict[str, Any],
+    frame: pd.DataFrame,
+    config: ModelingConfig,
+) -> np.ndarray:
+    """Return engine-equal weights, reduced above the window under window focus."""
+    weights = engine_equal_weights(frame["unit_id"].to_numpy())
+    if spec.get("emphasis", "uniform") == "window_focus":
+        eligible = eligible_rows(
+            frame["rul_true"].to_numpy(), config.scoring_rul_window
+        )
+        weights = weights * np.where(eligible, 1.0, config.emphasis_weight)
+    return weights
 
 
 def _fit_ridge(
     spec: dict[str, Any],
     features: pd.DataFrame,
-    target: np.ndarray,
-    engines: np.ndarray,
+    frame: pd.DataFrame,
+    config: ModelingConfig,
 ) -> RidgeBundle:
     preprocessor = _new_preprocessor(spec).fit(features)
     estimator = Ridge(alpha=float(spec["alpha"]))
     estimator.fit(
         preprocessor.transform(features),
-        target,
-        sample_weight=engine_equal_weights(engines),
+        _capped_target(frame, int(spec["cap"])),
+        sample_weight=row_weights(spec, frame, config),
     )
     return RidgeBundle(preprocessor=preprocessor, estimator=estimator)
 
@@ -392,14 +481,14 @@ def _fit_ridge(
 def _fit_early_stopped_xgboost(
     spec: dict[str, Any],
     features: pd.DataFrame,
-    target: np.ndarray,
-    engines: np.ndarray,
+    frame: pd.DataFrame,
     config: ModelingConfig,
     *,
     seed: int,
 ) -> tuple[XGBRegressor, FoldPreprocessor, int]:
+    target = _capped_target(frame, int(spec["cap"]))
     fit_rows, stop_rows = inner_engine_split(
-        engines,
+        frame["unit_id"].to_numpy(),
         fraction=config.inner_validation_fraction,
         seed=seed,
     )
@@ -414,11 +503,11 @@ def _fit_early_stopped_xgboost(
     estimator.fit(
         preprocessor.transform(features.iloc[fit_rows]),
         target[fit_rows],
-        sample_weight=engine_equal_weights(engines[fit_rows]),
+        sample_weight=row_weights(spec, frame.iloc[fit_rows], config),
         eval_set=[
-            (preprocessor.transform(features.iloc[stop_rows]), target[stop_rows])
+            (preprocessor.transform(features.iloc[stop_rows]), target[stop_rows]),
         ],
-        sample_weight_eval_set=[engine_equal_weights(engines[stop_rows])],
+        sample_weight_eval_set=[row_weights(spec, frame.iloc[stop_rows], config)],
         verbose=False,
     )
     return estimator, preprocessor, int(estimator.best_iteration) + 1
@@ -427,13 +516,12 @@ def _fit_early_stopped_xgboost(
 def _fit_fixed_xgboost(
     spec: dict[str, Any],
     features: pd.DataFrame,
-    target: np.ndarray,
-    engines: np.ndarray,
+    frame: pd.DataFrame,
+    preprocessor: FoldPreprocessor,
     config: ModelingConfig,
     *,
     seed: int,
-) -> tuple[XGBRegressor, FoldPreprocessor]:
-    preprocessor = _new_preprocessor(spec).fit(features)
+) -> XGBRegressor:
     estimator = _new_xgboost(
         spec["parameters"],
         config,
@@ -443,11 +531,109 @@ def _fit_fixed_xgboost(
     )
     estimator.fit(
         preprocessor.transform(features),
-        target,
-        sample_weight=engine_equal_weights(engines),
+        _capped_target(frame, int(spec["cap"])),
+        sample_weight=row_weights(spec, frame, config),
         verbose=False,
     )
-    return estimator, preprocessor
+    return estimator
+
+
+def _quantile_target(
+    frame: pd.DataFrame, spec: dict[str, Any], kind: str
+) -> np.ndarray:
+    if kind == "capped":
+        return _capped_target(frame, int(spec["cap"]))
+    if kind == "uncapped":
+        return frame["rul_true"].to_numpy(dtype=np.float64)
+    raise ModelingError(f"Unknown quantile target: {kind}")
+
+
+def _new_quantile_xgboost(
+    spec: dict[str, Any],
+    config: ModelingConfig,
+    *,
+    seed: int,
+    n_estimators: int,
+    early_stopping: bool,
+) -> XGBRegressor:
+    tail = (1.0 - config.nominal_interval_coverage) / 2.0
+    return XGBRegressor(
+        **spec["parameters"],
+        objective="reg:quantileerror",
+        quantile_alpha=[tail, 1.0 - tail],
+        n_estimators=n_estimators,
+        tree_method="hist",
+        random_state=seed,
+        n_jobs=config.xgboost_n_jobs,
+        early_stopping_rounds=(
+            config.xgboost_early_stopping_rounds if early_stopping else None
+        ),
+    )
+
+
+def fit_quantile_early_stopped(
+    spec: dict[str, Any],
+    kind: str,
+    features: pd.DataFrame,
+    frame: pd.DataFrame,
+    config: ModelingConfig,
+    *,
+    seed: int,
+) -> tuple[XGBRegressor, FoldPreprocessor, int]:
+    """Fit quantile XGBoost, early-stopped on pinball loss over inner engines."""
+    target = _quantile_target(frame, spec, kind)
+    fit_rows, stop_rows = inner_engine_split(
+        frame["unit_id"].to_numpy(),
+        fraction=config.inner_validation_fraction,
+        seed=seed,
+    )
+    preprocessor = _new_preprocessor(spec).fit(features.iloc[fit_rows])
+    model = _new_quantile_xgboost(
+        spec,
+        config,
+        seed=seed,
+        n_estimators=config.xgboost_max_trees,
+        early_stopping=True,
+    )
+    model.fit(
+        preprocessor.transform(features.iloc[fit_rows]),
+        target[fit_rows],
+        sample_weight=row_weights(spec, frame.iloc[fit_rows], config),
+        eval_set=[
+            (preprocessor.transform(features.iloc[stop_rows]), target[stop_rows]),
+        ],
+        sample_weight_eval_set=[row_weights(spec, frame.iloc[stop_rows], config)],
+        verbose=False,
+    )
+    return model, preprocessor, int(model.best_iteration) + 1
+
+
+def fit_quantile_fixed(
+    spec: dict[str, Any],
+    kind: str,
+    tree_count: int,
+    features: pd.DataFrame,
+    frame: pd.DataFrame,
+    config: ModelingConfig,
+    *,
+    seed: int,
+) -> tuple[XGBRegressor, FoldPreprocessor]:
+    """Fit final quantile XGBoost with a locked tree count."""
+    preprocessor = _new_preprocessor(spec).fit(features)
+    model = _new_quantile_xgboost(
+        spec,
+        config,
+        seed=seed,
+        n_estimators=tree_count,
+        early_stopping=False,
+    )
+    model.fit(
+        preprocessor.transform(features),
+        _quantile_target(frame, spec, kind),
+        sample_weight=row_weights(spec, frame, config),
+        verbose=False,
+    )
+    return model, preprocessor
 
 
 @dataclass
@@ -459,6 +645,7 @@ class _SelectionData:
     folds: list[tuple[np.ndarray, np.ndarray]]
     plan: np.ndarray
     config: ModelingConfig
+    condition_cache: dict[int, pd.DataFrame] = field(default_factory=dict)
 
     @property
     def truth(self) -> np.ndarray:
@@ -468,37 +655,55 @@ class _SelectionData:
     def engines(self) -> np.ndarray:
         return self.frame["unit_id"].to_numpy()
 
+    def fold_features(
+        self,
+        spec: dict[str, Any],
+        fold_index: int,
+        train_index: np.ndarray,
+    ) -> pd.DataFrame:
+        if not spec.get("condition"):
+            return self.features
+        if fold_index not in self.condition_cache:
+            self.condition_cache[fold_index], _ = partition_features(
+                spec, self.frame, self.features, train_index, self.config
+            )
+        return self.condition_cache[fold_index]
+
 
 def _candidate_oof(
     spec: dict[str, Any],
     data: _SelectionData,
 ) -> tuple[np.ndarray, list[int]]:
-    features = _feature_view(data.features, spec["feature_set"])
-    target = _capped_target(data.frame, int(spec["cap"]))
-    engines = data.engines
-    oof = np.empty(len(features), dtype=np.float64)
+    oof = np.empty(len(data.frame), dtype=np.float64)
     tree_counts: list[int] = []
+    members = int(spec.get("ensemble_members", 1))
     for fold_index, (train_index, validation_index) in enumerate(data.folds):
+        all_features = data.fold_features(spec, fold_index, train_index)
+        features = _feature_view(all_features, spec)
         train_features = features.iloc[train_index]
+        train_frame = data.frame.iloc[train_index]
         validation_features = features.iloc[validation_index]
         if spec["family"] == "ridge":
-            bundle = _fit_ridge(
-                spec, train_features, target[train_index], engines[train_index]
-            )
+            bundle = _fit_ridge(spec, train_features, train_frame, data.config)
             oof[validation_index] = bundle.predict(validation_features)
             continue
-        estimator, preprocessor, tree_count = _fit_early_stopped_xgboost(
-            spec,
-            train_features,
-            target[train_index],
-            engines[train_index],
-            data.config,
-            seed=data.config.seed + fold_index,
-        )
-        tree_counts.append(tree_count)
-        oof[validation_index] = np.maximum(
-            0.0, estimator.predict(preprocessor.transform(validation_features))
-        )
+        predictions = []
+        for member in range(members):
+            estimator, preprocessor, tree_count = _fit_early_stopped_xgboost(
+                spec,
+                train_features,
+                train_frame,
+                data.config,
+                seed=data.config.seed + fold_index + MEMBER_SEED_STEP * member,
+            )
+            tree_counts.append(tree_count)
+            predictions.append(
+                np.maximum(
+                    0.0,
+                    estimator.predict(preprocessor.transform(validation_features)),
+                )
+            )
+        oof[validation_index] = np.mean(predictions, axis=0)
     return oof, tree_counts
 
 
@@ -542,20 +747,22 @@ def _run_stage(
     data: _SelectionData,
     stage: str,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """Replace the simpler earlier choice only for a required RMSE improvement."""
+    """Replace the earlier choice only for lower RMSE and a NASA score not worse."""
     required = 1.0 - data.config.stage_min_improvement
     evaluated = [_evaluate_candidate(spec, data) for spec in alternatives]
     log: list[dict[str, Any]] = []
-    baseline = current["metrics"]["rmse"]["median"]
+    baseline, baseline_nasa = _rank(current)
     best = current
     for record in sorted(evaluated, key=_rank):
-        improves = record["metrics"]["rmse"]["median"] <= baseline * required
-        accepted = improves and best is current
+        rmse, nasa = _rank(record)
+        accepted = rmse <= baseline * required and nasa <= baseline_nasa
+        accepted = accepted and best is current
         log.append(
             {
                 "stage": stage,
                 **_public_record(record),
                 "baseline_rmse": baseline,
+                "baseline_nasa": baseline_nasa,
                 "accepted": accepted,
             }
         )
@@ -568,7 +775,7 @@ def _select_family(
     candidates: list[dict[str, Any]],
     data: _SelectionData,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Run the three protocol stages for one model family."""
+    """Run the protocol stages for one model family."""
     records = [_evaluate_candidate(spec, data) for spec in candidates]
     best = min(records, key=_rank)
     stages: dict[str, Any] = {
@@ -586,6 +793,27 @@ def _select_family(
         if cap != best["spec"]["cap"]
     ]
     best, stages["cap"] = _run_stage(best, cap_specs, data, "cap")
+    stages["raw_feature_baseline_rmse"] = _rank(best)[0]
+    if data.config.operating_conditions > 1:
+        best, stages["condition"] = _run_stage(
+            best,
+            [{**best["spec"], "condition": True}],
+            data,
+            "condition",
+        )
+    best, stages["emphasis"] = _run_stage(
+        best,
+        [{**best["spec"], "emphasis": "window_focus"}],
+        data,
+        "emphasis",
+    )
+    if best["spec"]["family"] == "xgboost":
+        best, stages["ensemble"] = _run_stage(
+            best,
+            [{**best["spec"], "ensemble_members": data.config.ensemble_members}],
+            data,
+            "ensemble",
+        )
     return best, stages
 
 
@@ -620,7 +848,11 @@ def _select_champion(
         ),
         "champion": champion,
         "rmse_target": config.rmse_target,
-        "rmse_target_met": chosen["metrics"]["rmse"]["median"] <= config.rmse_target,
+        "rmse_target_met": (
+            None
+            if config.rmse_target is None
+            else chosen["metrics"]["rmse"]["median"] <= config.rmse_target
+        ),
     }
 
 
@@ -694,57 +926,23 @@ def fit_final_model(
     seed: int,
 ) -> tuple[Any, FoldPreprocessor]:
     """Fit locked settings on the given engines."""
-    view = _feature_view(features, spec["feature_set"])
-    target = _capped_target(frame, int(spec["cap"]))
-    engines = frame["unit_id"].to_numpy()
+    view = _feature_view(features, spec)
     if spec["family"] == "ridge":
-        bundle = _fit_ridge(spec, view, target, engines)
+        bundle = _fit_ridge(spec, view, frame, config)
         return bundle, bundle.preprocessor
-    return _fit_fixed_xgboost(spec, view, target, engines, config, seed=seed)
-
-
-def _persist_model(
-    spec: dict[str, Any],
-    model: Any,
-    preprocessor: FoldPreprocessor,
-    run_dir: Path,
-) -> tuple[dict[str, str], dict[str, Any]]:
-    if spec["family"] == "ridge":
-        model_path = run_dir / "model.joblib"
-        joblib.dump(model, model_path)
-        return (
-            {"model.joblib": sha256_file(model_path)},
-            {
-                "kind": "ridge",
-                "format": "trusted-local-joblib",
-                "path": "model.joblib",
-                "parameters": {"alpha": float(spec["alpha"])},
-                "feature_set": spec["feature_set"],
-                "cap": int(spec["cap"]),
-            },
+    preprocessor = _new_preprocessor(spec).fit(view)
+    members = [
+        _fit_fixed_xgboost(
+            spec,
+            view,
+            frame,
+            preprocessor,
+            config,
+            seed=seed + MEMBER_SEED_STEP * member,
         )
-    model_path = run_dir / "model.json"
-    preprocessor_path = run_dir / "preprocessor.joblib"
-    model.save_model(model_path)
-    joblib.dump(preprocessor, preprocessor_path)
-    return (
-        {
-            "model.json": sha256_file(model_path),
-            "preprocessor.joblib": sha256_file(preprocessor_path),
-        },
-        {
-            "kind": "xgboost",
-            "format": "xgboost-json-with-trusted-local-joblib-preprocessor",
-            "path": "model.json",
-            "preprocessor_path": "preprocessor.joblib",
-            "parameters": {
-                **spec["parameters"],
-                "n_estimators": int(spec["tree_count"]),
-            },
-            "feature_set": spec["feature_set"],
-            "cap": int(spec["cap"]),
-        },
-    )
+        for member in range(int(spec.get("ensemble_members", 1)))
+    ]
+    return (members[0] if len(members) == 1 else members), preprocessor
 
 
 def _predict_model(
@@ -756,7 +954,32 @@ def _predict_model(
     view = features.loc[:, list(preprocessor.input_features)]
     if champion == "ridge":
         return model.predict(view)
-    return np.maximum(0.0, model.predict(preprocessor.transform(view)))
+    transformed = preprocessor.transform(view)
+    members = model if isinstance(model, list) else [model]
+    return np.mean(
+        [np.maximum(0.0, member.predict(transformed)) for member in members],
+        axis=0,
+    )
+
+
+def predict_quantiles(
+    model: XGBRegressor,
+    preprocessor: FoldPreprocessor,
+    features: pd.DataFrame,
+) -> np.ndarray:
+    """Return an ``n x 2`` array of lower and upper quantile predictions."""
+    view = features.loc[:, list(preprocessor.input_features)]
+    return np.asarray(model.predict(preprocessor.transform(view)), dtype=np.float64)
+
+
+@dataclass
+class CrossFit:
+    """Out-of-fold predictions over all training engines."""
+
+    prediction: np.ndarray
+    fold_ids: np.ndarray
+    quantiles: dict[str, np.ndarray]
+    quantile_tree_counts: dict[str, int]
 
 
 def cross_fit_predictions(
@@ -766,70 +989,139 @@ def cross_fit_predictions(
     config: ModelingConfig,
     *,
     seed: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Return out-of-fold predictions and fold IDs over all training engines."""
+    quantile_kinds: tuple[str, ...] = (),
+) -> CrossFit:
+    """Return out-of-fold point and quantile predictions over training engines."""
     engines = frame["unit_id"].to_numpy()
     prediction = np.empty(len(frame), dtype=np.float64)
     fold_ids = np.empty(len(frame), dtype=np.int64)
+    quantiles = {kind: np.empty((len(frame), 2)) for kind in quantile_kinds}
+    tree_counts: dict[str, list[int]] = {kind: [] for kind in quantile_kinds}
     for fold_index, (train_index, validation_index) in enumerate(
         group_fold_plan(engines, folds=config.cross_fit_folds, seed=seed)
     ):
+        fold_features, _ = partition_features(
+            spec, frame, features, train_index, config
+        )
+        fold_seed = seed + fold_index
+        train_features = fold_features.iloc[train_index]
+        validation_features = fold_features.iloc[validation_index]
+        train_frame = frame.iloc[train_index]
         model, preprocessor = fit_final_model(
             spec,
-            features.iloc[train_index],
-            frame.iloc[train_index],
+            train_features,
+            train_frame,
             config,
-            seed=seed + fold_index,
+            seed=fold_seed,
         )
         prediction[validation_index] = _predict_model(
             model,
             preprocessor,
-            features.iloc[validation_index],
+            validation_features,
             spec["family"],
         )
+        for kind in quantile_kinds:
+            quantile_model, quantile_prep, count = fit_quantile_early_stopped(
+                spec,
+                kind,
+                _feature_view(train_features, spec),
+                train_frame,
+                config,
+                seed=fold_seed,
+            )
+            quantiles[kind][validation_index] = predict_quantiles(
+                quantile_model, quantile_prep, validation_features
+            )
+            tree_counts[kind].append(count)
         fold_ids[validation_index] = fold_index
-    return prediction, fold_ids
+    return CrossFit(
+        prediction=prediction,
+        fold_ids=fold_ids,
+        quantiles=quantiles,
+        quantile_tree_counts={
+            kind: int(np.median(counts)) for kind, counts in tree_counts.items()
+        },
+    )
 
 
 def calibrate_interval(
-    prediction: np.ndarray,
-    fold_ids: np.ndarray,
+    cross_fit: CrossFit,
     frame: pd.DataFrame,
     config: ModelingConfig,
     *,
     seed: int,
+    forced_method: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Fit the Mondrian interval and choose the risk threshold from train engines."""
+    """Fit candidate intervals and choose the risk threshold from train engines."""
+    prediction = cross_fit.prediction
+    fold_ids = cross_fit.fold_ids
     truth = frame["rul_true"].to_numpy(dtype=np.float64)
     engines = frame["unit_id"].to_numpy()
     eligible = eligible_rows(truth, config.scoring_rul_window)
-    interval = fit_mondrian_interval(
-        prediction[eligible],
-        truth[eligible],
-        engines[eligible],
-        coverage=config.nominal_interval_coverage,
-        edges=config.interval_band_edges,
-        min_engines=config.interval_min_band_engines,
-    )
-    low, high = leave_engines_out_interval(
-        prediction,
-        truth,
-        engines,
-        eligible,
-        fold_ids,
-        coverage=config.nominal_interval_coverage,
-        edges=config.interval_band_edges,
-        min_engines=config.interval_min_band_engines,
-    )
+    arguments = {
+        "coverage": config.nominal_interval_coverage,
+        "edges": config.interval_band_edges,
+        "min_engines": config.interval_min_band_engines,
+    }
     plan = draw_engine_rows(
         engines,
         eligible,
         draws=config.scoring_draws,
         seed=seed + 1,
     )
+
+    def summarize(low: np.ndarray, high: np.ndarray) -> dict[str, Any]:
+        return summarize_interval_draws(
+            truth,
+            prediction,
+            low,
+            high,
+            plan,
+            edges=config.interval_band_edges,
+        )
+
+    low, high = leave_engines_out_interval(
+        prediction, truth, engines, eligible, fold_ids, **arguments
+    )
+    mondrian_report = summarize(low, high)
+    adopted = "mondrian"
+    adopted_report = mondrian_report
+    adopted_low = low
+    challengers: dict[str, Any] = {}
+    for kind, quantiles in cross_fit.quantiles.items():
+        kind_low, kind_high = leave_engines_out_cqr(
+            prediction, quantiles, truth, engines, eligible, fold_ids, **arguments
+        )
+        report = summarize(kind_low, kind_high)
+        reduction = (
+            1.0 - report["median_mean_width"] / mondrian_report["median_mean_width"]
+        )
+        qualifies = (
+            report["median_coverage"] >= config.cqr_min_coverage
+            and reduction >= config.cqr_min_width_reduction
+        )
+        challengers[kind] = {
+            "report": report,
+            "width_reduction_fraction": reduction,
+            "qualifies": qualifies,
+            "quantile_tree_count": cross_fit.quantile_tree_counts[kind],
+        }
+        method = f"cqr_{kind}"
+        better = (
+            report["median_mean_width"] < adopted_report["median_mean_width"]
+            if forced_method is None
+            else forced_method == method
+        )
+        if (forced_method == method) or (
+            forced_method is None and qualifies and better
+        ):
+            adopted = method
+            adopted_report = report
+            adopted_low = kind_low
+
     table = risk_threshold_table(
         truth,
-        low,
+        adopted_low,
         plan,
         critical_threshold=config.critical_rul_threshold,
         thresholds=RISK_THRESHOLD_GRID,
@@ -837,30 +1129,113 @@ def calibrate_interval(
     selected = select_risk_threshold(table, recall_target=config.risk_recall_target)
     analysis = {
         "scope": "leave-engines-out over all training engines",
-        "interval": summarize_interval_draws(
-            truth,
-            prediction,
-            low,
-            high,
-            plan,
-            edges=config.interval_band_edges,
+        "adopted": adopted,
+        "interval": adopted_report,
+        "mondrian": mondrian_report,
+        "cqr_challengers": challengers,
+        "width_target": config.interval_width_target,
+        "width_target_met": (
+            None
+            if config.interval_width_target is None
+            else adopted_report["median_mean_width"] < config.interval_width_target
         ),
         "risk_threshold_table": table,
         "selected_risk_threshold": selected,
     }
-    half_widths = [(band["q_high"] - band["q_low"]) / 2 for band in interval["bands"]]
+    if adopted == "mondrian":
+        interval = fit_mondrian_interval(
+            prediction[eligible],
+            truth[eligible],
+            engines[eligible],
+            **arguments,
+        )
+        half_widths = [
+            (band["q_high"] - band["q_low"]) / 2 for band in interval["bands"]
+        ]
+        method_fields: dict[str, Any] = {
+            "method": "mondrian-signed-residual-cross-fit",
+            "max_half_width": float(max(half_widths)),
+        }
+    else:
+        kind = adopted.removeprefix("cqr_")
+        interval = fit_mondrian_cqr(
+            prediction[eligible],
+            cross_fit.quantiles[kind][eligible],
+            truth[eligible],
+            engines[eligible],
+            **arguments,
+        )
+        method_fields = {
+            "method": "mondrian-cqr-cross-fit",
+            "quantile_target": kind,
+            "quantile_tree_count": cross_fit.quantile_tree_counts[kind],
+            "max_half_width": float(adopted_report["median_mean_width"] / 2),
+        }
     calibration = {
-        "method": "mondrian-signed-residual-cross-fit",
+        **method_fields,
         "label": "nominal empirical interval; not a safety guarantee",
         "coverage": config.nominal_interval_coverage,
         "bands": interval["bands"],
         "engines": int(pd.Series(engines[eligible]).nunique()),
-        "max_half_width": float(max(half_widths)),
         "risk_threshold": selected["threshold"],
         "elevated_threshold": selected["threshold"] + ELEVATED_BAND_MARGIN,
         "critical_rul_threshold": float(config.critical_rul_threshold),
     }
     return calibration, analysis
+
+
+def _persist_model(
+    spec: dict[str, Any],
+    model: Any,
+    preprocessor: FoldPreprocessor,
+    normalizer: ConditionNormalizer | None,
+    run_dir: Path,
+) -> tuple[dict[str, str], dict[str, Any]]:
+    hashes: dict[str, str] = {}
+    shared = {
+        "feature_set": spec["feature_set"],
+        "cap": int(spec["cap"]),
+        "condition": bool(spec.get("condition")),
+        "emphasis": spec.get("emphasis", "uniform"),
+    }
+    if normalizer is not None:
+        normalizer_path = run_dir / "condition_normalizer.joblib"
+        joblib.dump(normalizer, normalizer_path)
+        hashes[normalizer_path.name] = sha256_file(normalizer_path)
+        shared["normalizer_path"] = normalizer_path.name
+    if spec["family"] == "ridge":
+        model_path = run_dir / "model.joblib"
+        joblib.dump(model, model_path)
+        hashes[model_path.name] = sha256_file(model_path)
+        return hashes, {
+            "kind": "ridge",
+            "format": "trusted-local-joblib",
+            "path": model_path.name,
+            "parameters": {"alpha": float(spec["alpha"])},
+            **shared,
+        }
+    members = model if isinstance(model, list) else [model]
+    paths = []
+    for index, member in enumerate(members):
+        name = "model.json" if index == 0 else f"model_{index}.json"
+        member.save_model(run_dir / name)
+        hashes[name] = sha256_file(run_dir / name)
+        paths.append(name)
+    preprocessor_path = run_dir / "preprocessor.joblib"
+    joblib.dump(preprocessor, preprocessor_path)
+    hashes[preprocessor_path.name] = sha256_file(preprocessor_path)
+    return hashes, {
+        "kind": "xgboost",
+        "format": "xgboost-json-with-trusted-local-joblib-preprocessor",
+        "path": paths[0],
+        "member_paths": paths,
+        "preprocessor_path": preprocessor_path.name,
+        "parameters": {
+            **spec["parameters"],
+            "n_estimators": int(spec["tree_count"]),
+        },
+        **shared,
+    }
 
 
 def _build_explanation(
@@ -936,7 +1311,7 @@ def train_and_lock(
     root = project_root.resolve()
     if not run_id or Path(run_id).name != run_id:
         raise ModelingError("run_id must be one safe path component")
-    active_config = config or load_modeling_config(root)
+    active_config = config or load_modeling_config(root, dataset)
     test_status = load_test_status(root, dataset)
     train, data_manifest, split_manifest = _load_and_validate_training_inputs(
         root, dataset
@@ -999,41 +1374,83 @@ def train_and_lock(
             best_xgboost if decision["champion"] == "xgboost" else best_ridge
         )["spec"]
 
-        cross_fit, fold_ids = cross_fit_predictions(
+        chosen = best_xgboost if decision["champion"] == "xgboost" else best_ridge
+        family_stages = (
+            xgboost_stages if decision["champion"] == "xgboost" else ridge_stages
+        )
+        raw_baseline = family_stages["raw_feature_baseline_rmse"]
+        reduction_target = active_config.baseline_rmse_reduction_target
+        decision["raw_feature_baseline_rmse"] = raw_baseline
+        decision["baseline_rmse_reduction_fraction"] = (
+            1.0 - chosen["metrics"]["rmse"]["median"] / raw_baseline
+        )
+        decision["baseline_rmse_reduction_target"] = reduction_target
+        decision["baseline_rmse_reduction_target_met"] = (
+            None
+            if reduction_target is None
+            else decision["baseline_rmse_reduction_fraction"] >= reduction_target
+        )
+        cross_fit = cross_fit_predictions(
             locked_spec,
             all_features,
             all_frame,
             active_config,
             seed=active_config.seed,
+            quantile_kinds=(
+                QUANTILE_KINDS
+                if active_config.cqr_enabled and locked_spec["family"] == "xgboost"
+                else ()
+            ),
         )
         calibration, calibration_analysis = calibrate_interval(
             cross_fit,
-            fold_ids,
             all_frame,
             active_config,
             seed=active_config.seed,
         )
+        all_rows = np.arange(len(all_frame))
+        final_features, normalizer = partition_features(
+            locked_spec, all_frame, all_features, all_rows, active_config
+        )
         model, preprocessor = fit_final_model(
             locked_spec,
-            all_features,
+            final_features,
             all_frame,
             active_config,
             seed=active_config.seed,
         )
         model_hashes, model_spec = _persist_model(
-            locked_spec, model, preprocessor, temporary
+            locked_spec, model, preprocessor, normalizer, temporary
         )
+        if "quantile_target" in calibration:
+            quantile_model, quantile_preprocessor = fit_quantile_fixed(
+                locked_spec,
+                calibration["quantile_target"],
+                calibration["quantile_tree_count"],
+                _feature_view(final_features, locked_spec),
+                all_frame,
+                active_config,
+                seed=active_config.seed,
+            )
+            quantile_model.save_model(temporary / "quantile_model.json")
+            joblib.dump(
+                quantile_preprocessor, temporary / "quantile_preprocessor.joblib"
+            )
+            for name in ("quantile_model.json", "quantile_preprocessor.joblib"):
+                model_hashes[name] = sha256_file(temporary / name)
+            calibration["quantile_model_path"] = "quantile_model.json"
+            calibration["quantile_preprocessor_path"] = "quantile_preprocessor.joblib"
 
         last_rows = (
             all_frame.groupby("unit_id", sort=False)["cycle"]
             .transform("max")
             .eq(all_frame["cycle"])
         )
-        explanation_features = all_features.loc[
+        explanation_features = final_features.loc[
             last_rows, list(preprocessor.input_features)
         ].reset_index(drop=True)
         explanation = _build_explanation(
-            model,
+            model[0] if isinstance(model, list) else model,
             preprocessor,
             explanation_features,
             all_frame.loc[last_rows].iloc[0],
@@ -1088,8 +1505,8 @@ def train_and_lock(
                 "cycle": all_frame["cycle"],
                 "rul_true": all_frame["rul_true"],
                 "role": all_frame["role"],
-                "fold": fold_ids,
-                "prediction": cross_fit,
+                "fold": cross_fit.fold_ids,
+                "prediction": cross_fit.prediction,
             }
         )
 
@@ -1111,13 +1528,12 @@ def train_and_lock(
         }
         generated_hashes.update(model_hashes)
         processed = _processed_dir(root, dataset)
-        config_path = root / "configs" / "project.yaml"
         protocol_path = root / PROTOCOL_DOCUMENT
         environment = runtime_fingerprint(root)
         lock = {
             "schema_version": MODEL_SCHEMA_VERSION,
             "protocol": {
-                "version": 2,
+                "version": PROTOCOL_VERSION,
                 "document": PROTOCOL_DOCUMENT,
                 "sha256": (
                     sha256_file(protocol_path) if protocol_path.is_file() else None
@@ -1141,8 +1557,10 @@ def train_and_lock(
                 ],
             },
             "config": {
-                "path": "configs/project.yaml",
-                "sha256": sha256_file(config_path),
+                "path": protocol_config_path(root, dataset)
+                .relative_to(root)
+                .as_posix(),
+                "sha256": sha256_file(protocol_config_path(root, dataset)),
                 "modeling": asdict(active_config),
             },
             "features": {

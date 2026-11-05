@@ -232,6 +232,106 @@ def leave_engines_out_interval(
     return low, high
 
 
+def fit_mondrian_cqr(
+    y_pred: np.ndarray,
+    quantiles: np.ndarray,
+    y_true: np.ndarray,
+    engine_ids: np.ndarray,
+    *,
+    coverage: float,
+    edges: tuple[float, ...],
+    min_engines: int,
+) -> dict[str, Any]:
+    """Fit one conformal margin per predicted-RUL band for quantile predictions."""
+    prediction = np.asarray(y_pred, dtype=np.float64)
+    lower = np.min(quantiles, axis=1)
+    upper = np.max(quantiles, axis=1)
+    truth = np.asarray(y_true, dtype=np.float64)
+    engines = np.asarray(engine_ids)
+    if not len(prediction):
+        raise ValueError("Interval calibration requires at least one row")
+    score = np.maximum(lower - truth, truth - upper)
+    bands: list[dict[str, Any]] = []
+    for upper_rul, mask, engine_count in _merged_bands(
+        prediction, engines, edges, min_engines
+    ):
+        if not mask.any():
+            continue
+        counts = pd.Series(engines[mask]).map(pd.Series(engines[mask]).value_counts())
+        level = min(1.0, coverage * (engine_count + 1) / engine_count)
+        bands.append(
+            {
+                "upper_predicted_rul": upper_rul,
+                "engines": engine_count,
+                "rows": int(mask.sum()),
+                "margin": _weighted_quantile(
+                    score[mask],
+                    1.0 / counts.to_numpy(dtype=np.float64),
+                    level,
+                ),
+            }
+        )
+    return {"coverage": coverage, "bands": bands}
+
+
+def apply_mondrian_cqr(
+    y_pred: np.ndarray,
+    quantiles: np.ndarray,
+    interval: dict[str, Any],
+) -> tuple[np.ndarray, np.ndarray]:
+    """Return non-negative bounds from quantiles and per-band margins."""
+    prediction = np.asarray(y_pred, dtype=np.float64)
+    lower = np.min(quantiles, axis=1)
+    upper = np.max(quantiles, axis=1)
+    margin = np.full(len(prediction), interval["bands"][-1]["margin"], dtype=np.float64)
+    previous = -math.inf
+    for band in interval["bands"]:
+        limit = band["upper_predicted_rul"]
+        limit = math.inf if limit is None else float(limit)
+        margin[(prediction > previous) & (prediction <= limit)] = band["margin"]
+        previous = limit
+    low = np.maximum(0.0, lower - margin)
+    return low, np.maximum(low, upper + margin)
+
+
+def leave_engines_out_cqr(
+    y_pred: np.ndarray,
+    quantiles: np.ndarray,
+    y_true: np.ndarray,
+    engine_ids: np.ndarray,
+    eligible: np.ndarray,
+    fold_ids: np.ndarray,
+    *,
+    coverage: float,
+    edges: tuple[float, ...],
+    min_engines: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Bound each engine using margins calibrated without that engine."""
+    prediction = np.asarray(y_pred, dtype=np.float64)
+    truth = np.asarray(y_true, dtype=np.float64)
+    engines = np.asarray(engine_ids)
+    mask = np.asarray(eligible, dtype=bool)
+    folds = np.asarray(fold_ids)
+    low = np.empty(len(prediction), dtype=np.float64)
+    high = np.empty(len(prediction), dtype=np.float64)
+    for fold in np.unique(folds):
+        held_out = folds == fold
+        calibrating = ~held_out & mask
+        interval = fit_mondrian_cqr(
+            prediction[calibrating],
+            quantiles[calibrating],
+            truth[calibrating],
+            engines[calibrating],
+            coverage=coverage,
+            edges=edges,
+            min_engines=min_engines,
+        )
+        low[held_out], high[held_out] = apply_mondrian_cqr(
+            prediction[held_out], quantiles[held_out], interval
+        )
+    return low, high
+
+
 def _band_masks(values: np.ndarray, edges: tuple[float, ...]) -> list[tuple[str, Any]]:
     masks: list[tuple[str, Any]] = []
     lower = -math.inf
@@ -466,12 +566,15 @@ def bootstrap_official_metrics(
 
 
 __all__ = [
+    "apply_mondrian_cqr",
     "apply_mondrian_interval",
     "bootstrap_official_metrics",
     "draw_engine_rows",
     "eligible_rows",
+    "fit_mondrian_cqr",
     "fit_mondrian_interval",
     "interval_report",
+    "leave_engines_out_cqr",
     "leave_engines_out_interval",
     "nasa_score",
     "risk_threshold_table",

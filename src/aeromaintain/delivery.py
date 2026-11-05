@@ -187,6 +187,26 @@ def _finalize_run(
     )
 
 
+def finish_locked_run(
+    project_root: Path,
+    *,
+    run_id: str,
+    evaluation_step: EvaluationStep = evaluate_locked,
+    load_step: LoadStep = load_verified_run,
+) -> PipelineResult:
+    """Open labels for an existing lock, then write its report and completion."""
+    root = project_root.resolve()
+    if not run_id or Path(run_id).name != run_id:
+        raise DeliveryError("run_id must be one safe path component")
+    try:
+        evaluation_step(root, run_id=run_id)
+        return _finalize_run(root, run_id, load_step=load_step)
+    except DeliveryError:
+        raise
+    except Exception as exc:
+        raise DeliveryError(f"Finish stopped before completion: {exc}") from exc
+
+
 def run_pipeline(
     project_root: Path,
     *,

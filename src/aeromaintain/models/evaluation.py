@@ -15,13 +15,21 @@ from xgboost import XGBRegressor
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.evaluation import alert_rule_metrics, prediction_metrics
 from aeromaintain.evaluation.protocol import (
+    apply_mondrian_cqr,
     apply_mondrian_interval,
     bootstrap_official_metrics,
     interval_report,
 )
-from aeromaintain.features import FEATURE_NAMES, FoldPreprocessor, build_causal_features
+from aeromaintain.features import (
+    CONDITION_FEATURE,
+    FEATURE_NAMES,
+    ConditionNormalizer,
+    FoldPreprocessor,
+    build_causal_features,
+    build_condition_features,
+)
 from aeromaintain.models.rul import (
-    MODEL_SCHEMA_VERSION,
+    SUPPORTED_LOCK_SCHEMAS,
     TEST_CLEAN_SINGLE_OPEN,
     EvaluationResult,
     ModelingError,
@@ -32,6 +40,7 @@ from aeromaintain.models.rul import (
     _processed_dir,
     _write_json,
     _write_new_bytes,
+    predict_quantiles,
 )
 
 HOLDOUT_LEDGER = "holdout_ledger.json"
@@ -79,8 +88,9 @@ def _validate_lock(
     if manifest.get("model_lock_sha256") != sha256_file(lock_path):
         raise ModelingError("Model lock SHA-256 mismatch against run manifest")
     lock = _read_locked_json(lock_path, "Model lock")
-    if lock.get("run_id") != run_id or lock.get("schema_version") != (
-        MODEL_SCHEMA_VERSION
+    if (
+        lock.get("run_id") != run_id
+        or lock.get("schema_version") not in SUPPORTED_LOCK_SCHEMAS
     ):
         raise ModelingError("Model lock identity or schema is invalid")
 
@@ -99,10 +109,10 @@ def _validate_lock(
             if lock["data"].get(name) != observed:
                 raise ModelingError(f"Model lock data hash mismatch: {name}")
         if lock["config"]["sha256"] != _required_hash(
-            project_root / "configs" / "project.yaml"
+            project_root / lock["config"].get("path", "configs/project.yaml")
         ):
             raise ModelingError("Model lock config hash mismatch")
-        if not set(lock["features"]["order"]) <= set(FEATURE_NAMES):
+        if not set(lock["features"]["order"]) <= {*FEATURE_NAMES, CONDITION_FEATURE}:
             raise ModelingError("Model lock feature order mismatch")
         for relative_path, expected_hash in lock["artifacts"].items():
             artifact = _resolve_locked_artifact(run_dir, relative_path)
@@ -130,10 +140,48 @@ def _load_locked_model(
         )
         if not isinstance(preprocessor, FoldPreprocessor):
             raise ModelingError("Trusted local preprocessor has wrong type")
-        model = XGBRegressor()
-        model.load_model(_resolve_locked_artifact(run_dir, champion["path"]))
-        return model, preprocessor, kind
+        members = []
+        for path in champion.get("member_paths", [champion["path"]]):
+            member = XGBRegressor()
+            member.load_model(_resolve_locked_artifact(run_dir, path))
+            members.append(member)
+        return (members[0] if len(members) == 1 else members), preprocessor, kind
     raise ModelingError(f"Unsupported locked champion kind: {kind}")
+
+
+def _locked_features(
+    run_dir: Path,
+    lock: dict[str, Any],
+    test: pd.DataFrame,
+) -> pd.DataFrame:
+    path = lock["champion"].get("normalizer_path")
+    if path is None:
+        return build_causal_features(test)
+    normalizer = joblib.load(_resolve_locked_artifact(run_dir, path))
+    if not isinstance(normalizer, ConditionNormalizer):
+        raise ModelingError("Trusted local normalizer has wrong type")
+    return build_condition_features(test, normalizer)
+
+
+def _locked_interval(
+    run_dir: Path,
+    calibration: dict[str, Any],
+    prediction: np.ndarray,
+    final_features: pd.DataFrame,
+) -> tuple[np.ndarray, np.ndarray]:
+    if "quantile_model_path" not in calibration:
+        return apply_mondrian_interval(prediction, calibration)
+    model = XGBRegressor()
+    model.load_model(
+        _resolve_locked_artifact(run_dir, calibration["quantile_model_path"])
+    )
+    preprocessor = joblib.load(
+        _resolve_locked_artifact(run_dir, calibration["quantile_preprocessor_path"])
+    )
+    if not isinstance(preprocessor, FoldPreprocessor):
+        raise ModelingError("Trusted local quantile preprocessor has wrong type")
+    quantiles = predict_quantiles(model, preprocessor, final_features)
+    return apply_mondrian_cqr(prediction, quantiles, calibration)
 
 
 def _claim_single_open(project_root: Path, run_id: str, lock: dict[str, Any]) -> None:
@@ -172,7 +220,7 @@ def evaluate_locked(
 
     processed = _processed_dir(root, lock["dataset"])
     test = pd.read_parquet(processed / "test.parquet")
-    test_features = build_causal_features(test)
+    test_features = _locked_features(run_dir, lock, test)
     final_mask = (
         test.groupby("unit_id", sort=False)["cycle"].transform("max").eq(test["cycle"])
     )
@@ -181,7 +229,9 @@ def evaluate_locked(
     prediction = _predict_model(model, preprocessor, final_features, champion)
 
     calibration = lock["calibration"]
-    interval_low, interval_high = apply_mondrian_interval(prediction, calibration)
+    interval_low, interval_high = _locked_interval(
+        run_dir, calibration, prediction, final_features
+    )
     risk_threshold = float(calibration["risk_threshold"])
     elevated_threshold = float(calibration["elevated_threshold"])
 
@@ -215,6 +265,9 @@ def evaluate_locked(
         evaluation["unit_id"].to_numpy(),
         critical_threshold=critical_threshold,
     )
+    metrics["nasa_score_mean_per_engine"] = metrics[
+        "nasa_score_motor_normalized"
+    ] / float(metrics["engines"])
     metrics["protocol"] = {
         "version": lock["protocol"]["version"],
         "test_status": lock["protocol"]["test_status"],
