@@ -1130,5 +1130,1020 @@
         "verification": "Removing environment from the repro lock and restoring the reference run_id reproduces the reference hash exactly, so all locked data, model, and artifact hashes match."
       }
     }
+  },
+  "protocol_v3": {
+    "document": "docs/protocol_v3.md",
+    "development_evidence": "docs/protocol_v3_development.json",
+    "preregistration_commit": "94fd0ec",
+    "runs": [
+      {
+        "run_id": "fd002-v3-clean",
+        "dataset": "FD002",
+        "status": "pipeline_complete",
+        "seed": 42,
+        "label": "protocol v3, clean single-open test",
+        "test_status": "clean_single_open",
+        "model_lock_sha256": "fa50040abf9731cf3fd4a3b47aeb82222792dfc7304dc137b10166615ba4cb37",
+        "protocol_document_sha256": "053779177421df96048032080249841fd6381714f21ca862ab4eab1bb2675838",
+        "config_path": "configs/protocol_v3_six_conditions.yaml",
+        "development": {
+          "ridge": {
+            "spec": {
+              "alpha": 1.0,
+              "cap": 125,
+              "feature_set": "all",
+              "condition": true
+            },
+            "median_rmse": 21.40973680404699,
+            "rmse_p05_p95": [
+              19.779387935975745,
+              23.070805575944924
+            ],
+            "median_mae": 16.717560210548967,
+            "median_nasa": 1923.7257165977594,
+            "median_point_rule_recall": 0.7261363636363636
+          },
+          "xgboost": {
+            "spec": {
+              "candidate": 1,
+              "cap": 125,
+              "feature_set": "compact",
+              "tree_count": 166,
+              "condition": true
+            },
+            "median_rmse": 18.934742272476043,
+            "rmse_p05_p95": [
+              17.331926859258854,
+              20.304498141506595
+            ],
+            "median_mae": 14.279224678874016,
+            "median_nasa": 1469.92370476321,
+            "median_point_rule_recall": 0.8441295546558705
+          },
+          "champion": "xgboost",
+          "xgboost_rmse_improvement_fraction": 0.11560135251653858,
+          "xgboost_win_rate_over_paired_draws": 1.0,
+          "rmse_target": null,
+          "rmse_target_met": null,
+          "raw_feature_baseline_rmse": 21.190865229820496,
+          "baseline_rmse_reduction_fraction": 0.10646676918928066,
+          "baseline_rmse_reduction_target_met": true
+        },
+        "calibration": {
+          "adopted": "mondrian",
+          "median_coverage": 0.9038461538461539,
+          "median_mean_width": 58.76878308057785,
+          "width_target_met": null,
+          "risk_threshold": 25.0
+        },
+        "official_test": {
+          "engines": 259,
+          "rmse": 27.36156473401475,
+          "rmse_ci95": [
+            23.766597077790916,
+            30.816926912323684
+          ],
+          "mae": 18.45869959919609,
+          "mae_ci95": [
+            15.961892357687232,
+            21.005868885185727
+          ],
+          "signed_bias": -8.98070874913779,
+          "signed_bias_ci95": [
+            -12.121753140144827,
+            -5.710614332430152
+          ],
+          "nasa_score_motor_normalized": 10387.850081553588,
+          "nasa_score_ci95": [
+            5192.625402222308,
+            16823.09850473379
+          ],
+          "nasa_score_per_engine": 40.107529272407675,
+          "interval_coverage": 0.8262548262548263,
+          "interval_coverage_ci95": [
+            0.7799227799227799,
+            0.8725868725868726
+          ],
+          "interval_mean_width": 55.772238719417324,
+          "interval_mean_width_ci95": [
+            52.905767512689685,
+            58.65687362816343
+          ],
+          "interval_by_true_rul": {
+            "0-30": {
+              "coverage": 0.9508196721311475,
+              "mean_width": 18.531363342629103,
+              "rows": 61
+            },
+            "31-60": {
+              "coverage": 0.9512195121951219,
+              "mean_width": 47.040869550007145,
+              "rows": 41
+            },
+            "61-125": {
+              "coverage": 0.89,
+              "mean_width": 73.59787017822265,
+              "rows": 100
+            },
+            ">125": {
+              "coverage": 0.49122807017543857,
+              "mean_width": 70.63392973782723,
+              "rows": 57
+            }
+          },
+          "interval_by_predicted_rul": {
+            "31-60": {
+              "coverage": 0.9047619047619048,
+              "mean_width": 42.99363708496094,
+              "rows": 42
+            },
+            "61-100": {
+              "coverage": 0.8970588235294118,
+              "mean_width": 81.2649154663086,
+              "rows": 68
+            },
+            "<=30": {
+              "coverage": 0.9180327868852459,
+              "mean_width": 16.85984829996453,
+              "rows": 61
+            },
+            ">100": {
+              "coverage": 0.6704545454545454,
+              "mean_width": 69.14559173583984,
+              "rows": 88
+            }
+          },
+          "alert_rules": {
+            "interval_low": {
+              "alert_threshold": 25.0,
+              "critical_threshold": 30.0,
+              "f1": 0.8391608391608392,
+              "false_alarm_rate": 0.1111111111111111,
+              "false_negative": 1,
+              "false_positive": 22,
+              "precision": 0.7317073170731707,
+              "recall": 0.9836065573770492,
+              "true_negative": 176,
+              "true_positive": 60,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.1624953025596906,
+                  "low": 0.07452963324992465
+                },
+                "precision": {
+                  "high": 0.8156387950779851,
+                  "low": 0.6270377451631879
+                },
+                "recall": {
+                  "high": 0.9971002692007002,
+                  "low": 0.9128113995535841
+                }
+              }
+            },
+            "point_prediction": {
+              "alert_threshold": 30.0,
+              "critical_threshold": 30.0,
+              "f1": 0.9344262295081968,
+              "false_alarm_rate": 0.020202020202020204,
+              "false_negative": 4,
+              "false_positive": 4,
+              "precision": 0.9344262295081968,
+              "recall": 0.9344262295081968,
+              "true_negative": 194,
+              "true_positive": 57,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.05078359388989766,
+                  "low": 0.007883534706380906
+                },
+                "precision": {
+                  "high": 0.9742062955104335,
+                  "low": 0.8431719832010424
+                },
+                "recall": {
+                  "high": 0.9742062955104335,
+                  "low": 0.8431719832010424
+                }
+              }
+            },
+            "scope": "one row per engine; intervals are two-sided Wilson 95%"
+          }
+        },
+        "post_opening_diagnosis": {
+          "scope": "Computed after the labels opened. Explanatory only.",
+          "max_true_rul": 194,
+          "max_prediction": 126.80034637451172,
+          "max_interval_high": 167.3946762084961,
+          "rul_at_most_125": {
+            "engines": 202,
+            "rmse": 14.686976594159441,
+            "bias": 1.3641405235422719,
+            "coverage": 0.9207920792079208,
+            "share_of_squared_error": 0.22471628737816482
+          },
+          "rul_126_to_150": {
+            "engines": 21,
+            "rmse": 27.904663996453845,
+            "bias": -24.953230358305433,
+            "coverage": 0.9047619047619048,
+            "share_of_squared_error": 0.08433177975416817
+          },
+          "rul_at_most_150": {
+            "engines": 223,
+            "rmse": 16.392734170076498,
+            "bias": -1.1141769137617719,
+            "coverage": 0.9192825112107623,
+            "share_of_squared_error": 0.309048067132333
+          },
+          "rul_above_150": {
+            "engines": 36,
+            "rmse": 61.00472582089578,
+            "bias": -57.709503173828125,
+            "coverage": 0.25,
+            "share_of_squared_error": 0.690951932867667
+          }
+        }
+      },
+      {
+        "run_id": "fd004-v3-clean",
+        "dataset": "FD004",
+        "status": "pipeline_complete",
+        "seed": 42,
+        "label": "protocol v3, clean single-open test",
+        "test_status": "clean_single_open",
+        "model_lock_sha256": "f296bab85503ef145919402059fc63fc735764f2019b9e24893396bcabca41f7",
+        "protocol_document_sha256": "053779177421df96048032080249841fd6381714f21ca862ab4eab1bb2675838",
+        "config_path": "configs/protocol_v3_six_conditions.yaml",
+        "development": {
+          "ridge": {
+            "spec": {
+              "alpha": 1.0,
+              "cap": 125,
+              "feature_set": "no_age",
+              "condition": true
+            },
+            "median_rmse": 22.62367497018378,
+            "rmse_p05_p95": [
+              21.05246785853359,
+              24.32857947524782
+            ],
+            "median_mae": 17.92623139458955,
+            "median_nasa": 2385.820291881817,
+            "median_point_rule_recall": 0.6750471401634193
+          },
+          "xgboost": {
+            "spec": {
+              "candidate": 1,
+              "cap": 125,
+              "feature_set": "compact",
+              "tree_count": 321,
+              "condition": true
+            },
+            "median_rmse": 19.60933522387721,
+            "rmse_p05_p95": [
+              18.13457859520223,
+              21.271157574668997
+            ],
+            "median_mae": 14.59888815250828,
+            "median_nasa": 1764.1994975982748,
+            "median_point_rule_recall": 0.8421052631578947
+          },
+          "champion": "xgboost",
+          "xgboost_rmse_improvement_fraction": 0.13323828910551597,
+          "xgboost_win_rate_over_paired_draws": 1.0,
+          "rmse_target": null,
+          "rmse_target_met": null,
+          "raw_feature_baseline_rmse": 21.819712903543635,
+          "baseline_rmse_reduction_fraction": 0.10130186815186959,
+          "baseline_rmse_reduction_target_met": true
+        },
+        "calibration": {
+          "adopted": "mondrian",
+          "median_coverage": 0.9076305220883534,
+          "median_mean_width": 58.63569664829467,
+          "width_target_met": null,
+          "risk_threshold": 20.0
+        },
+        "official_test": {
+          "engines": 248,
+          "rmse": 27.395316168375448,
+          "rmse_ci95": [
+            24.532194187103496,
+            30.227816015258245
+          ],
+          "mae": 19.649829019101396,
+          "mae_ci95": [
+            17.29909812652716,
+            21.985740477069005
+          ],
+          "signed_bias": -9.33713608847991,
+          "signed_bias_ci95": [
+            -12.624641111087536,
+            -6.309469055513581
+          ],
+          "nasa_score_motor_normalized": 5125.7400876565425,
+          "nasa_score_ci95": [
+            3626.9634177391554,
+            6816.481275330683
+          ],
+          "nasa_score_per_engine": 20.668306805066702,
+          "interval_coverage": 0.8266129032258065,
+          "interval_coverage_ci95": [
+            0.7782258064516129,
+            0.8709677419354839
+          ],
+          "interval_mean_width": 58.52635581202565,
+          "interval_mean_width_ci95": [
+            55.629721427228176,
+            61.34310434660123
+          ],
+          "interval_by_true_rul": {
+            "0-30": {
+              "coverage": 0.9622641509433962,
+              "mean_width": 22.406864271411354,
+              "rows": 53
+            },
+            "31-60": {
+              "coverage": 0.8947368421052632,
+              "mean_width": 47.72945122969778,
+              "rows": 38
+            },
+            "61-125": {
+              "coverage": 0.9222222222222223,
+              "mean_width": 74.44791547987197,
+              "rows": 90
+            },
+            ">125": {
+              "coverage": 0.5522388059701493,
+              "mean_width": 71.83493873254577,
+              "rows": 67
+            }
+          },
+          "interval_by_predicted_rul": {
+            "31-60": {
+              "coverage": 0.8333333333333334,
+              "mean_width": 41.714027404785156,
+              "rows": 36
+            },
+            "61-100": {
+              "coverage": 0.8923076923076924,
+              "mean_width": 79.9210433959961,
+              "rows": 65
+            },
+            "<=30": {
+              "coverage": 0.96,
+              "mean_width": 19.126544224619867,
+              "rows": 50
+            },
+            ">100": {
+              "coverage": 0.711340206185567,
+              "mean_width": 70.73851776123047,
+              "rows": 97
+            }
+          },
+          "alert_rules": {
+            "interval_low": {
+              "alert_threshold": 20.0,
+              "critical_threshold": 30.0,
+              "f1": 0.85,
+              "false_alarm_rate": 0.08205128205128205,
+              "false_negative": 2,
+              "false_positive": 16,
+              "precision": 0.7611940298507462,
+              "recall": 0.9622641509433962,
+              "true_negative": 179,
+              "true_positive": 51,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.12911670716567017,
+                  "low": 0.05113473050364543
+                },
+                "precision": {
+                  "high": 0.8473186095150708,
+                  "low": 0.646742362444697
+                },
+                "recall": {
+                  "high": 0.9895897127241731,
+                  "low": 0.8724571280258164
+                }
+              }
+            },
+            "point_prediction": {
+              "alert_threshold": 30.0,
+              "critical_threshold": 30.0,
+              "f1": 0.8737864077669903,
+              "false_alarm_rate": 0.02564102564102564,
+              "false_negative": 8,
+              "false_positive": 5,
+              "precision": 0.9,
+              "recall": 0.8490566037735849,
+              "true_negative": 190,
+              "true_positive": 45,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.05860958752800707,
+                  "low": 0.011000939888087275
+                },
+                "precision": {
+                  "high": 0.9565242350681096,
+                  "low": 0.7863976856252035
+                },
+                "recall": {
+                  "high": 0.9214758214915374,
+                  "low": 0.7294575072380466
+                }
+              }
+            },
+            "scope": "one row per engine; intervals are two-sided Wilson 95%"
+          }
+        },
+        "post_opening_diagnosis": {
+          "scope": "Computed after the labels opened. Explanatory only.",
+          "max_true_rul": 195,
+          "max_prediction": 127.04472351074219,
+          "max_interval_high": 167.71039581298828,
+          "rul_at_most_125": {
+            "engines": 181,
+            "rmse": 15.409249243345595,
+            "bias": 2.689735954473032,
+            "coverage": 0.9281767955801105,
+            "share_of_squared_error": 0.23090706434964103
+          },
+          "rul_126_to_150": {
+            "engines": 25,
+            "rmse": 27.75081654009142,
+            "bias": -24.423651123046874,
+            "coverage": 0.96,
+            "share_of_squared_error": 0.10343969386293586
+          },
+          "rul_at_most_150": {
+            "engines": 206,
+            "rmse": 17.38069367940523,
+            "bias": -0.6007236423133646,
+            "coverage": 0.9320388349514563,
+            "share_of_squared_error": 0.33434675821257687
+          },
+          "rul_above_150": {
+            "engines": 42,
+            "rmse": 54.31271811578879,
+            "bias": -52.187159038725355,
+            "coverage": 0.30952380952380953,
+            "share_of_squared_error": 0.665653241787423
+          }
+        }
+      },
+      {
+        "run_id": "fd001-v3",
+        "dataset": "FD001",
+        "status": "pipeline_complete",
+        "seed": 42,
+        "label": "protocol v3, test previously seen",
+        "test_status": "previously_seen",
+        "model_lock_sha256": "256ea39507936cf250f1acbcde578ad78a8ed68401bdcf345d438f90441cb135",
+        "protocol_document_sha256": "25a815f783597e7121c16388cd6126bdc105ae61e7460f7b423edbbc9836423a",
+        "config_path": "configs/protocol_v3.yaml",
+        "development": {
+          "ridge": {
+            "spec": {
+              "alpha": 1.0,
+              "cap": 125,
+              "feature_set": "all"
+            },
+            "median_rmse": 21.006011025981266,
+            "rmse_p05_p95": [
+              18.20064446919547,
+              23.782399609794783
+            ],
+            "median_mae": 16.746044716294413,
+            "median_nasa": 625.8869415624088,
+            "median_point_rule_recall": 0.7
+          },
+          "xgboost": {
+            "spec": {
+              "candidate": 7,
+              "cap": 125,
+              "feature_set": "all",
+              "tree_count": 123
+            },
+            "median_rmse": 18.56533839683449,
+            "rmse_p05_p95": [
+              16.361487502673977,
+              21.256896610245686
+            ],
+            "median_mae": 14.399079895019531,
+            "median_nasa": 501.10929774340184,
+            "median_point_rule_recall": 0.8480769230769231
+          },
+          "champion": "xgboost",
+          "xgboost_rmse_improvement_fraction": 0.11618924821699994,
+          "xgboost_win_rate_over_paired_draws": 0.99,
+          "rmse_target": 16.6,
+          "rmse_target_met": false,
+          "raw_feature_baseline_rmse": 18.56533839683449,
+          "baseline_rmse_reduction_fraction": 0.0,
+          "baseline_rmse_reduction_target_met": null
+        },
+        "calibration": {
+          "adopted": "mondrian",
+          "median_coverage": 0.91,
+          "median_mean_width": 55.67903527826071,
+          "width_target_met": false,
+          "risk_threshold": 20.0
+        },
+        "official_test": {
+          "engines": 100,
+          "rmse": 15.795547328093768,
+          "rmse_ci95": [
+            12.866960173973196,
+            18.781198385034187
+          ],
+          "mae": 11.154422445297241,
+          "mae_ci95": [
+            9.099515436053276,
+            13.431291957736015
+          ],
+          "signed_bias": -1.5933013820648194,
+          "signed_bias_ci95": [
+            -4.607977868795395,
+            1.2795755923986398
+          ],
+          "nasa_score_motor_normalized": 398.3093549744923,
+          "nasa_score_ci95": [
+            232.97509843985677,
+            624.6703768017946
+          ],
+          "nasa_score_per_engine": 3.983093549744923,
+          "interval_coverage": 0.94,
+          "interval_coverage_ci95": [
+            0.89,
+            0.98
+          ],
+          "interval_mean_width": 55.42194278717041,
+          "interval_mean_width_ci95": [
+            51.18967044079304,
+            59.443210437178614
+          ],
+          "interval_by_true_rul": {
+            "0-30": {
+              "coverage": 0.96,
+              "mean_width": 23.642052459716798,
+              "rows": 25
+            },
+            "31-60": {
+              "coverage": 1.0,
+              "mean_width": 52.49945667811802,
+              "rows": 14
+            },
+            "61-125": {
+              "coverage": 0.92,
+              "mean_width": 68.8959260559082,
+              "rows": 50
+            },
+            ">125": {
+              "coverage": 0.9090909090909091,
+              "mean_width": 70.12311553955078,
+              "rows": 11
+            }
+          },
+          "interval_by_predicted_rul": {
+            "31-60": {
+              "coverage": 0.7647058823529411,
+              "mean_width": 40.11651611328125,
+              "rows": 17
+            },
+            "61-100": {
+              "coverage": 0.9666666666666667,
+              "mean_width": 74.78874969482422,
+              "rows": 30
+            },
+            "<=30": {
+              "coverage": 1.0,
+              "mean_width": 19.523436546325684,
+              "rows": 20
+            },
+            ">100": {
+              "coverage": 0.9696969696969697,
+              "mean_width": 67.45703887939453,
+              "rows": 33
+            }
+          },
+          "alert_rules": {
+            "interval_low": {
+              "alert_threshold": 20.0,
+              "critical_threshold": 30.0,
+              "f1": 0.9056603773584904,
+              "false_alarm_rate": 0.05333333333333334,
+              "false_negative": 1,
+              "false_positive": 4,
+              "precision": 0.8571428571428571,
+              "recall": 0.96,
+              "true_negative": 71,
+              "true_positive": 24,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.12925987153798557,
+                  "low": 0.02093342774665434
+                },
+                "precision": {
+                  "high": 0.9430099468025059,
+                  "low": 0.685101978364747
+                },
+                "recall": {
+                  "high": 0.9929037664980127,
+                  "low": 0.8045593626380625
+                }
+              }
+            },
+            "point_prediction": {
+              "alert_threshold": 30.0,
+              "critical_threshold": 30.0,
+              "f1": 0.888888888888889,
+              "false_alarm_rate": 0.0,
+              "false_negative": 5,
+              "false_positive": 0,
+              "precision": 1.0,
+              "recall": 0.8,
+              "true_negative": 75,
+              "true_positive": 20,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.04872384248280587,
+                  "low": 0.0
+                },
+                "precision": {
+                  "high": 1.0,
+                  "low": 0.8388748419471806
+                },
+                "recall": {
+                  "high": 0.9113941531319742,
+                  "low": 0.6086904963045967
+                }
+              }
+            },
+            "scope": "one row per engine; intervals are two-sided Wilson 95%"
+          }
+        }
+      },
+      {
+        "run_id": "fd003-v3",
+        "dataset": "FD003",
+        "status": "pipeline_complete",
+        "seed": 42,
+        "label": "protocol v3, test previously seen",
+        "test_status": "previously_seen",
+        "model_lock_sha256": "60d768b494406f72fc683b00e27494f7f46e950e5ecd5cbb6c987c8d5aea7798",
+        "protocol_document_sha256": "25a815f783597e7121c16388cd6126bdc105ae61e7460f7b423edbbc9836423a",
+        "config_path": "configs/protocol_v3.yaml",
+        "development": {
+          "ridge": {
+            "spec": {
+              "alpha": 100.0,
+              "cap": 125,
+              "feature_set": "no_age"
+            },
+            "median_rmse": 21.58251197901165,
+            "rmse_p05_p95": [
+              18.686952069884214,
+              23.52764230115764
+            ],
+            "median_mae": 17.113656921518306,
+            "median_nasa": 702.2359543336831,
+            "median_point_rule_recall": 0.7
+          },
+          "xgboost": {
+            "spec": {
+              "candidate": 12,
+              "cap": 125,
+              "feature_set": "all",
+              "tree_count": 184,
+              "ensemble_members": 5
+            },
+            "median_rmse": 17.86275688829199,
+            "rmse_p05_p95": [
+              15.026968798697379,
+              19.87157793181443
+            ],
+            "median_mae": 13.269685649871827,
+            "median_nasa": 472.77801175173727,
+            "median_point_rule_recall": 0.8947368421052632
+          },
+          "champion": "xgboost",
+          "xgboost_rmse_improvement_fraction": 0.17235042400703912,
+          "xgboost_win_rate_over_paired_draws": 0.995,
+          "rmse_target": 16.6,
+          "rmse_target_met": false,
+          "raw_feature_baseline_rmse": 18.049130716333472,
+          "baseline_rmse_reduction_fraction": 0.010325917129783146,
+          "baseline_rmse_reduction_target_met": null
+        },
+        "calibration": {
+          "adopted": "mondrian",
+          "median_coverage": 0.91,
+          "median_mean_width": 53.14727055549621,
+          "width_target_met": false,
+          "risk_threshold": 25.0
+        },
+        "official_test": {
+          "engines": 100,
+          "rmse": 15.453216290586715,
+          "rmse_ci95": [
+            12.914404479772628,
+            17.9490665868548
+          ],
+          "mae": 11.439451441764831,
+          "mae_ci95": [
+            9.432116345882417,
+            13.523802462100981
+          ],
+          "signed_bias": 0.09903473377227784,
+          "signed_bias_ci95": [
+            -2.865279869556427,
+            2.965177076458928
+          ],
+          "nasa_score_motor_normalized": 400.70741858824806,
+          "nasa_score_ci95": [
+            251.39428018304721,
+            584.3832335753773
+          ],
+          "nasa_score_per_engine": 4.00707418588248,
+          "interval_coverage": 0.94,
+          "interval_coverage_ci95": [
+            0.89,
+            0.98
+          ],
+          "interval_mean_width": 54.30043268680573,
+          "interval_mean_width_ci95": [
+            49.99081245195866,
+            58.53766370213032
+          ],
+          "interval_by_true_rul": {
+            "0-30": {
+              "coverage": 1.0,
+              "mean_width": 18.700535893440247,
+              "rows": 20
+            },
+            "31-60": {
+              "coverage": 0.9523809523809523,
+              "mean_width": 45.42048372541155,
+              "rows": 21
+            },
+            "61-125": {
+              "coverage": 0.9090909090909091,
+              "mean_width": 69.77955037897283,
+              "rows": 44
+            },
+            ">125": {
+              "coverage": 0.9333333333333333,
+              "mean_width": 68.7934783935547,
+              "rows": 15
+            }
+          },
+          "interval_by_predicted_rul": {
+            "31-60": {
+              "coverage": 0.9444444444444444,
+              "mean_width": 35.50068664550781,
+              "rows": 18
+            },
+            "61-100": {
+              "coverage": 0.9285714285714286,
+              "mean_width": 73.45160675048828,
+              "rows": 28
+            },
+            "<=30": {
+              "coverage": 1.0,
+              "mean_width": 15.756642368104723,
+              "rows": 18
+            },
+            ">100": {
+              "coverage": 0.9166666666666666,
+              "mean_width": 68.07684326171875,
+              "rows": 36
+            }
+          },
+          "alert_rules": {
+            "interval_low": {
+              "alert_threshold": 25.0,
+              "critical_threshold": 30.0,
+              "f1": 0.851063829787234,
+              "false_alarm_rate": 0.0875,
+              "false_negative": 0,
+              "false_positive": 7,
+              "precision": 0.7407407407407407,
+              "recall": 1.0,
+              "true_negative": 73,
+              "true_positive": 20,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.16976795508474996,
+                  "low": 0.04303200178205986
+                },
+                "precision": {
+                  "high": 0.8682962543809281,
+                  "low": 0.5532142868544692
+                },
+                "recall": {
+                  "high": 1.0,
+                  "low": 0.8388748419471806
+                }
+              }
+            },
+            "point_prediction": {
+              "alert_threshold": 30.0,
+              "critical_threshold": 30.0,
+              "f1": 0.8947368421052632,
+              "false_alarm_rate": 0.0125,
+              "false_negative": 3,
+              "false_positive": 1,
+              "precision": 0.9444444444444444,
+              "recall": 0.85,
+              "true_negative": 79,
+              "true_positive": 17,
+              "wilson_95": {
+                "false_alarm_rate": {
+                  "high": 0.06746270077668665,
+                  "low": 0.0022099755204522745
+                },
+                "precision": {
+                  "high": 0.990124809021697,
+                  "low": 0.7424269921812741
+                },
+                "recall": {
+                  "high": 0.9476312541037835,
+                  "low": 0.6395811352592431
+                }
+              }
+            },
+            "scope": "one row per engine; intervals are two-sided Wilson 95%"
+          }
+        }
+      }
+    ],
+    "seed_sweeps": {
+      "scope": "Seeds vary cross-fit folds, model randomness, draws, and the final fit. Selection is not rerun. Clean tests are excluded because a sweep scores test labels.",
+      "fd001-v3": {
+        "seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51
+        ],
+        "summary": {
+          "interval_coverage": {
+            "max": 0.95,
+            "mean": 0.942,
+            "min": 0.93,
+            "std": 0.009189365834726773
+          },
+          "interval_low_rule_false_alarms": {
+            "max": 4.0,
+            "mean": 3.2,
+            "min": 2.0,
+            "std": 0.7888106377466155
+          },
+          "interval_low_rule_precision": {
+            "max": 0.9230769230769231,
+            "mean": 0.8831824765273041,
+            "min": 0.8571428571428571,
+            "std": 0.024917288194386624
+          },
+          "interval_low_rule_recall": {
+            "max": 1.0,
+            "mean": 0.96,
+            "min": 0.92,
+            "std": 0.026666666666666655
+          },
+          "interval_mean_width": {
+            "max": 57.426772742271424,
+            "mean": 56.31182720863818,
+            "min": 55.42194278717041,
+            "std": 0.6481794177053284
+          },
+          "mae": {
+            "max": 11.901726956367492,
+            "mean": 11.622979448795318,
+            "min": 11.154422445297241,
+            "std": 0.20506349888046313
+          },
+          "nasa_score_motor_normalized": {
+            "max": 442.412616831478,
+            "mean": 419.41507042634913,
+            "min": 398.3093549744923,
+            "std": 13.318935204870414
+          },
+          "point_rule_precision": {
+            "max": 1.0,
+            "mean": 0.9897368421052631,
+            "min": 0.9473684210526315,
+            "std": 0.02164552559042089
+          },
+          "point_rule_recall": {
+            "max": 0.8,
+            "mean": 0.76,
+            "min": 0.72,
+            "std": 0.026666666666666693
+          },
+          "risk_threshold": {
+            "max": 20.0,
+            "mean": 20.0,
+            "min": 20.0,
+            "std": 0.0
+          },
+          "rmse": {
+            "max": 16.205289432412602,
+            "mean": 16.034284543727104,
+            "min": 15.795547328093768,
+            "std": 0.13474511904735828
+          }
+        }
+      },
+      "fd003-v3": {
+        "seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51
+        ],
+        "summary": {
+          "interval_coverage": {
+            "max": 0.95,
+            "mean": 0.945,
+            "min": 0.93,
+            "std": 0.007071067811865455
+          },
+          "interval_low_rule_false_alarms": {
+            "max": 7.0,
+            "mean": 6.8,
+            "min": 6.0,
+            "std": 0.4216370213557839
+          },
+          "interval_low_rule_precision": {
+            "max": 0.7692307692307693,
+            "mean": 0.7464387464387464,
+            "min": 0.7407407407407407,
+            "std": 0.01201245075087707
+          },
+          "interval_low_rule_recall": {
+            "max": 1.0,
+            "mean": 1.0,
+            "min": 1.0,
+            "std": 0.0
+          },
+          "interval_mean_width": {
+            "max": 55.185216102600094,
+            "mean": 54.704314929008476,
+            "min": 54.163196942806245,
+            "std": 0.398581775043636
+          },
+          "mae": {
+            "max": 11.601191215515136,
+            "mean": 11.409600385189055,
+            "min": 11.270994555950164,
+            "std": 0.0953606915869563
+          },
+          "nasa_score_motor_normalized": {
+            "max": 407.1520511269315,
+            "mean": 398.51347650585524,
+            "min": 382.44589599651715,
+            "std": 7.079257058420837
+          },
+          "point_rule_precision": {
+            "max": 0.9473684210526315,
+            "mean": 0.9453216374269007,
+            "min": 0.9444444444444444,
+            "std": 0.0014124148875428169
+          },
+          "point_rule_recall": {
+            "max": 0.9,
+            "mean": 0.8649999999999999,
+            "min": 0.85,
+            "std": 0.024152294576982418
+          },
+          "risk_threshold": {
+            "max": 25.0,
+            "mean": 25.0,
+            "min": 25.0,
+            "std": 0.0
+          },
+          "rmse": {
+            "max": 15.534722913589519,
+            "mean": 15.412319814937485,
+            "min": 15.227450922558788,
+            "std": 0.08073144110234297
+          }
+        }
+      }
+    }
   }
 }

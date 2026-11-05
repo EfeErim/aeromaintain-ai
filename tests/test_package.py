@@ -8,7 +8,7 @@ from aeromaintain.runtime import runtime_fingerprint
 
 
 def test_package_has_a_version() -> None:
-    assert __version__ == "0.2.0"
+    assert __version__ == "0.3.0"
 
 
 def test_runtime_fingerprint_requires_tested_constraints(tmp_path: Path) -> None:
@@ -30,6 +30,21 @@ def test_public_reference_evidence_is_sanitized_and_self_consistent() -> None:
         assert run["development"]["rmse_target_met"] is False
         assert run["calibration"]["width_target_met"] is False
         assert run["official_test"]["rmse_ci95"][0] < run["official_test"]["rmse"]
+    v3_runs = {run["run_id"]: run for run in evidence["protocol_v3"]["runs"]}
+    assert set(v3_runs) == {"fd001-v3", "fd002-v3-clean", "fd003-v3", "fd004-v3-clean"}
+    for run_id, run in v3_runs.items():
+        clean = run_id.endswith("-clean")
+        assert run["test_status"] == (
+            "clean_single_open" if clean else "previously_seen"
+        )
+        assert ("post_opening_diagnosis" in run) is clean
+        low, high = run["official_test"]["rmse_ci95"]
+        assert low < run["official_test"]["rmse"] < high
+    assert set(evidence["protocol_v3"]["seed_sweeps"]) == {
+        "scope",
+        "fd001-v3",
+        "fd003-v3",
+    }
     assert evidence["run"]["status"] == "pipeline_complete"
     assert evidence["run"]["stages"] == [
         "prepare",

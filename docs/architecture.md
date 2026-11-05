@@ -14,8 +14,9 @@ flowchart LR
 
 Reusable logic lives under `src/aeromaintain/`:
 
-- `data/pipeline.py` verifies and prepares FD001 and FD003;
-- `features/causal.py` creates past-and-current-only rolling features;
+- `data/pipeline.py` verifies and prepares FD001 through FD004;
+- `features/causal.py` creates past-and-current-only rolling features, optionally on
+  sensors normalized within each operating condition;
 - `evaluation/protocol.py` measures truncated rows, intervals, risk thresholds,
   and bootstrap uncertainty;
 - `models/rul.py` selects, calibrates, persists, and locks the model;

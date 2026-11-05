@@ -18,6 +18,10 @@ Tarih: 2026-11-04
 | 7. FD003 | Tamam | Temiz test RMSE 15,07 (12,61–17,50), tek açılış |
 | 8. Sunum | Tamam | [Release](https://github.com/EfeErim/aeromaintain-ai/releases/tag/v0.2.0) ve [demo](https://aeromaintain-ai-demo.streamlit.app/) yayında |
 
+Bu planın devamı [`protocol_v3.md`](protocol_v3.md) oldu: FD002 RMSE 27,36 (23,77–30,82)
+ve FD004 RMSE 27,40 (24,53–30,23), birer açılışla yayınlandı. Ayrıntı için
+[`results.md`](results.md).
+
 ### Sıradan sapma
 
 Plan 4. adımı 5. adımdan önce gösteriyordu, ama risk eşiği aralığa bağlı olduğu için
