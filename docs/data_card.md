@@ -1,10 +1,10 @@
 # C-MAPSS Data Card
 
-Checked: 2026-11-04. The project uses subsets FD001 and FD003.
+Checked: 2026-11-05. The project uses subsets FD001 through FD004.
 
 ## Dataset identity
 
-- Name: C-MAPSS Jet Engine Simulated Data, subsets FD001 and FD003
+- Name: C-MAPSS Jet Engine Simulated Data, subsets FD001 through FD004
 - Publisher: NASA Prognostics Center of Excellence
 - Dataset page:
   <https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data>
@@ -44,8 +44,24 @@ NASA characterizes FD003 as one operating condition and two degradation modes
 (high-pressure compressor and fan), with 100 training and 100 test engines. The pipeline
 requires 24,720 training rows, 16,596 test rows, and 100 official test RUL labels.
 
+FD002 and FD004 add six operating conditions, with one and two degradation modes
+respectively. Counts below come from the verified archive.
+
+| Subset | Train engines | Train rows | Test engines | Test rows | Largest test RUL |
+|---|---:|---:|---:|---:|---:|
+| FD001 | 100 | 20,631 | 100 | 13,096 | 145 |
+| FD002 | 260 | 53,759 | 259 | 33,991 | 194 |
+| FD003 | 100 | 24,720 | 100 | 16,596 | 145 |
+| FD004 | 249 | 61,249 | 248 | 41,214 | 195 |
+
+NASA's dataset page lists FD004 as 248 train and 249 test trajectories, the reverse of
+the archive. The pipeline follows the archive and fails closed unless the FD004 label
+file holds 248 rows.
+
 FD001 test labels were seen before protocol v2 was designed. FD003 test labels opened
-once, by `fd003-v2-clean`, after the protocol was frozen.
+once, by `fd003-v2-clean`, after that protocol was frozen. FD002 and FD004 test labels
+opened once each, by `fd002-v3-clean` and `fd004-v3-clean`, after protocol v3 and their
+locks were published.
 
 ## Schema
 
@@ -72,23 +88,23 @@ misordered, or schema-invalid rows.
 - real-aircraft maintenance approval or airworthiness decisions;
 - production deployment or safety guarantees;
 - claims that model explanations identify physical causes;
-- claims that FD001 results generalize to other conditions, fault modes, engine
-  types, or operational fleets; and
+- claims that results generalize to other conditions, fault modes, engine types,
+  or operational fleets; and
 - maintenance resource, duration, parts, capacity, or cost decisions.
 
 ## Acquisition and integrity policy
 
 M1 downloads only from the configured NASA URL or accepts an explicitly
 provided local archive. Before extraction it verifies both the full archive
-size and SHA-256. Extraction materializes only the FD001 training, test, and
-RUL members and rejects path traversal, symbolic links, duplicate source
+size and SHA-256. Extraction materializes only the selected subset's training,
+test, and RUL members and rejects path traversal, symbolic links, duplicate source
 members, and changed existing raw files.
 
 Raw inputs live under `data/raw/`; generated tables live under
 `data/processed/`; models, reports, and run outputs live under `artifacts/` or
 `runs/`. These paths are excluded from Git.
 
-Processed FD001 outputs live under `data/processed/fd001/`. The train and test
+Processed outputs live under `data/processed/<subset>/`. The train and test
 tables, split manifest, data-quality report, development-only EDA summary and
 HTML trend report are content-hashed in `manifest.json`. Official test labels
 are stored separately at `evaluation/test_rul.parquet` and are not joined to
@@ -113,8 +129,8 @@ does not relicense NASA data.
 ## Split and label isolation
 
 - All splits and folds operate on whole engines, never individual cycle rows.
-- Seed `42` and engine-lifetime quartiles define the reproducible 80-engine
-  development and 20-engine calibration roles.
+- Seed `42` and engine-lifetime quartiles define the reproducible 80% development
+  and 20% calibration roles.
 - Official test RUL labels are isolated from training, feature selection,
   hyperparameter search, and champion selection.
 - The evaluator may read official test labels only after `model_lock.json` is
@@ -130,14 +146,15 @@ rul_target = min(rul_true, 125)
 ```
 
 The `125` cap is a modeling assumption for the early healthy period, not a physical
-truth. Protocol v2 also tries `130` on development engines; `fd003-v2-clean` selected
-it. Official test metrics use NASA's original uncapped labels.
+truth. Protocols v2 and v3 also try `130` on development engines; `fd003-v2-clean`
+selected it. Official test metrics use NASA's original uncapped labels, so the cap
+costs accuracy on engines with far more life left: FD002 and FD004 test RUL reaches 195.
 
 ## Privacy, sensitivity, and known limitations
 
 The dataset is simulated and contains no personal data. Its principal risks are
 scientific misuse and overclaiming rather than personal privacy.
 
-Known limitations include one operating condition per subset, one or two modeled
+Known limitations include one or six simulated operating conditions, one or two modeled
 degradation modes, simulated sensor noise, a fixed historical benchmark, and no real
 maintenance resource or cost information.

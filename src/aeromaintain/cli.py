@@ -169,7 +169,7 @@ def prepare(
     ] = None,
     dataset: Annotated[
         str,
-        typer.Option("--dataset", help="C-MAPSS subset: FD001 or FD003."),
+        typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
     ] = "FD001",
 ) -> None:
     """Prepare one frozen NASA C-MAPSS subset."""
@@ -211,7 +211,7 @@ def train(
     ] = None,
     dataset: Annotated[
         str,
-        typer.Option("--dataset", help="C-MAPSS subset: FD001 or FD003."),
+        typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
     ] = "FD001",
 ) -> None:
     """Select, fit, calibrate, explain, persist, and lock an RUL model."""
@@ -411,7 +411,7 @@ def pipeline(
     ] = None,
     dataset: Annotated[
         str,
-        typer.Option("--dataset", help="C-MAPSS subset: FD001 or FD003."),
+        typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
     ] = "FD001",
 ) -> None:
     """Run prepare, train/lock, evaluate, and report."""

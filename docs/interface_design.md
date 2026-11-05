@@ -19,6 +19,6 @@ simulated-data boundary easy to find.
 - Require an explicit verified run and expose only `risk_ranking.csv` for
   download; official true RUL is not part of the review table.
 
-The tracked screenshots are captured from the verified `fd003-v2-clean` run after
-the page finishes rendering. The hosted demo hides sensor history because NASA's
+The tracked screenshots are captured from the verified `fd004-v3-clean` run after
+the page finishes rendering. The hosted demo reads the same run and hides sensor history because NASA's
 dataset page specifies no license.
