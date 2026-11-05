@@ -460,7 +460,8 @@ def test_fd003_contract_uses_its_own_members_shape_and_clean_status() -> None:
     assert contract.dataset == "FD003"
     assert (contract.train_rows, contract.test_rows) == (24_720, 16_596)
     assert expected_members("FD003")["test_rul"] == "RUL_FD003.txt"
-    assert load_test_status(root, "FD003") == "clean_single_open"
+    # FD003's single clean opening belongs to v2, so v3 treats it as seen.
+    assert load_test_status(root, "FD003") == "previously_seen"
     assert load_test_status(root, "FD001") == "previously_seen"
 
 
@@ -509,7 +510,7 @@ def test_clean_holdout_opens_for_one_lock_only(tmp_path: Path) -> None:
     first = train_and_lock(tmp_path, run_id="first", config=_small_config())
     second = train_and_lock(tmp_path, run_id="second", config=_small_config())
     locked = json.loads(first.model_lock.read_text(encoding="utf-8"))
-    assert locked["protocol"]["label"] == "protocol v2, clean single-open test"
+    assert locked["protocol"]["label"] == "protocol v3, clean single-open test"
 
     evaluated = evaluate_locked(tmp_path, run_id="first")
     assert evaluated.metrics["protocol"]["test_status"] == "clean_single_open"

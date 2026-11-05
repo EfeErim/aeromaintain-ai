@@ -332,7 +332,7 @@ def run_cqr_study(
     spec = decision[decision["champion"]]["spec"]
     if spec["family"] != "xgboost":
         raise ModelingError("The CQR study applies to an XGBoost champion")
-    features = _feature_view(build_causal_features(frame), spec["feature_set"])
+    features = _feature_view(build_causal_features(frame), spec)
     truth = frame["rul_true"].to_numpy(dtype=np.float64)
     engines = frame["unit_id"].to_numpy()
     target = np.minimum(truth, float(spec["cap"]))

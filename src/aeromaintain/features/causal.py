@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.cluster import KMeans
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
@@ -14,6 +15,7 @@ SETTING_COLUMNS = tuple(f"setting_{index}" for index in range(1, 4))
 SENSOR_COLUMNS = tuple(f"sensor_{index}" for index in range(1, 22))
 ROLLING_WINDOWS = (5, 10, 20)
 ROLLING_STATISTICS = ("mean", "std", "min", "max", "slope", "delta_mean")
+CONDITION_FEATURE = "cycles_since_condition_change"
 
 
 class FeatureContractError(ValueError):
@@ -119,6 +121,97 @@ def build_causal_features(frame: pd.DataFrame) -> pd.DataFrame:
     if not np.isfinite(result.to_numpy()).all():
         raise FeatureContractError("Generated features contain non-finite values")
     return result
+
+
+@dataclass
+class ConditionNormalizer:
+    """Condition clusters and per-condition sensor scales from one partition."""
+
+    conditions: int
+    seed: int
+    max_within_spread: float = 0.1
+    setting_mean: np.ndarray | None = None
+    setting_scale: np.ndarray | None = None
+    centroids: np.ndarray | None = None
+    sensor_mean: np.ndarray | None = None
+    sensor_scale: np.ndarray | None = None
+    within_spread: float | None = None
+
+    def fit(self, frame: pd.DataFrame) -> ConditionNormalizer:
+        """Fit clusters and scales, refusing settings that do not separate."""
+        settings = frame.loc[:, list(SETTING_COLUMNS)].to_numpy(dtype=np.float64)
+        self.setting_mean = settings.mean(axis=0)
+        scale = settings.std(axis=0)
+        self.setting_scale = np.where(scale > 0, scale, 1.0)
+        scaled = (settings - self.setting_mean) / self.setting_scale
+        model = KMeans(n_clusters=self.conditions, n_init=10, random_state=self.seed)
+        labels = model.fit_predict(scaled)
+        # Sorting makes condition numbers independent of KMeans initialization.
+        order = np.lexsort(model.cluster_centers_.T[::-1])
+        self.centroids = model.cluster_centers_[order]
+        labels = self._nearest(scaled)
+        spreads = [
+            float(np.abs(scaled[labels == index] - self.centroids[index]).max())
+            for index in range(self.conditions)
+            if (labels == index).any()
+        ]
+        self.within_spread = max(spreads)
+        if len(spreads) != self.conditions or self.within_spread > (
+            self.max_within_spread
+        ):
+            raise FeatureContractError(
+                "Operating settings do not separate into "
+                f"{self.conditions} conditions: spread {self.within_spread:.3f}"
+            )
+        sensors = frame.loc[:, list(SENSOR_COLUMNS)].to_numpy(dtype=np.float64)
+        self.sensor_mean = np.vstack(
+            [sensors[labels == index].mean(axis=0) for index in range(self.conditions)]
+        )
+        deviation = np.vstack(
+            [sensors[labels == index].std(axis=0) for index in range(self.conditions)]
+        )
+        self.sensor_scale = np.where(deviation > 0, deviation, 1.0)
+        return self
+
+    def _nearest(self, scaled: np.ndarray) -> np.ndarray:
+        distance = np.linalg.norm(
+            scaled[:, np.newaxis, :] - self.centroids[np.newaxis, :, :],
+            axis=2,
+        )
+        return distance.argmin(axis=1)
+
+    def labels(self, frame: pd.DataFrame) -> np.ndarray:
+        """Assign each row to its nearest fitted condition."""
+        if self.centroids is None:
+            raise FeatureContractError("Normalizer must be fitted before transform")
+        settings = frame.loc[:, list(SETTING_COLUMNS)].to_numpy(dtype=np.float64)
+        return self._nearest((settings - self.setting_mean) / self.setting_scale)
+
+    def normalized_frame(self, frame: pd.DataFrame) -> pd.DataFrame:
+        """Return a copy whose sensors are standardized within their condition."""
+        labels = self.labels(frame)
+        sensors = frame.loc[:, list(SENSOR_COLUMNS)].to_numpy(dtype=np.float64)
+        result = frame.copy()
+        result[list(SENSOR_COLUMNS)] = (
+            sensors - self.sensor_mean[labels]
+        ) / self.sensor_scale[labels]
+        return result
+
+
+def build_condition_features(
+    frame: pd.DataFrame,
+    normalizer: ConditionNormalizer,
+) -> pd.DataFrame:
+    """Build causal features on condition-normalized sensors."""
+    features = build_causal_features(normalizer.normalized_frame(frame))
+    labels = pd.Series(normalizer.labels(frame), index=frame.index)
+    engines = frame["unit_id"]
+    changed = labels.ne(labels.groupby(engines, sort=False).shift()) | (
+        engines.ne(engines.shift())
+    )
+    run = changed.cumsum()
+    features[CONDITION_FEATURE] = labels.groupby(run).cumcount().astype("float64")
+    return features
 
 
 @dataclass

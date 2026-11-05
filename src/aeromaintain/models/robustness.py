@@ -1,4 +1,4 @@
-"""Seed sensitivity and byte-level repeatability of locked protocol v2 runs."""
+"""Seed sensitivity and byte-level repeatability of locked runs."""
 
 from __future__ import annotations
 
@@ -12,19 +12,26 @@ import pandas as pd
 
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.evaluation import alert_rule_metrics, prediction_metrics
-from aeromaintain.evaluation.protocol import apply_mondrian_interval
-from aeromaintain.features import build_causal_features
+from aeromaintain.evaluation.protocol import (
+    apply_mondrian_cqr,
+    apply_mondrian_interval,
+)
+from aeromaintain.features import build_causal_features, build_condition_features
 from aeromaintain.models.evaluation import _validate_lock
 from aeromaintain.models.rul import (
     TEST_PREVIOUSLY_SEEN,
     ModelingConfig,
     ModelingError,
+    _feature_view,
     _json_bytes,
     _predict_model,
     _processed_dir,
     calibrate_interval,
     cross_fit_predictions,
     fit_final_model,
+    fit_quantile_fixed,
+    partition_features,
+    predict_quantiles,
 )
 
 SEED_METRICS = (
@@ -55,20 +62,60 @@ def _config_from_lock(lock: dict[str, Any]) -> ModelingConfig:
 
 def _seed_result(
     spec: dict[str, Any],
+    locked_calibration: dict[str, Any],
     features: pd.DataFrame,
     frame: pd.DataFrame,
-    final_features: pd.DataFrame,
+    test: pd.DataFrame,
+    final_mask: pd.Series,
     evaluation: pd.DataFrame,
     config: ModelingConfig,
     seed: int,
 ) -> dict[str, Any]:
-    cross_fit, fold_ids = cross_fit_predictions(
-        spec, features, frame, config, seed=seed
+    kind = locked_calibration.get("quantile_target")
+    cross_fit = cross_fit_predictions(
+        spec,
+        features,
+        frame,
+        config,
+        seed=seed,
+        quantile_kinds=(kind,) if kind else (),
     )
-    calibration, _ = calibrate_interval(cross_fit, fold_ids, frame, config, seed=seed)
-    model, preprocessor = fit_final_model(spec, features, frame, config, seed=seed)
-    prediction = _predict_model(model, preprocessor, final_features, spec["family"])
-    low, high = apply_mondrian_interval(prediction, calibration)
+    calibration, _ = calibrate_interval(
+        cross_fit,
+        frame,
+        config,
+        seed=seed,
+        forced_method=f"cqr_{kind}" if kind else "mondrian",
+    )
+    rows = np.arange(len(frame))
+    final_features, normalizer = partition_features(spec, frame, features, rows, config)
+    model, preprocessor = fit_final_model(
+        spec, final_features, frame, config, seed=seed
+    )
+    test_features = (
+        build_causal_features(test)
+        if normalizer is None
+        else build_condition_features(test, normalizer)
+    )
+    last_features = test_features.loc[final_mask].reset_index(drop=True)
+    prediction = _predict_model(model, preprocessor, last_features, spec["family"])
+    if kind:
+        quantile_model, quantile_preprocessor = fit_quantile_fixed(
+            spec,
+            kind,
+            calibration["quantile_tree_count"],
+            _feature_view(final_features, spec),
+            frame,
+            config,
+            seed=seed,
+        )
+        low, high = apply_mondrian_cqr(
+            prediction,
+            predict_quantiles(quantile_model, quantile_preprocessor, last_features),
+            calibration,
+        )
+    else:
+        low, high = apply_mondrian_interval(prediction, calibration)
     truth = evaluation["rul_true"].to_numpy(dtype=np.float64)
     metrics = prediction_metrics(
         truth,
@@ -125,11 +172,9 @@ def run_seed_sweep(
     frame = pd.read_parquet(processed / "train.parquet").reset_index(drop=True)
     features = build_causal_features(frame)
     test = pd.read_parquet(processed / "test.parquet")
-    test_features = build_causal_features(test)
     final_mask = (
         test.groupby("unit_id", sort=False)["cycle"].transform("max").eq(test["cycle"])
     )
-    final_features = test_features.loc[final_mask].reset_index(drop=True)
     labels = pd.read_parquet(processed / "evaluation" / "test_rul.parquet")
     evaluation = (
         test.loc[final_mask, ["unit_id"]]
@@ -138,7 +183,17 @@ def run_seed_sweep(
     )
 
     rows = [
-        _seed_result(spec, features, frame, final_features, evaluation, config, seed)
+        _seed_result(
+            spec,
+            lock["calibration"],
+            features,
+            frame,
+            test,
+            final_mask,
+            evaluation,
+            config,
+            seed,
+        )
         for seed in seeds
     ]
     table = pd.DataFrame(rows)

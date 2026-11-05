@@ -1,0 +1,46 @@
+project:
+  name: aeromaintain-ai
+  seed: 42
+  educational_prototype: true
+
+data:
+  datasets:
+    FD001:
+      test_status: previously_seen
+      operating_conditions: 1
+      rmse_target: 16.6
+      interval_width_target: 45
+    FD002:
+      test_status: clean_single_open
+      operating_conditions: 6
+      rmse_target: null
+      baseline_rmse_reduction_target: 0.10
+      interval_width_target: null
+    FD003:
+      test_status: previously_seen
+      operating_conditions: 1
+      rmse_target: 16.6
+      interval_width_target: 45
+    FD004:
+      test_status: clean_single_open
+      operating_conditions: 6
+      rmse_target: null
+      baseline_rmse_reduction_target: 0.10
+      interval_width_target: null
+
+modeling:
+  group_folds: 5
+  critical_rul_threshold: 30
+  nominal_interval_coverage: 0.90
+  xgboost_n_jobs: 6
+  xgboost_candidates: 4
+  cqr_enabled: false
+  scoring_draws: 200
+  scoring_rul_window: 150
+  sensitivity_windows: [130, 175, null]
+  inner_validation_fraction: 0.2
+  rul_cap_candidates: [125, 130]
+  cross_fit_folds: 10
+  interval_band_edges: [30, 60, 100]
+  interval_min_band_engines: 20
+  risk_recall_target: 0.95

@@ -1,0 +1,1763 @@
+{
+  "schema_version": 1,
+  "scope": "Training engines only. No test label had been opened under v3 when this file was written.",
+  "runs": [
+    {
+      "run_id": "fd002-v3-clean",
+      "dataset": "FD002",
+      "test_status": "clean_single_open",
+      "label": "protocol v3, clean single-open test",
+      "model_lock_sha256": "fa50040abf9731cf3fd4a3b47aeb82222792dfc7304dc137b10166615ba4cb37",
+      "protocol_document_sha256": "053779177421df96048032080249841fd6381714f21ca862ab4eab1bb2675838",
+      "config_path": "configs/protocol_v3_six_conditions.yaml",
+      "config_sha256": "9a49ec67f14467f32d4091eaba7caf0db6b9d53c0a02bb2ae2dd580ebbc7e1f2",
+      "champion": "xgboost",
+      "ridge": {
+        "spec": {
+          "alpha": 1.0,
+          "cap": 125,
+          "feature_set": "all",
+          "condition": true
+        },
+        "median_rmse": 21.40973680404699,
+        "rmse_p05_p95": [
+          19.779387935975745,
+          23.070805575944924
+        ],
+        "median_mae": 16.717560210548967,
+        "median_nasa": 1923.7257165977594,
+        "median_point_rule_recall": 0.7261363636363636
+      },
+      "xgboost": {
+        "spec": {
+          "candidate": 1,
+          "cap": 125,
+          "feature_set": "compact",
+          "tree_count": 166,
+          "condition": true
+        },
+        "median_rmse": 18.934742272476043,
+        "rmse_p05_p95": [
+          17.331926859258854,
+          20.304498141506595
+        ],
+        "median_mae": 14.279224678874016,
+        "median_nasa": 1469.92370476321,
+        "median_point_rule_recall": 0.8441295546558705
+      },
+      "xgboost_rmse_improvement_fraction": 0.11560135251653858,
+      "xgboost_win_rate_over_paired_draws": 1.0,
+      "rmse_target": null,
+      "rmse_target_met": null,
+      "raw_feature_baseline_rmse": 21.190865229820496,
+      "baseline_rmse_reduction_fraction": 0.10646676918928066,
+      "baseline_rmse_reduction_target_met": true,
+      "window_sensitivity": [
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 1466.867034321481,
+          "ridge_median_rmse": 18.58882789489399,
+          "window": 130,
+          "xgboost_median_nasa": 1185.0839888847781,
+          "xgboost_median_rmse": 16.52182621322846
+        },
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 3828.5068796426494,
+          "ridge_median_rmse": 26.661164820549704,
+          "window": 175,
+          "xgboost_median_nasa": 2771.617099197461,
+          "xgboost_median_rmse": 23.950904409505945
+        },
+        {
+          "champion": "ridge",
+          "ridge_median_nasa": 1795379.0726334825,
+          "ridge_median_rmse": 44.8245816815364,
+          "window": null,
+          "xgboost_median_nasa": 2254238.4477931415,
+          "xgboost_median_rmse": 43.24649042542167
+        }
+      ],
+      "stage_log": {
+        "ridge": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 21.710958719070277,
+            "median_nasa": 2043.6566251200288,
+            "baseline_rmse": 21.910800095055862,
+            "baseline_nasa": 1947.6597767613912,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 21.921668835198936,
+            "median_nasa": 1950.9200808273279,
+            "baseline_rmse": 21.910800095055862,
+            "baseline_nasa": 1947.6597767613912,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 23.267194515167773,
+            "median_nasa": 2451.1503698959427,
+            "baseline_rmse": 21.910800095055862,
+            "baseline_nasa": 1947.6597767613912,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "all",
+              "cap": 130
+            },
+            "median_rmse": 21.84333075050106,
+            "median_nasa": 2048.2278430714096,
+            "baseline_rmse": 21.910800095055862,
+            "baseline_nasa": 1947.6597767613912,
+            "accepted": false
+          },
+          {
+            "stage": "condition",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "condition": true
+            },
+            "median_rmse": 21.40973680404699,
+            "median_nasa": 1923.7257165977594,
+            "baseline_rmse": 21.910800095055862,
+            "baseline_nasa": 1947.6597767613912,
+            "accepted": true
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "condition": true,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 21.499712365307065,
+            "median_nasa": 1877.5283503919372,
+            "baseline_rmse": 21.40973680404699,
+            "baseline_nasa": 1923.7257165977594,
+            "accepted": false
+          }
+        ],
+        "xgboost": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 21.190865229820496,
+            "median_nasa": 2110.2253779073562,
+            "baseline_rmse": 21.491685093889096,
+            "baseline_nasa": 2267.769805255047,
+            "accepted": true
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 21.622901607453382,
+            "median_nasa": 2249.252896073794,
+            "baseline_rmse": 21.491685093889096,
+            "baseline_nasa": 2267.769805255047,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 23.619685441004673,
+            "median_nasa": 4082.453938422792,
+            "baseline_rmse": 21.491685093889096,
+            "baseline_nasa": 2267.769805255047,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "compact",
+              "cap": 130
+            },
+            "median_rmse": 21.067087528429,
+            "median_nasa": 2245.744398978599,
+            "baseline_rmse": 21.190865229820496,
+            "baseline_nasa": 2110.2253779073562,
+            "accepted": false
+          },
+          {
+            "stage": "condition",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125,
+              "condition": true
+            },
+            "median_rmse": 18.934742272476043,
+            "median_nasa": 1469.92370476321,
+            "baseline_rmse": 21.190865229820496,
+            "baseline_nasa": 2110.2253779073562,
+            "accepted": true
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125,
+              "condition": true,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 19.05012990814913,
+            "median_nasa": 1415.2505889344975,
+            "baseline_rmse": 18.934742272476043,
+            "baseline_nasa": 1469.92370476321,
+            "accepted": false
+          },
+          {
+            "stage": "ensemble",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125,
+              "condition": true,
+              "ensemble_members": 5
+            },
+            "median_rmse": 18.850154773591356,
+            "median_nasa": 1430.4350012890304,
+            "baseline_rmse": 18.934742272476043,
+            "baseline_nasa": 1469.92370476321,
+            "accepted": false
+          }
+        ]
+      },
+      "interval": {
+        "adopted": "mondrian",
+        "median_coverage": 0.9038461538461539,
+        "median_mean_width": 58.76878308057785,
+        "width_target": null,
+        "width_target_met": null,
+        "by_predicted_rul": {
+          "31-60": {
+            "median_coverage": 0.8900966183574879,
+            "median_mean_width": 43.12396978626737,
+            "median_rows": 46.0
+          },
+          "61-100": {
+            "median_coverage": 0.9068217054263565,
+            "median_mean_width": 81.58230933950531,
+            "median_rows": 85.0
+          },
+          "<=30": {
+            "median_coverage": 0.8979591836734694,
+            "median_mean_width": 16.61234908934723,
+            "median_rows": 49.5
+          },
+          ">100": {
+            "median_coverage": 0.917156862745098,
+            "median_mean_width": 69.39141692043653,
+            "median_rows": 80.0
+          }
+        },
+        "by_true_rul": {
+          "0-30": {
+            "median_coverage": 0.9303940568475453,
+            "median_mean_width": 20.5684770176348,
+            "median_rows": 54.0
+          },
+          "31-60": {
+            "median_coverage": 0.8947368421052632,
+            "median_mean_width": 55.03471705866795,
+            "median_rows": 52.0
+          },
+          "61-125": {
+            "median_coverage": 0.911634565330557,
+            "median_mean_width": 74.01331150421049,
+            "median_rows": 112.0
+          },
+          ">125": {
+            "median_coverage": 0.8713813068651779,
+            "median_mean_width": 71.58051275095545,
+            "median_rows": 42.0
+          }
+        },
+        "cqr_challengers": {}
+      },
+      "risk": {
+        "selected": {
+          "median_false_alarm_rate": 0.11386138613861387,
+          "median_false_alarms": 23.0,
+          "median_missed": 1.0,
+          "median_precision": 0.6955588929414289,
+          "median_recall": 0.9807692307692307,
+          "recall_target": 0.95,
+          "target_met": true,
+          "threshold": 25.0
+        },
+        "table": [
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 41.0,
+            "median_precision": 1.0,
+            "median_recall": 0.25,
+            "threshold": 0.0
+          },
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 30.0,
+            "median_precision": 1.0,
+            "median_recall": 0.44,
+            "threshold": 5.0
+          },
+          {
+            "median_false_alarm_rate": 0.0049261083743842365,
+            "median_false_alarms": 1.0,
+            "median_missed": 20.0,
+            "median_precision": 0.96875,
+            "median_recall": 0.6310068649885583,
+            "threshold": 10.0
+          },
+          {
+            "median_false_alarm_rate": 0.0297029702970297,
+            "median_false_alarms": 6.0,
+            "median_missed": 10.0,
+            "median_precision": 0.8725338491295938,
+            "median_recall": 0.8034250585480094,
+            "threshold": 15.0
+          },
+          {
+            "median_false_alarm_rate": 0.06817775507598009,
+            "median_false_alarms": 14.0,
+            "median_missed": 4.0,
+            "median_precision": 0.7852622061482821,
+            "median_recall": 0.9306335204490778,
+            "threshold": 20.0
+          },
+          {
+            "median_false_alarm_rate": 0.11386138613861387,
+            "median_false_alarms": 23.0,
+            "median_missed": 1.0,
+            "median_precision": 0.6955588929414289,
+            "median_recall": 0.9807692307692307,
+            "threshold": 25.0
+          },
+          {
+            "median_false_alarm_rate": 0.188111527992349,
+            "median_false_alarms": 39.0,
+            "median_missed": 0.0,
+            "median_precision": 0.5789884135472372,
+            "median_recall": 1.0,
+            "threshold": 30.0
+          },
+          {
+            "median_false_alarm_rate": 0.26789372599231753,
+            "median_false_alarms": 55.0,
+            "median_missed": 0.0,
+            "median_precision": 0.49106858054226477,
+            "median_recall": 1.0,
+            "threshold": 35.0
+          },
+          {
+            "median_false_alarm_rate": 0.3349768051878659,
+            "median_false_alarms": 69.0,
+            "median_missed": 0.0,
+            "median_precision": 0.4351145038167939,
+            "median_recall": 1.0,
+            "threshold": 40.0
+          },
+          {
+            "median_false_alarm_rate": 0.3896656669019054,
+            "median_false_alarms": 81.0,
+            "median_missed": 0.0,
+            "median_precision": 0.39857606161953985,
+            "median_recall": 1.0,
+            "threshold": 45.0
+          },
+          {
+            "median_false_alarm_rate": 0.45297759433962265,
+            "median_false_alarms": 93.0,
+            "median_missed": 0.0,
+            "median_precision": 0.3657651566373676,
+            "median_recall": 1.0,
+            "threshold": 50.0
+          },
+          {
+            "median_false_alarm_rate": 0.5120772946859904,
+            "median_false_alarms": 106.0,
+            "median_missed": 0.0,
+            "median_precision": 0.3375796178343949,
+            "median_recall": 1.0,
+            "threshold": 55.0
+          },
+          {
+            "median_false_alarm_rate": 0.5728399277943114,
+            "median_false_alarms": 118.0,
+            "median_missed": 0.0,
+            "median_precision": 0.313953488372093,
+            "median_recall": 1.0,
+            "threshold": 60.0
+          }
+        ]
+      },
+      "calibration_bands": [
+        {
+          "engines": 260,
+          "q_high": 9.175365447998047,
+          "q_low": -8.327667236328125,
+          "rows": 7373,
+          "upper_predicted_rul": 30.0
+        },
+        {
+          "engines": 260,
+          "q_high": 21.230018615722656,
+          "q_low": -21.76361846923828,
+          "rows": 6869,
+          "upper_predicted_rul": 60.0
+        },
+        {
+          "engines": 260,
+          "q_high": 45.034873962402344,
+          "q_low": -36.23004150390625,
+          "rows": 12669,
+          "upper_predicted_rul": 100.0
+        },
+        {
+          "engines": 240,
+          "q_high": 40.594329833984375,
+          "q_low": -28.55126190185547,
+          "rows": 12184,
+          "upper_predicted_rul": null
+        }
+      ]
+    },
+    {
+      "run_id": "fd004-v3-clean",
+      "dataset": "FD004",
+      "test_status": "clean_single_open",
+      "label": "protocol v3, clean single-open test",
+      "model_lock_sha256": "f296bab85503ef145919402059fc63fc735764f2019b9e24893396bcabca41f7",
+      "protocol_document_sha256": "053779177421df96048032080249841fd6381714f21ca862ab4eab1bb2675838",
+      "config_path": "configs/protocol_v3_six_conditions.yaml",
+      "config_sha256": "9a49ec67f14467f32d4091eaba7caf0db6b9d53c0a02bb2ae2dd580ebbc7e1f2",
+      "champion": "xgboost",
+      "ridge": {
+        "spec": {
+          "alpha": 1.0,
+          "cap": 125,
+          "feature_set": "no_age",
+          "condition": true
+        },
+        "median_rmse": 22.62367497018378,
+        "rmse_p05_p95": [
+          21.05246785853359,
+          24.32857947524782
+        ],
+        "median_mae": 17.92623139458955,
+        "median_nasa": 2385.820291881817,
+        "median_point_rule_recall": 0.6750471401634193
+      },
+      "xgboost": {
+        "spec": {
+          "candidate": 1,
+          "cap": 125,
+          "feature_set": "compact",
+          "tree_count": 321,
+          "condition": true
+        },
+        "median_rmse": 19.60933522387721,
+        "rmse_p05_p95": [
+          18.13457859520223,
+          21.271157574668997
+        ],
+        "median_mae": 14.59888815250828,
+        "median_nasa": 1764.1994975982748,
+        "median_point_rule_recall": 0.8421052631578947
+      },
+      "xgboost_rmse_improvement_fraction": 0.13323828910551597,
+      "xgboost_win_rate_over_paired_draws": 1.0,
+      "rmse_target": null,
+      "rmse_target_met": null,
+      "raw_feature_baseline_rmse": 21.819712903543635,
+      "baseline_rmse_reduction_fraction": 0.10130186815186959,
+      "baseline_rmse_reduction_target_met": true,
+      "window_sensitivity": [
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 2081.571118539907,
+          "ridge_median_rmse": 20.107405815133802,
+          "window": 130,
+          "xgboost_median_nasa": 1488.799277643442,
+          "xgboost_median_rmse": 17.448905459061073
+        },
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 4592.301872593316,
+          "ridge_median_rmse": 28.61201083423274,
+          "window": 175,
+          "xgboost_median_nasa": 3161.644340307512,
+          "xgboost_median_rmse": 25.3675884922457
+        },
+        {
+          "champion": "ridge",
+          "ridge_median_nasa": 993964794.1481047,
+          "ridge_median_rmse": 67.19079471398214,
+          "window": null,
+          "xgboost_median_nasa": 993314814.2785168,
+          "xgboost_median_rmse": 65.38250190373927
+        }
+      ],
+      "stage_log": {
+        "ridge": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 23.100871223871287,
+            "median_nasa": 2532.9476677687394,
+            "baseline_rmse": 23.47635596387294,
+            "baseline_nasa": 2545.099783838137,
+            "accepted": true
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 23.49660350758917,
+            "median_nasa": 2551.409156144071,
+            "baseline_rmse": 23.47635596387294,
+            "baseline_nasa": 2545.099783838137,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 24.83571238547202,
+            "median_nasa": 3040.1722419171037,
+            "baseline_rmse": 23.47635596387294,
+            "baseline_nasa": 2545.099783838137,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 130
+            },
+            "median_rmse": 23.09772057280911,
+            "median_nasa": 2880.1281831765054,
+            "baseline_rmse": 23.100871223871287,
+            "baseline_nasa": 2532.9476677687394,
+            "accepted": false
+          },
+          {
+            "stage": "condition",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125,
+              "condition": true
+            },
+            "median_rmse": 22.62367497018378,
+            "median_nasa": 2385.820291881817,
+            "baseline_rmse": 23.100871223871287,
+            "baseline_nasa": 2532.9476677687394,
+            "accepted": true
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125,
+              "condition": true,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 22.840461320965836,
+            "median_nasa": 2274.3190872084024,
+            "baseline_rmse": 22.62367497018378,
+            "baseline_nasa": 2385.820291881817,
+            "accepted": false
+          }
+        ],
+        "xgboost": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 21.819712903543635,
+            "median_nasa": 2345.1229281635183,
+            "baseline_rmse": 22.177372732594826,
+            "baseline_nasa": 2619.22361742198,
+            "accepted": true
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 22.023603295294798,
+            "median_nasa": 2651.466467388148,
+            "baseline_rmse": 22.177372732594826,
+            "baseline_nasa": 2619.22361742198,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 23.250986557420447,
+            "median_nasa": 3798.2621448822174,
+            "baseline_rmse": 22.177372732594826,
+            "baseline_nasa": 2619.22361742198,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "compact",
+              "cap": 130
+            },
+            "median_rmse": 21.916121272820362,
+            "median_nasa": 2537.051293071003,
+            "baseline_rmse": 21.819712903543635,
+            "baseline_nasa": 2345.1229281635183,
+            "accepted": false
+          },
+          {
+            "stage": "condition",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125,
+              "condition": true
+            },
+            "median_rmse": 19.60933522387721,
+            "median_nasa": 1764.1994975982748,
+            "baseline_rmse": 21.819712903543635,
+            "baseline_nasa": 2345.1229281635183,
+            "accepted": true
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125,
+              "condition": true,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 19.477424320681433,
+            "median_nasa": 1569.2492261745738,
+            "baseline_rmse": 19.60933522387721,
+            "baseline_nasa": 1764.1994975982748,
+            "accepted": false
+          },
+          {
+            "stage": "ensemble",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125,
+              "condition": true,
+              "ensemble_members": 5
+            },
+            "median_rmse": 19.431233207037785,
+            "median_nasa": 1615.9405847088285,
+            "baseline_rmse": 19.60933522387721,
+            "baseline_nasa": 1764.1994975982748,
+            "accepted": false
+          }
+        ]
+      },
+      "interval": {
+        "adopted": "mondrian",
+        "median_coverage": 0.9076305220883534,
+        "median_mean_width": 58.63569664829467,
+        "width_target": null,
+        "width_target_met": null,
+        "by_predicted_rul": {
+          "31-60": {
+            "median_coverage": 0.8913043478260869,
+            "median_mean_width": 41.718642511675434,
+            "median_rows": 43.0
+          },
+          "61-100": {
+            "median_coverage": 0.9031961178045516,
+            "median_mean_width": 80.10048979346885,
+            "median_rows": 76.0
+          },
+          "<=30": {
+            "median_coverage": 0.9043040293040293,
+            "median_mean_width": 18.756965853399954,
+            "median_rows": 48.0
+          },
+          ">100": {
+            "median_coverage": 0.922077922077922,
+            "median_mean_width": 70.83478822655925,
+            "median_rows": 82.0
+          }
+        },
+        "by_true_rul": {
+          "0-30": {
+            "median_coverage": 0.9423076923076923,
+            "median_mean_width": 21.958735240580143,
+            "median_rows": 52.0
+          },
+          "31-60": {
+            "median_coverage": 0.8913043478260869,
+            "median_mean_width": 53.651726808357665,
+            "median_rows": 50.0
+          },
+          "61-125": {
+            "median_coverage": 0.912184306921149,
+            "median_mean_width": 73.5674496051061,
+            "median_rows": 106.5
+          },
+          ">125": {
+            "median_coverage": 0.8823529411764706,
+            "median_mean_width": 72.2968948217767,
+            "median_rows": 40.0
+          }
+        },
+        "cqr_challengers": {}
+      },
+      "risk": {
+        "selected": {
+          "median_false_alarm_rate": 0.07653061224489796,
+          "median_false_alarms": 15.0,
+          "median_missed": 1.5,
+          "median_precision": 0.7678571428571429,
+          "median_recall": 0.9714574898785425,
+          "recall_target": 0.95,
+          "target_met": true,
+          "threshold": 20.0
+        },
+        "table": [
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 35.0,
+            "median_precision": 1.0,
+            "median_recall": 0.3333333333333333,
+            "threshold": 0.0
+          },
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 26.0,
+            "median_precision": 1.0,
+            "median_recall": 0.48214285714285715,
+            "threshold": 5.0
+          },
+          {
+            "median_false_alarm_rate": 0.005319148936170213,
+            "median_false_alarms": 1.0,
+            "median_missed": 18.0,
+            "median_precision": 0.9660919540229885,
+            "median_recall": 0.6483983983983984,
+            "threshold": 10.0
+          },
+          {
+            "median_false_alarm_rate": 0.039120038259206125,
+            "median_false_alarms": 8.0,
+            "median_missed": 8.0,
+            "median_precision": 0.8571428571428571,
+            "median_recall": 0.8558441558441559,
+            "threshold": 15.0
+          },
+          {
+            "median_false_alarm_rate": 0.07653061224489796,
+            "median_false_alarms": 15.0,
+            "median_missed": 1.5,
+            "median_precision": 0.7678571428571429,
+            "median_recall": 0.9714574898785425,
+            "threshold": 20.0
+          },
+          {
+            "median_false_alarm_rate": 0.11386138613861387,
+            "median_false_alarms": 22.5,
+            "median_missed": 1.0,
+            "median_precision": 0.6962025316455697,
+            "median_recall": 0.9836065573770492,
+            "threshold": 25.0
+          },
+          {
+            "median_false_alarm_rate": 0.18253085438847397,
+            "median_false_alarms": 36.0,
+            "median_missed": 0.0,
+            "median_precision": 0.5844155844155844,
+            "median_recall": 1.0,
+            "threshold": 30.0
+          },
+          {
+            "median_false_alarm_rate": 0.2537313432835821,
+            "median_false_alarms": 50.0,
+            "median_missed": 0.0,
+            "median_precision": 0.5096153846153846,
+            "median_recall": 1.0,
+            "threshold": 35.0
+          },
+          {
+            "median_false_alarm_rate": 0.32114807744750473,
+            "median_false_alarms": 63.0,
+            "median_missed": 0.0,
+            "median_precision": 0.4454995499549955,
+            "median_recall": 1.0,
+            "threshold": 40.0
+          },
+          {
+            "median_false_alarm_rate": 0.365,
+            "median_false_alarms": 72.0,
+            "median_missed": 0.0,
+            "median_precision": 0.416695652173913,
+            "median_recall": 1.0,
+            "threshold": 45.0
+          },
+          {
+            "median_false_alarm_rate": 0.41708542713567837,
+            "median_false_alarms": 82.0,
+            "median_missed": 0.0,
+            "median_precision": 0.3878430682617875,
+            "median_recall": 1.0,
+            "threshold": 50.0
+          },
+          {
+            "median_false_alarm_rate": 0.46984848484848485,
+            "median_false_alarms": 92.0,
+            "median_missed": 0.0,
+            "median_precision": 0.35869965780468543,
+            "median_recall": 1.0,
+            "threshold": 55.0
+          },
+          {
+            "median_false_alarm_rate": 0.5357142857142857,
+            "median_false_alarms": 104.5,
+            "median_missed": 0.0,
+            "median_precision": 0.3323643410852713,
+            "median_recall": 1.0,
+            "threshold": 60.0
+          }
+        ]
+      },
+      "calibration_bands": [
+        {
+          "engines": 249,
+          "q_high": 9.249662399291992,
+          "q_low": -11.245462417602539,
+          "rows": 7174,
+          "upper_predicted_rul": 30.0
+        },
+        {
+          "engines": 249,
+          "q_high": 20.689590454101562,
+          "q_low": -21.024436950683594,
+          "rows": 6478,
+          "upper_predicted_rul": 60.0
+        },
+        {
+          "engines": 249,
+          "q_high": 44.325477600097656,
+          "q_low": -35.59556579589844,
+          "rows": 11265,
+          "upper_predicted_rul": 100.0
+        },
+        {
+          "engines": 240,
+          "q_high": 40.665672302246094,
+          "q_low": -30.072845458984375,
+          "rows": 12581,
+          "upper_predicted_rul": null
+        }
+      ]
+    },
+    {
+      "run_id": "fd001-v3",
+      "dataset": "FD001",
+      "test_status": "previously_seen",
+      "label": "protocol v3, test previously seen",
+      "model_lock_sha256": "256ea39507936cf250f1acbcde578ad78a8ed68401bdcf345d438f90441cb135",
+      "protocol_document_sha256": "25a815f783597e7121c16388cd6126bdc105ae61e7460f7b423edbbc9836423a",
+      "config_path": "configs/protocol_v3.yaml",
+      "config_sha256": "13ea11400ffcae2632454f6f6b277b4ccde252e001182114be0c03081971371d",
+      "champion": "xgboost",
+      "ridge": {
+        "spec": {
+          "alpha": 1.0,
+          "cap": 125,
+          "feature_set": "all"
+        },
+        "median_rmse": 21.006011025981266,
+        "rmse_p05_p95": [
+          18.20064446919547,
+          23.782399609794783
+        ],
+        "median_mae": 16.746044716294413,
+        "median_nasa": 625.8869415624088,
+        "median_point_rule_recall": 0.7
+      },
+      "xgboost": {
+        "spec": {
+          "candidate": 7,
+          "cap": 125,
+          "feature_set": "all",
+          "tree_count": 123
+        },
+        "median_rmse": 18.56533839683449,
+        "rmse_p05_p95": [
+          16.361487502673977,
+          21.256896610245686
+        ],
+        "median_mae": 14.399079895019531,
+        "median_nasa": 501.10929774340184,
+        "median_point_rule_recall": 0.8480769230769231
+      },
+      "xgboost_rmse_improvement_fraction": 0.11618924821699994,
+      "xgboost_win_rate_over_paired_draws": 0.99,
+      "rmse_target": 16.6,
+      "rmse_target_met": false,
+      "raw_feature_baseline_rmse": 18.56533839683449,
+      "baseline_rmse_reduction_fraction": 0.0,
+      "baseline_rmse_reduction_target_met": null,
+      "window_sensitivity": [
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 479.2956782212069,
+          "ridge_median_rmse": 18.348958887214252,
+          "window": 130,
+          "xgboost_median_nasa": 421.5182289880835,
+          "xgboost_median_rmse": 16.35226112587496
+        },
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 1317.0034581191585,
+          "ridge_median_rmse": 26.32137619539145,
+          "window": 175,
+          "xgboost_median_nasa": 1056.8503801227143,
+          "xgboost_median_rmse": 24.151282729719547
+        },
+        {
+          "champion": "ridge",
+          "ridge_median_nasa": 362653.84731954604,
+          "ridge_median_rmse": 44.86128551872639,
+          "window": null,
+          "xgboost_median_nasa": 473465.2833127831,
+          "xgboost_median_rmse": 43.784030703151174
+        }
+      ],
+      "stage_log": {
+        "ridge": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 21.02525326309525,
+            "median_nasa": 628.2840022553521,
+            "baseline_rmse": 21.006011025981266,
+            "baseline_nasa": 625.8869415624088,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 21.030505304808838,
+            "median_nasa": 646.2787760698086,
+            "baseline_rmse": 21.006011025981266,
+            "baseline_nasa": 625.8869415624088,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 22.819710535109337,
+            "median_nasa": 799.3679574519385,
+            "baseline_rmse": 21.006011025981266,
+            "baseline_nasa": 625.8869415624088,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "all",
+              "cap": 130
+            },
+            "median_rmse": 21.020138694663363,
+            "median_nasa": 660.1551670576486,
+            "baseline_rmse": 21.006011025981266,
+            "baseline_nasa": 625.8869415624088,
+            "accepted": false
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 21.319203479462864,
+            "median_nasa": 633.3813682641321,
+            "baseline_rmse": 21.006011025981266,
+            "baseline_nasa": 625.8869415624088,
+            "accepted": false
+          }
+        ],
+        "xgboost": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 18.61065548194786,
+            "median_nasa": 520.1754409652607,
+            "baseline_rmse": 18.56533839683449,
+            "baseline_nasa": 501.10929774340184,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 18.846250620132793,
+            "median_nasa": 514.1541673577883,
+            "baseline_rmse": 18.56533839683449,
+            "baseline_nasa": 501.10929774340184,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 19.618128304805353,
+            "median_nasa": 606.407658170813,
+            "baseline_rmse": 18.56533839683449,
+            "baseline_nasa": 501.10929774340184,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "all",
+              "cap": 130
+            },
+            "median_rmse": 18.63892771215668,
+            "median_nasa": 550.7613587506312,
+            "baseline_rmse": 18.56533839683449,
+            "baseline_nasa": 501.10929774340184,
+            "accepted": false
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 18.921207997619,
+            "median_nasa": 498.91372716391766,
+            "baseline_rmse": 18.56533839683449,
+            "baseline_nasa": 501.10929774340184,
+            "accepted": false
+          },
+          {
+            "stage": "ensemble",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "ensemble_members": 5
+            },
+            "median_rmse": 18.80034242045193,
+            "median_nasa": 502.9890720301604,
+            "baseline_rmse": 18.56533839683449,
+            "baseline_nasa": 501.10929774340184,
+            "accepted": false
+          }
+        ]
+      },
+      "interval": {
+        "adopted": "mondrian",
+        "median_coverage": 0.91,
+        "median_mean_width": 55.67903527826071,
+        "width_target": 45,
+        "width_target_met": false,
+        "by_predicted_rul": {
+          "31-60": {
+            "median_coverage": 0.9148550724637681,
+            "median_mean_width": 40.59376333024767,
+            "median_rows": 17.0
+          },
+          "61-100": {
+            "median_coverage": 0.9080338266384778,
+            "median_mean_width": 75.00962514143724,
+            "median_rows": 32.0
+          },
+          "<=30": {
+            "median_coverage": 0.9166666666666666,
+            "median_mean_width": 18.833845542711124,
+            "median_rows": 19.0
+          },
+          ">100": {
+            "median_coverage": 0.9245014245014245,
+            "median_mean_width": 67.53663290352084,
+            "median_rows": 32.0
+          }
+        },
+        "by_true_rul": {
+          "0-30": {
+            "median_coverage": 0.9486842105263158,
+            "median_mean_width": 21.346685923836493,
+            "median_rows": 21.5
+          },
+          "31-60": {
+            "median_coverage": 0.9023809523809524,
+            "median_mean_width": 51.21053968369961,
+            "median_rows": 20.0
+          },
+          "61-125": {
+            "median_coverage": 0.9175170068027211,
+            "median_mean_width": 70.00781862666604,
+            "median_rows": 43.0
+          },
+          ">125": {
+            "median_coverage": 0.8823529411764706,
+            "median_mean_width": 68.50698135659422,
+            "median_rows": 16.0
+          }
+        },
+        "cqr_challengers": {
+          "capped": {
+            "median_coverage": 0.93,
+            "median_mean_width": 93.94957184046507,
+            "width_reduction_fraction": -0.6873419478434584,
+            "qualifies": false,
+            "quantile_tree_count": 166
+          },
+          "uncapped": {
+            "median_coverage": 0.9,
+            "median_mean_width": 85.72194142103194,
+            "width_reduction_fraction": -0.5395730366488796,
+            "qualifies": false,
+            "quantile_tree_count": 110
+          }
+        }
+      },
+      "risk": {
+        "selected": {
+          "median_false_alarm_rate": 0.0641025641025641,
+          "median_false_alarms": 5.0,
+          "median_missed": 1.0,
+          "median_precision": 0.8076923076923077,
+          "median_recall": 0.9615384615384616,
+          "recall_target": 0.95,
+          "target_met": true,
+          "threshold": 20.0
+        },
+        "table": [
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 14.0,
+            "median_precision": 1.0,
+            "median_recall": 0.3333333333333333,
+            "threshold": 0.0
+          },
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 11.0,
+            "median_precision": 1.0,
+            "median_recall": 0.4913793103448276,
+            "threshold": 5.0
+          },
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 7.0,
+            "median_precision": 1.0,
+            "median_recall": 0.6470588235294118,
+            "threshold": 10.0
+          },
+          {
+            "median_false_alarm_rate": 0.02666666666666667,
+            "median_false_alarms": 2.0,
+            "median_missed": 4.0,
+            "median_precision": 0.8823529411764706,
+            "median_recall": 0.8260869565217391,
+            "threshold": 15.0
+          },
+          {
+            "median_false_alarm_rate": 0.0641025641025641,
+            "median_false_alarms": 5.0,
+            "median_missed": 1.0,
+            "median_precision": 0.8076923076923077,
+            "median_recall": 0.9615384615384616,
+            "threshold": 20.0
+          },
+          {
+            "median_false_alarm_rate": 0.09256425948592412,
+            "median_false_alarms": 7.0,
+            "median_missed": 0.0,
+            "median_precision": 0.75,
+            "median_recall": 1.0,
+            "threshold": 25.0
+          },
+          {
+            "median_false_alarm_rate": 0.15384615384615385,
+            "median_false_alarms": 12.0,
+            "median_missed": 0.0,
+            "median_precision": 0.641941391941392,
+            "median_recall": 1.0,
+            "threshold": 30.0
+          },
+          {
+            "median_false_alarm_rate": 0.224937343358396,
+            "median_false_alarms": 18.0,
+            "median_missed": 0.0,
+            "median_precision": 0.55,
+            "median_recall": 1.0,
+            "threshold": 35.0
+          },
+          {
+            "median_false_alarm_rate": 0.2972972972972973,
+            "median_false_alarms": 23.0,
+            "median_missed": 0.0,
+            "median_precision": 0.475,
+            "median_recall": 1.0,
+            "threshold": 40.0
+          },
+          {
+            "median_false_alarm_rate": 0.351000351000351,
+            "median_false_alarms": 27.0,
+            "median_missed": 0.0,
+            "median_precision": 0.43478260869565216,
+            "median_recall": 1.0,
+            "threshold": 45.0
+          },
+          {
+            "median_false_alarm_rate": 0.40360046457607435,
+            "median_false_alarms": 32.0,
+            "median_missed": 0.0,
+            "median_precision": 0.40336728919071874,
+            "median_recall": 1.0,
+            "threshold": 50.0
+          },
+          {
+            "median_false_alarm_rate": 0.4605263157894737,
+            "median_false_alarms": 36.0,
+            "median_missed": 0.0,
+            "median_precision": 0.37037037037037035,
+            "median_recall": 1.0,
+            "threshold": 55.0
+          },
+          {
+            "median_false_alarm_rate": 0.524390243902439,
+            "median_false_alarms": 41.0,
+            "median_missed": 0.0,
+            "median_precision": 0.3388463641334062,
+            "median_recall": 1.0,
+            "threshold": 60.0
+          }
+        ]
+      },
+      "calibration_bands": [
+        {
+          "engines": 100,
+          "q_high": 10.638481140136719,
+          "q_low": -9.529182434082031,
+          "rows": 2943,
+          "upper_predicted_rul": 30.0
+        },
+        {
+          "engines": 100,
+          "q_high": 19.078277587890625,
+          "q_low": -21.038238525390625,
+          "rows": 2505,
+          "upper_predicted_rul": 60.0
+        },
+        {
+          "engines": 100,
+          "q_high": 41.03038787841797,
+          "q_low": -33.75836181640625,
+          "rows": 4849,
+          "upper_predicted_rul": 100.0
+        },
+        {
+          "engines": 95,
+          "q_high": 39.639366149902344,
+          "q_low": -27.817672729492188,
+          "rows": 4727,
+          "upper_predicted_rul": null
+        }
+      ]
+    },
+    {
+      "run_id": "fd003-v3",
+      "dataset": "FD003",
+      "test_status": "previously_seen",
+      "label": "protocol v3, test previously seen",
+      "model_lock_sha256": "60d768b494406f72fc683b00e27494f7f46e950e5ecd5cbb6c987c8d5aea7798",
+      "protocol_document_sha256": "25a815f783597e7121c16388cd6126bdc105ae61e7460f7b423edbbc9836423a",
+      "config_path": "configs/protocol_v3.yaml",
+      "config_sha256": "13ea11400ffcae2632454f6f6b277b4ccde252e001182114be0c03081971371d",
+      "champion": "xgboost",
+      "ridge": {
+        "spec": {
+          "alpha": 100.0,
+          "cap": 125,
+          "feature_set": "no_age"
+        },
+        "median_rmse": 21.58251197901165,
+        "rmse_p05_p95": [
+          18.686952069884214,
+          23.52764230115764
+        ],
+        "median_mae": 17.113656921518306,
+        "median_nasa": 702.2359543336831,
+        "median_point_rule_recall": 0.7
+      },
+      "xgboost": {
+        "spec": {
+          "candidate": 12,
+          "cap": 125,
+          "feature_set": "all",
+          "tree_count": 184,
+          "ensemble_members": 5
+        },
+        "median_rmse": 17.86275688829199,
+        "rmse_p05_p95": [
+          15.026968798697379,
+          19.87157793181443
+        ],
+        "median_mae": 13.269685649871827,
+        "median_nasa": 472.77801175173727,
+        "median_point_rule_recall": 0.8947368421052632
+      },
+      "xgboost_rmse_improvement_fraction": 0.17235042400703912,
+      "xgboost_win_rate_over_paired_draws": 0.995,
+      "rmse_target": 16.6,
+      "rmse_target_met": false,
+      "raw_feature_baseline_rmse": 18.049130716333472,
+      "baseline_rmse_reduction_fraction": 0.010325917129783146,
+      "baseline_rmse_reduction_target_met": null,
+      "window_sensitivity": [
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 556.156141343501,
+          "ridge_median_rmse": 18.32896786191963,
+          "window": 130,
+          "xgboost_median_nasa": 389.04953407768994,
+          "xgboost_median_rmse": 15.662763142696193
+        },
+        {
+          "champion": "xgboost",
+          "ridge_median_nasa": 1462.5854339018474,
+          "ridge_median_rmse": 27.357316934223235,
+          "window": 175,
+          "xgboost_median_nasa": 999.7217336381004,
+          "xgboost_median_rmse": 23.537502200528508
+        },
+        {
+          "champion": "ridge",
+          "ridge_median_nasa": 13814228805.745945,
+          "ridge_median_rmse": 72.34111695946672,
+          "window": null,
+          "xgboost_median_nasa": 14998624706.190489,
+          "xgboost_median_rmse": 71.43139702503619
+        }
+      ],
+      "stage_log": {
+        "ridge": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 21.58251197901165,
+            "median_nasa": 702.2359543336831,
+            "baseline_rmse": 21.96283300343481,
+            "baseline_nasa": 703.1775973384904,
+            "accepted": true
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 21.945635095823356,
+            "median_nasa": 703.6732772988822,
+            "baseline_rmse": 21.96283300343481,
+            "baseline_nasa": 703.1775973384904,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 23.43881516847005,
+            "median_nasa": 920.6544663493631,
+            "baseline_rmse": 21.96283300343481,
+            "baseline_nasa": 703.1775973384904,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 130
+            },
+            "median_rmse": 21.615065458809624,
+            "median_nasa": 760.1739144724608,
+            "baseline_rmse": 21.58251197901165,
+            "baseline_nasa": 702.2359543336831,
+            "accepted": false
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 21.8205698457808,
+            "median_nasa": 700.669150206138,
+            "baseline_rmse": 21.58251197901165,
+            "baseline_nasa": 702.2359543336831,
+            "accepted": false
+          }
+        ],
+        "xgboost": [
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "compact",
+              "cap": 125
+            },
+            "median_rmse": 17.803287088813317,
+            "median_nasa": 508.0413896570336,
+            "baseline_rmse": 18.049130716333472,
+            "baseline_nasa": 492.8859275793733,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_settings",
+              "cap": 125
+            },
+            "median_rmse": 18.179810960659864,
+            "median_nasa": 511.9028863993608,
+            "baseline_rmse": 18.049130716333472,
+            "baseline_nasa": 492.8859275793733,
+            "accepted": false
+          },
+          {
+            "stage": "features",
+            "change": {
+              "feature_set": "no_age",
+              "cap": 125
+            },
+            "median_rmse": 20.098636673379602,
+            "median_nasa": 710.8826972495087,
+            "baseline_rmse": 18.049130716333472,
+            "baseline_nasa": 492.8859275793733,
+            "accepted": false
+          },
+          {
+            "stage": "cap",
+            "change": {
+              "feature_set": "all",
+              "cap": 130
+            },
+            "median_rmse": 18.101478851951203,
+            "median_nasa": 538.8854669979471,
+            "baseline_rmse": 18.049130716333472,
+            "baseline_nasa": 492.8859275793733,
+            "accepted": false
+          },
+          {
+            "stage": "emphasis",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "emphasis": "window_focus"
+            },
+            "median_rmse": 18.146418246542638,
+            "median_nasa": 466.71245173525466,
+            "baseline_rmse": 18.049130716333472,
+            "baseline_nasa": 492.8859275793733,
+            "accepted": false
+          },
+          {
+            "stage": "ensemble",
+            "change": {
+              "feature_set": "all",
+              "cap": 125,
+              "ensemble_members": 5
+            },
+            "median_rmse": 17.86275688829199,
+            "median_nasa": 472.77801175173727,
+            "baseline_rmse": 18.049130716333472,
+            "baseline_nasa": 492.8859275793733,
+            "accepted": true
+          }
+        ]
+      },
+      "interval": {
+        "adopted": "mondrian",
+        "median_coverage": 0.91,
+        "median_mean_width": 53.14727055549621,
+        "width_target": 45,
+        "width_target_met": false,
+        "by_predicted_rul": {
+          "31-60": {
+            "median_coverage": 0.8947368421052632,
+            "median_mean_width": 35.749941863381835,
+            "median_rows": 18.0
+          },
+          "61-100": {
+            "median_coverage": 0.9,
+            "median_mean_width": 73.14872753443976,
+            "median_rows": 29.0
+          },
+          "<=30": {
+            "median_coverage": 0.9090909090909091,
+            "median_mean_width": 15.51363359434881,
+            "median_rows": 20.0
+          },
+          ">100": {
+            "median_coverage": 0.9310344827586207,
+            "median_mean_width": 68.29022132739043,
+            "median_rows": 34.0
+          }
+        },
+        "by_true_rul": {
+          "0-30": {
+            "median_coverage": 0.9444444444444444,
+            "median_mean_width": 17.41981237358517,
+            "median_rows": 21.0
+          },
+          "31-60": {
+            "median_coverage": 0.9230769230769231,
+            "median_mean_width": 45.02260563730711,
+            "median_rows": 20.0
+          },
+          "61-125": {
+            "median_coverage": 0.9047619047619048,
+            "median_mean_width": 68.93838695864062,
+            "median_rows": 43.0
+          },
+          ">125": {
+            "median_coverage": 0.9,
+            "median_mean_width": 68.33797605005324,
+            "median_rows": 16.5
+          }
+        },
+        "cqr_challengers": {
+          "capped": {
+            "median_coverage": 0.93,
+            "median_mean_width": 89.86659849584103,
+            "width_reduction_fraction": -0.6908977179176607,
+            "qualifies": false,
+            "quantile_tree_count": 423
+          },
+          "uncapped": {
+            "median_coverage": 0.91,
+            "median_mean_width": 95.88174805819989,
+            "width_reduction_fraction": -0.8040766168430129,
+            "qualifies": false,
+            "quantile_tree_count": 203
+          }
+        }
+      },
+      "risk": {
+        "selected": {
+          "median_false_alarm_rate": 0.09807626245276538,
+          "median_false_alarms": 8.0,
+          "median_missed": 0.0,
+          "median_precision": 0.7302494802494802,
+          "median_recall": 1.0,
+          "recall_target": 0.95,
+          "target_met": true,
+          "threshold": 25.0
+        },
+        "table": [
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 16.0,
+            "median_precision": 1.0,
+            "median_recall": 0.23529411764705882,
+            "threshold": 0.0
+          },
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 12.0,
+            "median_precision": 1.0,
+            "median_recall": 0.4166666666666667,
+            "threshold": 5.0
+          },
+          {
+            "median_false_alarm_rate": 0.0,
+            "median_false_alarms": 0.0,
+            "median_missed": 9.0,
+            "median_precision": 1.0,
+            "median_recall": 0.5683229813664596,
+            "threshold": 10.0
+          },
+          {
+            "median_false_alarm_rate": 0.012987012987012988,
+            "median_false_alarms": 1.0,
+            "median_missed": 4.0,
+            "median_precision": 0.9375,
+            "median_recall": 0.782608695652174,
+            "threshold": 15.0
+          },
+          {
+            "median_false_alarm_rate": 0.05263157894736842,
+            "median_false_alarms": 4.0,
+            "median_missed": 1.0,
+            "median_precision": 0.8248081841432224,
+            "median_recall": 0.9473684210526315,
+            "threshold": 20.0
+          },
+          {
+            "median_false_alarm_rate": 0.09807626245276538,
+            "median_false_alarms": 8.0,
+            "median_missed": 0.0,
+            "median_precision": 0.7302494802494802,
+            "median_recall": 1.0,
+            "threshold": 25.0
+          },
+          {
+            "median_false_alarm_rate": 0.14365079365079364,
+            "median_false_alarms": 11.0,
+            "median_missed": 0.0,
+            "median_precision": 0.6486486486486487,
+            "median_recall": 1.0,
+            "threshold": 30.0
+          },
+          {
+            "median_false_alarm_rate": 0.21426160337552744,
+            "median_false_alarms": 17.0,
+            "median_missed": 0.0,
+            "median_precision": 0.5555555555555556,
+            "median_recall": 1.0,
+            "threshold": 35.0
+          },
+          {
+            "median_false_alarm_rate": 0.28931515535827523,
+            "median_false_alarms": 22.0,
+            "median_missed": 0.0,
+            "median_precision": 0.48936170212765956,
+            "median_recall": 1.0,
+            "threshold": 40.0
+          },
+          {
+            "median_false_alarm_rate": 0.35294117647058826,
+            "median_false_alarms": 28.0,
+            "median_missed": 0.0,
+            "median_precision": 0.4388104407359863,
+            "median_recall": 1.0,
+            "threshold": 45.0
+          },
+          {
+            "median_false_alarm_rate": 0.3972602739726027,
+            "median_false_alarms": 31.0,
+            "median_missed": 0.0,
+            "median_precision": 0.40816326530612246,
+            "median_recall": 1.0,
+            "threshold": 50.0
+          },
+          {
+            "median_false_alarm_rate": 0.44996873045653535,
+            "median_false_alarms": 35.0,
+            "median_missed": 0.0,
+            "median_precision": 0.37735849056603776,
+            "median_recall": 1.0,
+            "threshold": 55.0
+          },
+          {
+            "median_false_alarm_rate": 0.5,
+            "median_false_alarms": 39.0,
+            "median_missed": 0.0,
+            "median_precision": 0.3543424317617866,
+            "median_recall": 1.0,
+            "threshold": 60.0
+          }
+        ]
+      },
+      "calibration_bands": [
+        {
+          "engines": 100,
+          "q_high": 7.868555068969727,
+          "q_low": -8.242349624633789,
+          "rows": 2979,
+          "upper_predicted_rul": 30.0
+        },
+        {
+          "engines": 100,
+          "q_high": 17.548667907714844,
+          "q_low": -17.95201873779297,
+          "rows": 2644,
+          "upper_predicted_rul": 60.0
+        },
+        {
+          "engines": 100,
+          "q_high": 41.886390686035156,
+          "q_low": -31.565216064453125,
+          "rows": 4298,
+          "upper_predicted_rul": 100.0
+        },
+        {
+          "engines": 96,
+          "q_high": 39.84715270996094,
+          "q_low": -28.229690551757812,
+          "rows": 5169,
+          "upper_predicted_rul": null
+        }
+      ]
+    }
+  ]
+}
