@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-07",
+  "excluded": "N-CMAPSS_DS08d-010.h5 is truncated and stays unused.",
+  "files": {
+    "N-CMAPSS_DS01-005.h5": {
+      "archive_dev_units": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "archive_test_units": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "bytes": 2873351432,
+      "engines": 10,
+      "sha256": "3abdcee2a3c8136e8880e5d43ac8cdf12ab9f7f3ab37145f23b24c11335afbed"
+    },
+    "N-CMAPSS_DS08a-009.h5": {
+      "archive_dev_units": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "archive_test_units": [
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "bytes": 3236762200,
+      "engines": 15,
+      "sha256": "10ddf52e5441a05e3d0d8d797a34e0e5a9ac73dce8ae35d7b22d1ef224d24836"
+    },
+    "N-CMAPSS_DS08c-008.h5": {
+      "archive_dev_units": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "archive_test_units": [
+        7,
+        8,
+        9,
+        10
+      ],
+      "bytes": 2413078176,
+      "engines": 10,
+      "sha256": "150bf696dcf4bbac84518f439ac0d491410037881e214c5b10c048a71770bb38"
+    }
+  },
+  "provenance": "DS01 was extracted from data_set.zip with ZipFile CRC checking; data_set.zip matched the CRC32 and size recorded for it inside the NASA archive (etag in data/raw/ncmapss/source.json). DS08a and DS08c were extracted under protocol v4; amendment 2 counted their units but read no labels.",
+  "purpose": "Reserve the only N-CMAPSS engines whose labels were never read as the single final clean holdout for protocol v5. No v5 rule, model or threshold exists yet.",
+  "reads_performed": "HDF5 key listing and the 'unit' column of A_dev and A_test only. Y, hs, Fc, cycle, T, X_s, X_v and W were not read. Per-unit cycle or row counts were not computed, because in run-to-failure data they reveal engine life.",
+  "rules": [
+    "Unit IDs are namespaced by file; equal numbers in different files are different engines.",
+    "These engines may not be used for fitting, selection, calibration or thresholds.",
+    "Labels open once, after the v5 protocol and model locks are committed and claimed in the holdout ledger."
+  ],
+  "total_engines": 35
+}
