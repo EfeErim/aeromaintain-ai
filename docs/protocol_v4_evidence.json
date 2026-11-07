@@ -1,0 +1,5148 @@
+{
+  "chosen": "reference",
+  "cmapss_locks": {
+    "FD002": {
+      "candidate": "reference",
+      "config_sha256": "4cb10eb605b3fdd98a630c106ed9855bdc81ea3c7963fd404c7450470665a404",
+      "data_sha256": "4d1b4531f3f787bfcfe78f03dc07b5fedf365958e4564bf755f350660b19dfaa",
+      "dataset": "FD002",
+      "model_sha256": "f2d03619e433c7883f0b58947cf2939fc6db529ff08a443bf347e533f0ed7882",
+      "mondrian": {
+        "bands": [
+          {
+            "engines": 52,
+            "q_high": 11.81566047668457,
+            "q_low": -9.571271896362305,
+            "rows": 1517,
+            "upper_predicted_rul": 30
+          },
+          {
+            "engines": 52,
+            "q_high": 27.494121551513672,
+            "q_low": -22.11345672607422,
+            "rows": 1568,
+            "upper_predicted_rul": 60
+          },
+          {
+            "engines": 52,
+            "q_high": 69.0416488647461,
+            "q_low": -35.523231506347656,
+            "rows": 3041,
+            "upper_predicted_rul": 100
+          },
+          {
+            "engines": 52,
+            "q_high": 161.7123260498047,
+            "q_low": -23.14716339111328,
+            "rows": 5401,
+            "upper_predicted_rul": 150
+          }
+        ],
+        "coverage": 0.9
+      },
+      "partitions": {
+        "calibration": [
+          2,
+          11,
+          12,
+          18,
+          19,
+          22,
+          41,
+          43,
+          44,
+          54,
+          64,
+          66,
+          70,
+          72,
+          74,
+          75,
+          77,
+          88,
+          91,
+          94,
+          100,
+          104,
+          106,
+          112,
+          117,
+          118,
+          123,
+          126,
+          130,
+          143,
+          152,
+          155,
+          158,
+          168,
+          174,
+          178,
+          184,
+          187,
+          188,
+          199,
+          204,
+          207,
+          209,
+          212,
+          213,
+          220,
+          223,
+          224,
+          237,
+          242,
+          245,
+          257
+        ],
+        "evaluation": [
+          7,
+          15,
+          16,
+          17,
+          20,
+          23,
+          24,
+          31,
+          32,
+          35,
+          36,
+          37,
+          42,
+          45,
+          48,
+          50,
+          58,
+          59,
+          61,
+          62,
+          65,
+          78,
+          98,
+          103,
+          110,
+          111,
+          114,
+          137,
+          138,
+          140,
+          141,
+          142,
+          161,
+          164,
+          165,
+          176,
+          177,
+          182,
+          183,
+          191,
+          195,
+          196,
+          203,
+          214,
+          225,
+          229,
+          230,
+          236,
+          238,
+          240,
+          243,
+          244
+        ],
+        "selection": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          13,
+          14,
+          21,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          33,
+          34,
+          38,
+          39,
+          40,
+          46,
+          47,
+          49,
+          51,
+          52,
+          53,
+          55,
+          56,
+          57,
+          60,
+          63,
+          67,
+          68,
+          69,
+          71,
+          73,
+          76,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          89,
+          90,
+          92,
+          93,
+          95,
+          96,
+          97,
+          99,
+          101,
+          102,
+          105,
+          107,
+          108,
+          109,
+          113,
+          115,
+          116,
+          119,
+          120,
+          121,
+          122,
+          124,
+          125,
+          127,
+          128,
+          129,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          139,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          153,
+          154,
+          156,
+          157,
+          159,
+          160,
+          162,
+          163,
+          166,
+          167,
+          169,
+          170,
+          171,
+          172,
+          173,
+          175,
+          179,
+          180,
+          181,
+          185,
+          186,
+          189,
+          190,
+          192,
+          193,
+          194,
+          197,
+          198,
+          200,
+          201,
+          202,
+          205,
+          206,
+          208,
+          210,
+          211,
+          215,
+          216,
+          217,
+          218,
+          219,
+          221,
+          222,
+          226,
+          227,
+          228,
+          231,
+          232,
+          233,
+          234,
+          235,
+          239,
+          241,
+          246,
+          247,
+          248,
+          249,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255,
+          256,
+          258,
+          259,
+          260
+        ]
+      },
+      "protocol_sha256": "2bc72feb5e0afe53c86c5946ad267947c04e2228c0d0b0c075ec8289f05922c3",
+      "scope": "v4 held-out development engines; previously used under v3",
+      "split_margin": 62.36932373046875,
+      "tree_count": 138
+    },
+    "FD004": {
+      "candidate": "reference",
+      "config_sha256": "4cb10eb605b3fdd98a630c106ed9855bdc81ea3c7963fd404c7450470665a404",
+      "data_sha256": "568d22e7d38f25e7ce9dc63fa32837a2465632f7a49016eb3fca59b30e7ef64e",
+      "dataset": "FD004",
+      "model_sha256": "4f9e8769eab2341d41a13ff12a2d20d935144efaf8deae834b1366479f1dbbc0",
+      "mondrian": {
+        "bands": [
+          {
+            "engines": 50,
+            "q_high": 11.044532775878906,
+            "q_low": -14.208059310913086,
+            "rows": 1450,
+            "upper_predicted_rul": 30
+          },
+          {
+            "engines": 50,
+            "q_high": 22.117637634277344,
+            "q_low": -24.09707260131836,
+            "rows": 1256,
+            "upper_predicted_rul": 60
+          },
+          {
+            "engines": 50,
+            "q_high": 58.92179870605469,
+            "q_low": -36.745033264160156,
+            "rows": 2630,
+            "upper_predicted_rul": 100
+          },
+          {
+            "engines": 50,
+            "q_high": 215.47737884521484,
+            "q_low": -29.20257568359375,
+            "rows": 7826,
+            "upper_predicted_rul": 150
+          }
+        ],
+        "coverage": 0.9
+      },
+      "partitions": {
+        "calibration": [
+          2,
+          11,
+          12,
+          18,
+          22,
+          41,
+          43,
+          44,
+          54,
+          58,
+          62,
+          64,
+          66,
+          70,
+          72,
+          74,
+          75,
+          77,
+          88,
+          94,
+          100,
+          106,
+          112,
+          117,
+          118,
+          123,
+          126,
+          130,
+          143,
+          152,
+          155,
+          158,
+          161,
+          168,
+          173,
+          187,
+          192,
+          199,
+          200,
+          207,
+          210,
+          211,
+          215,
+          217,
+          223,
+          224,
+          229,
+          232,
+          234,
+          247
+        ],
+        "evaluation": [
+          7,
+          15,
+          16,
+          17,
+          20,
+          23,
+          24,
+          31,
+          32,
+          35,
+          36,
+          37,
+          42,
+          45,
+          48,
+          50,
+          59,
+          61,
+          65,
+          78,
+          98,
+          103,
+          110,
+          111,
+          114,
+          137,
+          138,
+          140,
+          141,
+          142,
+          164,
+          165,
+          176,
+          177,
+          182,
+          183,
+          191,
+          194,
+          195,
+          196,
+          201,
+          203,
+          206,
+          212,
+          216,
+          227,
+          230,
+          231,
+          236,
+          238
+        ],
+        "selection": [
+          1,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          13,
+          14,
+          19,
+          21,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          33,
+          34,
+          38,
+          39,
+          40,
+          46,
+          47,
+          49,
+          51,
+          52,
+          53,
+          55,
+          56,
+          57,
+          60,
+          63,
+          67,
+          68,
+          69,
+          71,
+          73,
+          76,
+          79,
+          80,
+          81,
+          82,
+          83,
+          84,
+          85,
+          86,
+          87,
+          89,
+          90,
+          91,
+          92,
+          93,
+          95,
+          96,
+          97,
+          99,
+          101,
+          102,
+          104,
+          105,
+          107,
+          108,
+          109,
+          113,
+          115,
+          116,
+          119,
+          120,
+          121,
+          122,
+          124,
+          125,
+          127,
+          128,
+          129,
+          131,
+          132,
+          133,
+          134,
+          135,
+          136,
+          139,
+          144,
+          145,
+          146,
+          147,
+          148,
+          149,
+          150,
+          151,
+          153,
+          154,
+          156,
+          157,
+          159,
+          160,
+          162,
+          163,
+          166,
+          167,
+          169,
+          170,
+          171,
+          172,
+          174,
+          175,
+          178,
+          179,
+          180,
+          181,
+          184,
+          185,
+          186,
+          188,
+          189,
+          190,
+          193,
+          197,
+          198,
+          202,
+          204,
+          205,
+          208,
+          209,
+          213,
+          214,
+          218,
+          219,
+          220,
+          221,
+          222,
+          225,
+          226,
+          228,
+          233,
+          235,
+          237,
+          239,
+          240,
+          241,
+          242,
+          243,
+          244,
+          245,
+          246,
+          248,
+          249
+        ]
+      },
+      "protocol_sha256": "2bc72feb5e0afe53c86c5946ad267947c04e2228c0d0b0c075ec8289f05922c3",
+      "scope": "v4 held-out development engines; previously used under v3",
+      "split_margin": 92.20662689208984,
+      "tree_count": 277
+    }
+  },
+  "current_source_hashes": {
+    "configs/protocol_v4.json": "4cb10eb605b3fdd98a630c106ed9855bdc81ea3c7963fd404c7450470665a404",
+    "src/aeromaintain/data/ncmapss.py": "758fd3d8de263aa2cc34c665babaf4ee8712209b98c52f0b5b8b4c27a2ca5da7",
+    "src/aeromaintain/evaluation/ledger.py": "b4f8397b17582603d14a4fa15cc556df3eb84b25d4a704387deb50ffe5e8014a",
+    "src/aeromaintain/evaluation/v4.py": "13898555e3f19364b058d7f3d9d85daef38021a8227944a686543ada25190bc8",
+    "src/aeromaintain/models/v4.py": "e339b17845e99ce0e162b79092b702e94a87658cd56a553ef0af8bd5d369d0f7"
+  },
+  "data_source": {
+    "archive_bytes": 15760443389,
+    "etag": "\"bc0e65c8560b05cec3f88f964c32c403-918\"",
+    "url": "https://phm-datasets.s3.amazonaws.com/NASA/17.+Turbofan+Engine+Degradation+Simulation+Data+Set+2.zip"
+  },
+  "evaluation": {
+    "FD002": {
+      "intervals": {
+        "mondrian": {
+          "groups": {
+            "condition_0": {
+              "above_upper": 72,
+              "below_lower": 87,
+              "coverage": 0.8984674329501916,
+              "cuts": 1566,
+              "engines": 52,
+              "interval_score": 139.96556819931604,
+              "mean_width": 117.2629042101089,
+              "small_group": false
+            },
+            "condition_1": {
+              "above_upper": 60,
+              "below_lower": 70,
+              "coverage": 0.9169329073482428,
+              "cuts": 1565,
+              "engines": 52,
+              "interval_score": 137.62529002134792,
+              "mean_width": 121.5995453241915,
+              "small_group": false
+            },
+            "condition_2": {
+              "above_upper": 58,
+              "below_lower": 73,
+              "coverage": 0.9172979797979798,
+              "cuts": 1584,
+              "engines": 52,
+              "interval_score": 141.16414791797146,
+              "mean_width": 119.96127549235267,
+              "small_group": false
+            },
+            "condition_3": {
+              "above_upper": 47,
+              "below_lower": 91,
+              "coverage": 0.9105638366817888,
+              "cuts": 1543,
+              "engines": 52,
+              "interval_score": 138.34000007162138,
+              "mean_width": 118.1304768230416,
+              "small_group": false
+            },
+            "condition_4": {
+              "above_upper": 47,
+              "below_lower": 63,
+              "coverage": 0.9276315789473685,
+              "cuts": 1520,
+              "engines": 52,
+              "interval_score": 139.98600852677697,
+              "mean_width": 124.41884709220183,
+              "small_group": false
+            },
+            "condition_5": {
+              "above_upper": 93,
+              "below_lower": 102,
+              "coverage": 0.9256292906178489,
+              "cuts": 2622,
+              "engines": 52,
+              "interval_score": 138.74626737428383,
+              "mean_width": 122.2735766596143,
+              "small_group": false
+            },
+            "overall": {
+              "above_upper": 377,
+              "below_lower": 486,
+              "coverage": 0.9170192307692308,
+              "cuts": 10400,
+              "engines": 52,
+              "interval_score": 139.2503591454029,
+              "mean_width": 120.76432193508515,
+              "small_group": false
+            },
+            "rul_31-150": {
+              "above_upper": 220,
+              "below_lower": 402,
+              "coverage": 0.9017687934301958,
+              "cuts": 6332,
+              "engines": 52,
+              "interval_score": 144.06508555144202,
+              "mean_width": 124.11061724965812,
+              "small_group": false
+            },
+            "rul_<=30": {
+              "above_upper": 7,
+              "below_lower": 84,
+              "coverage": 0.9459940652818991,
+              "cuts": 1685,
+              "engines": 52,
+              "interval_score": 27.468661578826453,
+              "mean_width": 24.929389179920232,
+              "small_group": false
+            },
+            "rul_>150": {
+              "above_upper": 150,
+              "below_lower": 0,
+              "coverage": 0.9370541334452371,
+              "cuts": 2383,
+              "engines": 48,
+              "interval_score": 205.4968185648916,
+              "mean_width": 179.6368019017561,
+              "small_group": false
+            }
+          },
+          "lower_bound_alarm": {
+            "engines": 52,
+            "engines_with_alarm": 52,
+            "false_events_per_engine": 2.1923076923076925,
+            "median_first_confirmed_lead": 49.5,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 57.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 38.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 51.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 70.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 95.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 98.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 48.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 52.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 37.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 108.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 72.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 36.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 58
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 58.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 51.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 80.0,
+                "missed": false,
+                "unit_id": 62
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 72.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 39.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 64.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 60.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 48.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 47.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 62.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 41.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 97.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 116.0,
+                "missed": false,
+                "unit_id": 161
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 92.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 51.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 47.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 80.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 54.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 85.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 123.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 214
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 225
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 32.0,
+                "missed": false,
+                "unit_id": 229
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 52.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 139.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 238
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 45.0,
+                "missed": false,
+                "unit_id": 240
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 126.0,
+                "missed": false,
+                "unit_id": 243
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 244
+              }
+            ]
+          },
+          "point_alarm": {
+            "engines": 52,
+            "engines_with_alarm": 52,
+            "false_events_per_engine": 0.46153846153846156,
+            "median_first_confirmed_lead": 24.5,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 34.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 49.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 11.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 20.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 17.0,
+                "missed": false,
+                "unit_id": 58
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 62
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 20.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 26.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 33.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 11.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 161
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 214
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 225
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 229
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 54.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 238
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 240
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 54.0,
+                "missed": false,
+                "unit_id": 243
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 244
+              }
+            ]
+          }
+        },
+        "split_conformal": {
+          "groups": {
+            "condition_0": {
+              "above_upper": 181,
+              "below_lower": 0,
+              "coverage": 0.8844189016602809,
+              "cuts": 1566,
+              "engines": 52,
+              "interval_score": 182.20525270464472,
+              "mean_width": 114.50901794433594,
+              "small_group": false
+            },
+            "condition_1": {
+              "above_upper": 173,
+              "below_lower": 0,
+              "coverage": 0.8894568690095846,
+              "cuts": 1565,
+              "engines": 52,
+              "interval_score": 175.7557020680973,
+              "mean_width": 115.32150268554688,
+              "small_group": false
+            },
+            "condition_2": {
+              "above_upper": 187,
+              "below_lower": 0,
+              "coverage": 0.8819444444444444,
+              "cuts": 1584,
+              "engines": 52,
+              "interval_score": 172.9026364076017,
+              "mean_width": 115.4829330444336,
+              "small_group": false
+            },
+            "condition_3": {
+              "above_upper": 168,
+              "below_lower": 0,
+              "coverage": 0.8911211924821776,
+              "cuts": 1543,
+              "engines": 52,
+              "interval_score": 178.37677431631923,
+              "mean_width": 115.54695892333984,
+              "small_group": false
+            },
+            "condition_4": {
+              "above_upper": 156,
+              "below_lower": 0,
+              "coverage": 0.8973684210526316,
+              "cuts": 1520,
+              "engines": 52,
+              "interval_score": 176.02328477658725,
+              "mean_width": 115.7342300415039,
+              "small_group": false
+            },
+            "condition_5": {
+              "above_upper": 368,
+              "below_lower": 0,
+              "coverage": 0.8596491228070176,
+              "cuts": 2622,
+              "engines": 52,
+              "interval_score": 194.41510955729075,
+              "mean_width": 115.04768371582031,
+              "small_group": false
+            },
+            "overall": {
+              "above_upper": 1233,
+              "below_lower": 0,
+              "coverage": 0.8814423076923077,
+              "cuts": 10400,
+              "engines": 52,
+              "interval_score": 181.42462004148044,
+              "mean_width": 115.24848937988281,
+              "small_group": false
+            },
+            "rul_31-150": {
+              "above_upper": 56,
+              "below_lower": 0,
+              "coverage": 0.9911560328490209,
+              "cuts": 6332,
+              "engines": 52,
+              "interval_score": 122.23628404994442,
+              "mean_width": 120.91069030761719,
+              "small_group": false
+            },
+            "rul_<=30": {
+              "above_upper": 0,
+              "below_lower": 0,
+              "coverage": 1.0,
+              "cuts": 1685,
+              "engines": 52,
+              "interval_score": 80.54930835123939,
+              "mean_width": 80.54931640625,
+              "small_group": false
+            },
+            "rul_>150": {
+              "above_upper": 1177,
+              "below_lower": 0,
+              "coverage": 0.5060847671002937,
+              "cuts": 2383,
+              "engines": 48,
+              "interval_score": 410.02530980080155,
+              "mean_width": 124.73863983154297,
+              "small_group": false
+            }
+          },
+          "lower_bound_alarm": {
+            "engines": 52,
+            "engines_with_alarm": 52,
+            "false_events_per_engine": 2.076923076923077,
+            "median_first_confirmed_lead": 84.5,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 65.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 71.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 50.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 75.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 67.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 72.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 100.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 214.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 192.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 93.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 107.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 112.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 143.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 44.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 107.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 76.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 78.0,
+                "missed": false,
+                "unit_id": 58
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 114.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 66.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 91.0,
+                "missed": false,
+                "unit_id": 62
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 122.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 72.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 76.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 110.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 130.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 83.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 77.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 69.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 112.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 86.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 75.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 126.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 130.0,
+                "missed": false,
+                "unit_id": 161
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 154.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 77.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 75.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 92.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 76.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 118.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 82.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 105.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 148.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 183.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 49.0,
+                "missed": false,
+                "unit_id": 214
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 70.0,
+                "missed": false,
+                "unit_id": 225
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 82.0,
+                "missed": false,
+                "unit_id": 229
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 73.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 147.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 72.0,
+                "missed": false,
+                "unit_id": 238
+              },
+              {
+                "critical_observed": true,
+                "false_events": 6,
+                "first_confirmed_lead": 162.0,
+                "missed": false,
+                "unit_id": 240
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 142.0,
+                "missed": false,
+                "unit_id": 243
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 45.0,
+                "missed": false,
+                "unit_id": 244
+              }
+            ]
+          },
+          "point_alarm": {
+            "engines": 52,
+            "engines_with_alarm": 52,
+            "false_events_per_engine": 0.46153846153846156,
+            "median_first_confirmed_lead": 24.5,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 34.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 49.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 11.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 20.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 17.0,
+                "missed": false,
+                "unit_id": 58
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 62
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 20.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 26.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 33.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 29.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 11.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 161
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 27.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 214
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 225
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 229
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 54.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 238
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 240
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 54.0,
+                "missed": false,
+                "unit_id": 243
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 244
+              }
+            ]
+          }
+        }
+      },
+      "point": {
+        "bands": {
+          "31-150": {
+            "engines": 52,
+            "sampled_cuts": 6332
+          },
+          "<=30": {
+            "engines": 52,
+            "sampled_cuts": 1685
+          },
+          ">150": {
+            "engines": 48,
+            "sampled_cuts": 2383
+          }
+        },
+        "bias": -16.934428007786092,
+        "critical_miss_rate": 0.1572700296735905,
+        "draws": 200,
+        "engines": 52,
+        "long_bias": -68.37820204375824,
+        "long_rmse": 74.90720170301734,
+        "mae": 27.386360011375867,
+        "mean_critical_misses_per_draw": 1.325,
+        "nasa_per_engine": 14508.405183892823,
+        "rmse": 40.02685031433611
+      }
+    },
+    "FD004": {
+      "intervals": {
+        "mondrian": {
+          "groups": {
+            "condition_0": {
+              "above_upper": 48,
+              "below_lower": 58,
+              "coverage": 0.9280868385345997,
+              "cuts": 1474,
+              "engines": 50,
+              "interval_score": 181.91862925955851,
+              "mean_width": 166.15021957196245,
+              "small_group": false
+            },
+            "condition_1": {
+              "above_upper": 71,
+              "below_lower": 57,
+              "coverage": 0.9154557463672391,
+              "cuts": 1514,
+              "engines": 50,
+              "interval_score": 187.6163734334916,
+              "mean_width": 165.40786653941146,
+              "small_group": false
+            },
+            "condition_2": {
+              "above_upper": 37,
+              "below_lower": 65,
+              "coverage": 0.9300411522633745,
+              "cuts": 1458,
+              "engines": 50,
+              "interval_score": 180.2852343450695,
+              "mean_width": 165.7663502173833,
+              "small_group": false
+            },
+            "condition_3": {
+              "above_upper": 56,
+              "below_lower": 73,
+              "coverage": 0.9127198917456022,
+              "cuts": 1478,
+              "engines": 50,
+              "interval_score": 179.49363527105206,
+              "mean_width": 160.05164557368732,
+              "small_group": false
+            },
+            "condition_4": {
+              "above_upper": 52,
+              "below_lower": 69,
+              "coverage": 0.9230279898218829,
+              "cuts": 1572,
+              "engines": 50,
+              "interval_score": 180.34317088705362,
+              "mean_width": 161.58059626652766,
+              "small_group": false
+            },
+            "condition_5": {
+              "above_upper": 68,
+              "below_lower": 102,
+              "coverage": 0.9321086261980831,
+              "cuts": 2504,
+              "engines": 50,
+              "interval_score": 175.4829242335091,
+              "mean_width": 161.3818945952248,
+              "small_group": false
+            },
+            "overall": {
+              "above_upper": 332,
+              "below_lower": 424,
+              "coverage": 0.9244,
+              "cuts": 10000,
+              "engines": 50,
+              "interval_score": 180.3255420427777,
+              "mean_width": 163.16815657620205,
+              "small_group": false
+            },
+            "rul_31-150": {
+              "above_upper": 168,
+              "below_lower": 318,
+              "coverage": 0.9103486441615938,
+              "cuts": 5421,
+              "engines": 50,
+              "interval_score": 174.4548820207269,
+              "mean_width": 155.17074392792307,
+              "small_group": false
+            },
+            "rul_<=30": {
+              "above_upper": 7,
+              "below_lower": 106,
+              "coverage": 0.921907394609537,
+              "cuts": 1447,
+              "engines": 50,
+              "interval_score": 35.274640163045014,
+              "mean_width": 26.99699903274394,
+              "small_group": false
+            },
+            "rul_>150": {
+              "above_upper": 157,
+              "below_lower": 0,
+              "coverage": 0.9498722860791826,
+              "cuts": 3132,
+              "engines": 47,
+              "interval_score": 257.5009899991987,
+              "mean_width": 239.9221919950093,
+              "small_group": false
+            }
+          },
+          "lower_bound_alarm": {
+            "engines": 50,
+            "engines_with_alarm": 50,
+            "false_events_per_engine": 1.54,
+            "median_first_confirmed_lead": 48.0,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 83.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 51.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 48.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 62.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 58.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 37.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 56.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 38.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 55.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 59.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 48.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 95.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 41.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 62.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 68.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 33.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 44.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 13.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 44.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 57.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 79.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 85.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 45.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 54.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 50.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 57.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 41.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 53.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 34.0,
+                "missed": false,
+                "unit_id": 194
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 34.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 58.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 98.0,
+                "missed": false,
+                "unit_id": 201
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 64.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 36.0,
+                "missed": false,
+                "unit_id": 206
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 49.0,
+                "missed": false,
+                "unit_id": 212
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 64.0,
+                "missed": false,
+                "unit_id": 216
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 45.0,
+                "missed": false,
+                "unit_id": 227
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 63.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 37.0,
+                "missed": false,
+                "unit_id": 231
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 51.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 37.0,
+                "missed": false,
+                "unit_id": 238
+              }
+            ]
+          },
+          "point_alarm": {
+            "engines": 50,
+            "engines_with_alarm": 50,
+            "false_events_per_engine": 0.34,
+            "median_first_confirmed_lead": 24.5,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 47.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 32.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 64.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 26.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 6.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 31.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 26.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 31.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 32.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 17.0,
+                "missed": false,
+                "unit_id": 194
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 41.0,
+                "missed": false,
+                "unit_id": 201
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 34.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 17.0,
+                "missed": false,
+                "unit_id": 206
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 212
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 216
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 227
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 20.0,
+                "missed": false,
+                "unit_id": 231
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 238
+              }
+            ]
+          }
+        },
+        "split_conformal": {
+          "groups": {
+            "condition_0": {
+              "above_upper": 179,
+              "below_lower": 0,
+              "coverage": 0.878561736770692,
+              "cuts": 1474,
+              "engines": 50,
+              "interval_score": 269.9393866654167,
+              "mean_width": 168.10794067382812,
+              "small_group": false
+            },
+            "condition_1": {
+              "above_upper": 200,
+              "below_lower": 0,
+              "coverage": 0.8678996036988111,
+              "cuts": 1514,
+              "engines": 50,
+              "interval_score": 306.6912704830598,
+              "mean_width": 167.50106811523438,
+              "small_group": false
+            },
+            "condition_2": {
+              "above_upper": 160,
+              "below_lower": 0,
+              "coverage": 0.8902606310013718,
+              "cuts": 1458,
+              "engines": 50,
+              "interval_score": 274.8723907052081,
+              "mean_width": 167.93775939941406,
+              "small_group": false
+            },
+            "condition_3": {
+              "above_upper": 148,
+              "below_lower": 0,
+              "coverage": 0.8998646820027063,
+              "cuts": 1478,
+              "engines": 50,
+              "interval_score": 264.7775387331662,
+              "mean_width": 167.29995727539062,
+              "small_group": false
+            },
+            "condition_4": {
+              "above_upper": 174,
+              "below_lower": 0,
+              "coverage": 0.8893129770992366,
+              "cuts": 1572,
+              "engines": 50,
+              "interval_score": 270.74599447565834,
+              "mean_width": 167.25143432617188,
+              "small_group": false
+            },
+            "condition_5": {
+              "above_upper": 278,
+              "below_lower": 0,
+              "coverage": 0.8889776357827476,
+              "cuts": 2504,
+              "engines": 50,
+              "interval_score": 273.25572197277324,
+              "mean_width": 167.0645751953125,
+              "small_group": false
+            },
+            "overall": {
+              "above_upper": 1139,
+              "below_lower": 0,
+              "coverage": 0.8861,
+              "cuts": 10000,
+              "engines": 50,
+              "interval_score": 276.4171418487549,
+              "mean_width": 167.47592163085938,
+              "small_group": false
+            },
+            "rul_31-150": {
+              "above_upper": 0,
+              "below_lower": 0,
+              "coverage": 1.0,
+              "cuts": 5421,
+              "engines": 50,
+              "interval_score": 172.47527436237232,
+              "mean_width": 172.4752655029297,
+              "small_group": false
+            },
+            "rul_<=30": {
+              "above_upper": 0,
+              "below_lower": 0,
+              "coverage": 1.0,
+              "cuts": 1447,
+              "engines": 50,
+              "interval_score": 112.1408028065458,
+              "mean_width": 112.14080810546875,
+              "small_group": false
+            },
+            "rul_>150": {
+              "above_upper": 1139,
+              "below_lower": 0,
+              "coverage": 0.6363346104725415,
+              "cuts": 3132,
+              "engines": 47,
+              "interval_score": 532.2206942873744,
+              "mean_width": 184.38795471191406,
+              "small_group": false
+            }
+          },
+          "lower_bound_alarm": {
+            "engines": 50,
+            "engines_with_alarm": 50,
+            "false_events_per_engine": 3.5,
+            "median_first_confirmed_lead": 177.0,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 195.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 143.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 181.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 87.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 241.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 204.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 136.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 244.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 165.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 142.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 139.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 12,
+                "first_confirmed_lead": 315.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 180.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 138.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 7,
+                "first_confirmed_lead": 276.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 88.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 141.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 145.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 10,
+                "first_confirmed_lead": 263.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 167.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 184.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 221.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 114.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 6,
+                "first_confirmed_lead": 209.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 88.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 173.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 148.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 222.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 196.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 140.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 11,
+                "first_confirmed_lead": 284.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 195.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 174.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 239.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 130.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 148.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 6,
+                "first_confirmed_lead": 228.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 141.0,
+                "missed": false,
+                "unit_id": 194
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 152.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 171.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 375.0,
+                "missed": false,
+                "unit_id": 201
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 232.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 7,
+                "first_confirmed_lead": 183.0,
+                "missed": false,
+                "unit_id": 206
+              },
+              {
+                "critical_observed": true,
+                "false_events": 4,
+                "first_confirmed_lead": 220.0,
+                "missed": false,
+                "unit_id": 212
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 211.0,
+                "missed": false,
+                "unit_id": 216
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 203.0,
+                "missed": false,
+                "unit_id": 227
+              },
+              {
+                "critical_observed": true,
+                "false_events": 5,
+                "first_confirmed_lead": 242.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 134.0,
+                "missed": false,
+                "unit_id": 231
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 152.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 3,
+                "first_confirmed_lead": 105.0,
+                "missed": false,
+                "unit_id": 238
+              }
+            ]
+          },
+          "point_alarm": {
+            "engines": 50,
+            "engines_with_alarm": 50,
+            "false_events_per_engine": 0.34,
+            "median_first_confirmed_lead": 24.5,
+            "missed_engines": 0,
+            "records": [
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 47.0,
+                "missed": false,
+                "unit_id": 7
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 15
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 16
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 19.0,
+                "missed": false,
+                "unit_id": 17
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 42.0,
+                "missed": false,
+                "unit_id": 20
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 23
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 24
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 31
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 32
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 35
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 36
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 37
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 42
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 32.0,
+                "missed": false,
+                "unit_id": 45
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 35.0,
+                "missed": false,
+                "unit_id": 48
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 50
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 59
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 61
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 64.0,
+                "missed": false,
+                "unit_id": 65
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 78
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 98
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 40.0,
+                "missed": false,
+                "unit_id": 103
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 15.0,
+                "missed": false,
+                "unit_id": 110
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 26.0,
+                "missed": false,
+                "unit_id": 111
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 6.0,
+                "missed": false,
+                "unit_id": 114
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 14.0,
+                "missed": false,
+                "unit_id": 137
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 138
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 46.0,
+                "missed": false,
+                "unit_id": 140
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 43.0,
+                "missed": false,
+                "unit_id": 141
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 25.0,
+                "missed": false,
+                "unit_id": 142
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 31.0,
+                "missed": false,
+                "unit_id": 164
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 26.0,
+                "missed": false,
+                "unit_id": 165
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 176
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 31.0,
+                "missed": false,
+                "unit_id": 177
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 16.0,
+                "missed": false,
+                "unit_id": 182
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 183
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 32.0,
+                "missed": false,
+                "unit_id": 191
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 17.0,
+                "missed": false,
+                "unit_id": 194
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 195
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 22.0,
+                "missed": false,
+                "unit_id": 196
+              },
+              {
+                "critical_observed": true,
+                "false_events": 2,
+                "first_confirmed_lead": 41.0,
+                "missed": false,
+                "unit_id": 201
+              },
+              {
+                "critical_observed": true,
+                "false_events": 1,
+                "first_confirmed_lead": 34.0,
+                "missed": false,
+                "unit_id": 203
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 17.0,
+                "missed": false,
+                "unit_id": 206
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 212
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 28.0,
+                "missed": false,
+                "unit_id": 216
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 23.0,
+                "missed": false,
+                "unit_id": 227
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 30.0,
+                "missed": false,
+                "unit_id": 230
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 20.0,
+                "missed": false,
+                "unit_id": 231
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 24.0,
+                "missed": false,
+                "unit_id": 236
+              },
+              {
+                "critical_observed": true,
+                "false_events": 0,
+                "first_confirmed_lead": 21.0,
+                "missed": false,
+                "unit_id": 238
+              }
+            ]
+          }
+        }
+      },
+      "point": {
+        "bands": {
+          "31-150": {
+            "engines": 50,
+            "sampled_cuts": 5421
+          },
+          "<=30": {
+            "engines": 50,
+            "sampled_cuts": 1447
+          },
+          ">150": {
+            "engines": 47,
+            "sampled_cuts": 3132
+          }
+        },
+        "bias": -26.889353558971735,
+        "critical_miss_rate": 0.18659295093296477,
+        "draws": 200,
+        "engines": 50,
+        "long_bias": -87.95836066956112,
+        "long_rmse": 100.3185346366429,
+        "mae": 37.97472334000394,
+        "mean_critical_misses_per_draw": 1.35,
+        "nasa_per_engine": 780325.8223894261,
+        "rmse": 58.53843411783687
+      }
+    }
+  },
+  "holdout_ledger": {
+    "DS02": {
+      "data_sha256": {
+        "N-CMAPSS_DS02-006.h5": "47971a68b239ecb756833218a95d68ded6eb7e63ee84e86671c8b188de1ca765"
+      },
+      "model_lock_sha256": "0fa44f405e60b2187256009f02b081d12481ac8af0252539d2be060af6f5365f",
+      "protocol_sha256": "064b6324bb60121655a3eec7cfbfdf23e0412a1530c7ce19326c66ad820b6dab"
+    },
+    "DS03-DS07": {
+      "data_sha256": {
+        "N-CMAPSS_DS03-012.h5": "f67cc4bd0cf927f09eb8e0198bd62c777e1c6213177cfc46d81cc43bba52c333",
+        "N-CMAPSS_DS04.h5": "2b58cbb78497679fadafe0761203b2ae3b0e4e1193039dc34ca25f17ecaeb2e6",
+        "N-CMAPSS_DS05.h5": "ef99ead42ac184503035895797c16e9a7e42554a08074aa760d0bba39db42e23",
+        "N-CMAPSS_DS06.h5": "91ccf478b21dd6337cfa608f20b647ec04228d59cf4ee59be87fad5f08b17b20",
+        "N-CMAPSS_DS07.h5": "2f88abc61a532d2e30a6e5ff100a511be4921484a6c7071bc8504e300da4d3bd"
+      },
+      "model_lock_sha256": "3e1062528667f76a52285341fc825f2ad9169e1b41ffd00e539ecef427129cd4",
+      "protocol_sha256": "064b6324bb60121655a3eec7cfbfdf23e0412a1530c7ce19326c66ad820b6dab"
+    }
+  },
+  "independent_simulation": {
+    "DS02": {
+      "baseline": {
+        "bands": {
+          "31-150": {
+            "engines": 3,
+            "sampled_cuts": 329
+          },
+          "<=30": {
+            "engines": 3,
+            "sampled_cuts": 271
+          },
+          ">150": {
+            "engines": 0,
+            "sampled_cuts": 0
+          }
+        },
+        "bias": 2.926666666666657,
+        "critical_miss_rate": 1.0,
+        "draws": 200,
+        "engines": 3,
+        "long_bias": null,
+        "long_rmse": null,
+        "mae": 16.523333333333333,
+        "mean_critical_misses_per_draw": 1.355,
+        "nasa_per_engine": 6.500375824052455,
+        "rmse": 19.417975635420333
+      },
+      "lock": {
+        "baseline": 36.66666666666666,
+        "calibration_engines": [],
+        "data_filenames": [
+          "N-CMAPSS_DS02-006.h5"
+        ],
+        "data_sha256": {
+          "N-CMAPSS_DS02-006.h5": "47971a68b239ecb756833218a95d68ded6eb7e63ee84e86671c8b188de1ca765"
+        },
+        "evaluation_engines": [
+          11,
+          14,
+          15
+        ],
+        "features": [
+          "sensor_0_mean",
+          "sensor_0_std",
+          "sensor_0_min",
+          "sensor_0_max",
+          "sensor_1_mean",
+          "sensor_1_std",
+          "sensor_1_min",
+          "sensor_1_max",
+          "sensor_2_mean",
+          "sensor_2_std",
+          "sensor_2_min",
+          "sensor_2_max",
+          "sensor_3_mean",
+          "sensor_3_std",
+          "sensor_3_min",
+          "sensor_3_max",
+          "sensor_4_mean",
+          "sensor_4_std",
+          "sensor_4_min",
+          "sensor_4_max",
+          "sensor_5_mean",
+          "sensor_5_std",
+          "sensor_5_min",
+          "sensor_5_max",
+          "sensor_6_mean",
+          "sensor_6_std",
+          "sensor_6_min",
+          "sensor_6_max",
+          "sensor_7_mean",
+          "sensor_7_std",
+          "sensor_7_min",
+          "sensor_7_max",
+          "sensor_8_mean",
+          "sensor_8_std",
+          "sensor_8_min",
+          "sensor_8_max",
+          "sensor_9_mean",
+          "sensor_9_std",
+          "sensor_9_min",
+          "sensor_9_max",
+          "sensor_10_mean",
+          "sensor_10_std",
+          "sensor_10_min",
+          "sensor_10_max",
+          "sensor_11_mean",
+          "sensor_11_std",
+          "sensor_11_min",
+          "sensor_11_max",
+          "sensor_12_mean",
+          "sensor_12_std",
+          "sensor_12_min",
+          "sensor_12_max",
+          "sensor_13_mean",
+          "sensor_13_std",
+          "sensor_13_min",
+          "sensor_13_max",
+          "setting_0_mean",
+          "setting_0_std",
+          "setting_0_min",
+          "setting_0_max",
+          "setting_1_mean",
+          "setting_1_std",
+          "setting_1_min",
+          "setting_1_max",
+          "setting_2_mean",
+          "setting_2_std",
+          "setting_2_min",
+          "setting_2_max",
+          "setting_3_mean",
+          "setting_3_std",
+          "setting_3_min",
+          "setting_3_max"
+        ],
+        "fit_engines": [
+          2,
+          5,
+          10,
+          16,
+          18,
+          20
+        ],
+        "model_sha256": "c63a51a0e30d9e7c120d58eb6cafa9e68a4ef0d49bc23c98c289506f2097e497",
+        "protocol_sha256": "064b6324bb60121655a3eec7cfbfdf23e0412a1530c7ce19326c66ad820b6dab",
+        "scope": "DS02 descriptive simulation pilot",
+        "split_margin": null
+      },
+      "point": {
+        "bands": {
+          "31-150": {
+            "engines": 3,
+            "sampled_cuts": 329
+          },
+          "<=30": {
+            "engines": 3,
+            "sampled_cuts": 271
+          },
+          ">150": {
+            "engines": 0,
+            "sampled_cuts": 0
+          }
+        },
+        "bias": 5.618675600300088,
+        "critical_miss_rate": 0.5608856088560885,
+        "draws": 200,
+        "engines": 3,
+        "long_bias": null,
+        "long_rmse": null,
+        "mae": 9.640506436908462,
+        "mean_critical_misses_per_draw": 0.76,
+        "nasa_per_engine": 2.093827887506683,
+        "rmse": 11.54621634610877
+      }
+    },
+    "DS03-DS07": {
+      "baseline": {
+        "bands": {
+          "31-150": {
+            "engines": 20,
+            "sampled_cuts": 2426
+          },
+          "<=30": {
+            "engines": 20,
+            "sampled_cuts": 1574
+          },
+          ">150": {
+            "engines": 0,
+            "sampled_cuts": 0
+          }
+        },
+        "bias": -0.9370000000000002,
+        "critical_miss_rate": 1.0,
+        "draws": 200,
+        "engines": 20,
+        "long_bias": null,
+        "long_rmse": null,
+        "mae": 20.1421375,
+        "mean_critical_misses_per_draw": 7.87,
+        "nasa_per_engine": 9.328706974074622,
+        "rmse": 23.561208054766634
+      },
+      "gates": {
+        "coverage_at_least_85_percent": true,
+        "rmse_not_worse_than_mean": true
+      },
+      "interval": {
+        "above_upper": 201,
+        "below_lower": 89,
+        "coverage": 0.9275,
+        "cuts": 4000,
+        "engines": 20,
+        "interval_score": 61.60957300000103,
+        "mean_width": 52.860986821449416,
+        "small_group": false
+      },
+      "intervals_95": {
+        "coverage": [
+          0.8782500000000001,
+          0.9654999999999999
+        ],
+        "rmse": [
+          13.49401545322208,
+          17.70559092846025
+        ]
+      },
+      "lock": {
+        "baseline": 38.275,
+        "calibration_engines": [
+          1,
+          12,
+          15,
+          1003,
+          1004,
+          1005,
+          2003,
+          2004,
+          2005,
+          3003,
+          3004,
+          3005,
+          4003,
+          4004,
+          4005
+        ],
+        "data_filenames": [
+          "N-CMAPSS_DS03-012.h5",
+          "N-CMAPSS_DS04.h5",
+          "N-CMAPSS_DS05.h5",
+          "N-CMAPSS_DS06.h5",
+          "N-CMAPSS_DS07.h5"
+        ],
+        "data_sha256": {
+          "N-CMAPSS_DS03-012.h5": "f67cc4bd0cf927f09eb8e0198bd62c777e1c6213177cfc46d81cc43bba52c333",
+          "N-CMAPSS_DS04.h5": "2b58cbb78497679fadafe0761203b2ae3b0e4e1193039dc34ca25f17ecaeb2e6",
+          "N-CMAPSS_DS05.h5": "ef99ead42ac184503035895797c16e9a7e42554a08074aa760d0bba39db42e23",
+          "N-CMAPSS_DS06.h5": "91ccf478b21dd6337cfa608f20b647ec04228d59cf4ee59be87fad5f08b17b20",
+          "N-CMAPSS_DS07.h5": "2f88abc61a532d2e30a6e5ff100a511be4921484a6c7071bc8504e300da4d3bd"
+        },
+        "evaluation_engines": [
+          4,
+          7,
+          8,
+          10,
+          1001,
+          1006,
+          1007,
+          1008,
+          2001,
+          2006,
+          2007,
+          2008,
+          3001,
+          3006,
+          3007,
+          3008,
+          4001,
+          4006,
+          4007,
+          4008
+        ],
+        "features": [
+          "sensor_0_mean",
+          "sensor_0_std",
+          "sensor_0_min",
+          "sensor_0_max",
+          "sensor_1_mean",
+          "sensor_1_std",
+          "sensor_1_min",
+          "sensor_1_max",
+          "sensor_2_mean",
+          "sensor_2_std",
+          "sensor_2_min",
+          "sensor_2_max",
+          "sensor_3_mean",
+          "sensor_3_std",
+          "sensor_3_min",
+          "sensor_3_max",
+          "sensor_4_mean",
+          "sensor_4_std",
+          "sensor_4_min",
+          "sensor_4_max",
+          "sensor_5_mean",
+          "sensor_5_std",
+          "sensor_5_min",
+          "sensor_5_max",
+          "sensor_6_mean",
+          "sensor_6_std",
+          "sensor_6_min",
+          "sensor_6_max",
+          "sensor_7_mean",
+          "sensor_7_std",
+          "sensor_7_min",
+          "sensor_7_max",
+          "sensor_8_mean",
+          "sensor_8_std",
+          "sensor_8_min",
+          "sensor_8_max",
+          "sensor_9_mean",
+          "sensor_9_std",
+          "sensor_9_min",
+          "sensor_9_max",
+          "sensor_10_mean",
+          "sensor_10_std",
+          "sensor_10_min",
+          "sensor_10_max",
+          "sensor_11_mean",
+          "sensor_11_std",
+          "sensor_11_min",
+          "sensor_11_max",
+          "sensor_12_mean",
+          "sensor_12_std",
+          "sensor_12_min",
+          "sensor_12_max",
+          "sensor_13_mean",
+          "sensor_13_std",
+          "sensor_13_min",
+          "sensor_13_max",
+          "setting_0_mean",
+          "setting_0_std",
+          "setting_0_min",
+          "setting_0_max",
+          "setting_1_mean",
+          "setting_1_std",
+          "setting_1_min",
+          "setting_1_max",
+          "setting_2_mean",
+          "setting_2_std",
+          "setting_2_min",
+          "setting_2_max",
+          "setting_3_mean",
+          "setting_3_std",
+          "setting_3_min",
+          "setting_3_max"
+        ],
+        "fit_engines": [
+          2,
+          3,
+          5,
+          6,
+          9,
+          11,
+          13,
+          14,
+          1002,
+          1009,
+          1010,
+          2002,
+          2009,
+          2010,
+          3002,
+          3009,
+          3010,
+          4002,
+          4009,
+          4010
+        ],
+        "model_sha256": "4dc195d6e24d779419f2726928f9544933d67516b49ff8444181f0c31a18a97a",
+        "protocol_sha256": "064b6324bb60121655a3eec7cfbfdf23e0412a1530c7ce19326c66ad820b6dab",
+        "scope": "independent simulation validation",
+        "split_margin": 27.96905280101845
+      },
+      "point": {
+        "bands": {
+          "31-150": {
+            "engines": 20,
+            "sampled_cuts": 2426
+          },
+          "<=30": {
+            "engines": 20,
+            "sampled_cuts": 1574
+          },
+          ">150": {
+            "engines": 0,
+            "sampled_cuts": 0
+          }
+        },
+        "bias": 0.18540803224938476,
+        "critical_miss_rate": 0.4834815756035578,
+        "draws": 200,
+        "engines": 20,
+        "long_bias": null,
+        "long_rmse": null,
+        "mae": 12.402615163665779,
+        "mean_critical_misses_per_draw": 3.805,
+        "nasa_per_engine": 3.511313286325495,
+        "rmse": 15.514468592063606
+      }
+    }
+  },
+  "protocol_snapshots": {
+    "protocol_v4.md": "064b6324bb60121655a3eec7cfbfdf23e0412a1530c7ce19326c66ad820b6dab",
+    "protocol_v4_amendment1.md": "2bc72feb5e0afe53c86c5946ad267947c04e2228c0d0b0c075ec8289f05922c3",
+    "protocol_v4_initial.md": "6a3c78572183df6fc08ccfa3bf0e51a3217ad2782848afaa34ddd4c411c10c37"
+  },
+  "provenance": {
+    "config_sha256": "4cb10eb605b3fdd98a630c106ed9855bdc81ea3c7963fd404c7450470665a404",
+    "protocol_sha256": "6a3c78572183df6fc08ccfa3bf0e51a3217ad2782848afaa34ddd4c411c10c37",
+    "source_sha256": "c3654c61aba018db5cf543649eb719d53ffb38a11c21e64574b49d56a15dcd74"
+  },
+  "reference_nasa_concentration": {
+    "FD002": {
+      "median_per_engine": 20.996102872198975,
+      "worst_engine_share": 0.6445456723766484,
+      "worst_three_engines_share": 0.9239636627235468
+    },
+    "FD004": {
+      "median_per_engine": 185.71175552421678,
+      "worst_engine_share": 0.9288562783853219,
+      "worst_three_engines_share": 0.9917186237621936
+    }
+  },
+  "reproduction": {
+    "compared_values": 2797,
+    "floating_values": 720,
+    "max_absolute_difference": 0.0,
+    "non_floating_values_equal": true,
+    "recorded_source_sha256": "c3654c61aba018db5cf543649eb719d53ffb38a11c21e64574b49d56a15dcd74",
+    "reproduction_source_sha256": "e339b17845e99ce0e162b79092b702e94a87658cd56a553ef0af8bd5d369d0f7"
+  },
+  "scope": "C-MAPSS development-only full-range comparison. Official test labels were not used in v4. These training engines and v3 hyperparameters were previously used, so this is not an independent clean C-MAPSS test.",
+  "selection": {
+    "FD002": {
+      "reference": {
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 156,
+              "sampled_cuts": 19024
+            },
+            "<=30": {
+              "engines": 156,
+              "sampled_cuts": 5094
+            },
+            ">150": {
+              "engines": 138,
+              "sampled_cuts": 7082
+            }
+          },
+          "bias": -16.152249591333838,
+          "critical_miss_rate": 0.1635257165292501,
+          "draws": 200,
+          "engines": 156,
+          "long_bias": -71.29708055142325,
+          "long_rmse": 79.27497105904476,
+          "mae": 27.13831062492986,
+          "mean_critical_misses_per_draw": 4.165,
+          "nasa_per_engine": 19766.950617746756,
+          "rmse": 41.2122121832149
+        },
+        "spec": {
+          "cap": 125,
+          "condition": true,
+          "family": "xgboost"
+        },
+        "tree_counts": [
+          128,
+          165,
+          355,
+          138,
+          131
+        ]
+      },
+      "ridge_normalized": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 156,
+              "sampled_cuts": 19024
+            },
+            "<=30": {
+              "engines": 156,
+              "sampled_cuts": 5094
+            },
+            ">150": {
+              "engines": 138,
+              "sampled_cuts": 7082
+            }
+          },
+          "bias": 0.9653234781592958,
+          "critical_miss_rate": 0.35924617196702,
+          "draws": 200,
+          "engines": 156,
+          "long_bias": -38.3762376820526,
+          "long_rmse": 54.60058810533652,
+          "mae": 27.50939166051751,
+          "mean_critical_misses_per_draw": 9.15,
+          "nasa_per_engine": 4198.4627159466,
+          "rmse": 36.446323452883576
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.15439984168687684,
+              0.2379112333849729
+            ],
+            "long_rmse": [
+              -27.55396517059204,
+              -21.73788341753156
+            ],
+            "mae": [
+              -1.695993531061577,
+              2.47753105273242
+            ],
+            "nasa_per_engine": [
+              -40424.37412987685,
+              -531.9619541345068
+            ],
+            "rmse": [
+              -7.1561598993591335,
+              -2.3040872754561676
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": true,
+          "family": "ridge"
+        },
+        "tree_counts": []
+      },
+      "ridge_raw": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 156,
+              "sampled_cuts": 19024
+            },
+            "<=30": {
+              "engines": 156,
+              "sampled_cuts": 5094
+            },
+            ">150": {
+              "engines": 138,
+              "sampled_cuts": 7082
+            }
+          },
+          "bias": 0.9382668520765656,
+          "critical_miss_rate": 0.36650961915979585,
+          "draws": 200,
+          "engines": 156,
+          "long_bias": -39.08883165015957,
+          "long_rmse": 54.45325888768202,
+          "mae": 27.673434780199226,
+          "mean_critical_misses_per_draw": 9.335,
+          "nasa_per_engine": 2531.8508579164913,
+          "rmse": 36.48652189859228
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.1603778101803269,
+              0.24749966760854444
+            ],
+            "long_rmse": [
+              -27.653143270341353,
+              -21.995420087670137
+            ],
+            "mae": [
+              -1.5472055066709647,
+              2.695308485826653
+            ],
+            "nasa_per_engine": [
+              -44216.43918751739,
+              -1432.8625520856776
+            ],
+            "rmse": [
+              -7.157784510151089,
+              -2.275640246542215
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": false,
+          "family": "ridge"
+        },
+        "tree_counts": []
+      },
+      "xgboost_normalized": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 156,
+              "sampled_cuts": 19024
+            },
+            "<=30": {
+              "engines": 156,
+              "sampled_cuts": 5094
+            },
+            ">150": {
+              "engines": 138,
+              "sampled_cuts": 7082
+            }
+          },
+          "bias": 0.7975013843828287,
+          "critical_miss_rate": 0.2137809187279152,
+          "draws": 200,
+          "engines": 156,
+          "long_bias": -32.75194105338458,
+          "long_rmse": 52.09818505310436,
+          "mae": 23.4886710345363,
+          "mean_critical_misses_per_draw": 5.445,
+          "nasa_per_engine": 951.4398665482448,
+          "rmse": 33.34810526098669
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.03590016804488795,
+              0.06578966298827828
+            ],
+            "long_rmse": [
+              -29.94290426817789,
+              -24.807027715713094
+            ],
+            "mae": [
+              -5.571494175433706,
+              -1.7593674555965917
+            ],
+            "nasa_per_engine": [
+              -49895.614940577805,
+              -1479.151984130141
+            ],
+            "rmse": [
+              -10.07389219881354,
+              -5.613325266883304
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": true,
+          "family": "xgboost"
+        },
+        "tree_counts": [
+          87,
+          95,
+          127,
+          125,
+          62
+        ]
+      },
+      "xgboost_raw": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 156,
+              "sampled_cuts": 19024
+            },
+            "<=30": {
+              "engines": 156,
+              "sampled_cuts": 5094
+            },
+            ">150": {
+              "engines": 138,
+              "sampled_cuts": 7082
+            }
+          },
+          "bias": 0.7788161799622079,
+          "critical_miss_rate": 0.2626619552414605,
+          "draws": 200,
+          "engines": 156,
+          "long_bias": -31.877086249962595,
+          "long_rmse": 51.817620694255965,
+          "mae": 24.79867019493276,
+          "mean_critical_misses_per_draw": 6.69,
+          "nasa_per_engine": 676.4600839528035,
+          "rmse": 34.21544744100786
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.07296486755660839,
+              0.1260849925618572
+            ],
+            "long_rmse": [
+              -30.124849361199352,
+              -25.000660999135384
+            ],
+            "mae": [
+              -4.3264434598483446,
+              -0.2276310846284573
+            ],
+            "nasa_per_engine": [
+              -50631.58831707817,
+              -1523.7234024872653
+            ],
+            "rmse": [
+              -9.198693881780708,
+              -4.728016578341564
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": false,
+          "family": "xgboost"
+        },
+        "tree_counts": [
+          195,
+          136,
+          211,
+          274,
+          111
+        ]
+      }
+    },
+    "FD004": {
+      "reference": {
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 149,
+              "sampled_cuts": 15850
+            },
+            "<=30": {
+              "engines": 149,
+              "sampled_cuts": 4206
+            },
+            ">150": {
+              "engines": 140,
+              "sampled_cuts": 9744
+            }
+          },
+          "bias": -30.914977827374916,
+          "critical_miss_rate": 0.15786970993818356,
+          "draws": 200,
+          "engines": 149,
+          "long_bias": -96.22330324466789,
+          "long_rmse": 110.32648728540285,
+          "mae": 41.308207431645855,
+          "mean_critical_misses_per_draw": 3.32,
+          "nasa_per_engine": 272899533.84668195,
+          "rmse": 65.06482746068667
+        },
+        "spec": {
+          "cap": 125,
+          "condition": true,
+          "family": "xgboost"
+        },
+        "tree_counts": [
+          277,
+          168,
+          279,
+          109,
+          294
+        ]
+      },
+      "ridge_normalized": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 149,
+              "sampled_cuts": 15850
+            },
+            "<=30": {
+              "engines": 149,
+              "sampled_cuts": 4206
+            },
+            ">150": {
+              "engines": 140,
+              "sampled_cuts": 9744
+            }
+          },
+          "bias": 1.4824917109632263,
+          "critical_miss_rate": 0.33999048977650975,
+          "draws": 200,
+          "engines": 149,
+          "long_bias": -36.8155545311614,
+          "long_rmse": 64.25286179080523,
+          "mae": 36.81795464979213,
+          "mean_critical_misses_per_draw": 7.15,
+          "nasa_per_engine": 73451.29191837361,
+          "rmse": 48.60989960860426
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.14006648234593705,
+              0.22181391008822418
+            ],
+            "long_rmse": [
+              -50.63950085699805,
+              -41.546018474589765
+            ],
+            "mae": [
+              -8.277846992268694,
+              -0.6603394047126889
+            ],
+            "nasa_per_engine": [
+              -793216365.9422338,
+              -2217816.5072793704
+            ],
+            "rmse": [
+              -20.984983364985222,
+              -11.784205596858971
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": true,
+          "family": "ridge"
+        },
+        "tree_counts": []
+      },
+      "ridge_raw": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 149,
+              "sampled_cuts": 15850
+            },
+            "<=30": {
+              "engines": 149,
+              "sampled_cuts": 4206
+            },
+            ">150": {
+              "engines": 140,
+              "sampled_cuts": 9744
+            }
+          },
+          "bias": 1.4951805878223616,
+          "critical_miss_rate": 0.3977650974797908,
+          "draws": 200,
+          "engines": 149,
+          "long_bias": -36.39691640088126,
+          "long_rmse": 63.7331810709841,
+          "mae": 36.86671538606623,
+          "mean_critical_misses_per_draw": 8.365,
+          "nasa_per_engine": 106444.06656143215,
+          "rmse": 48.42295250505761
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.19148263361195547,
+              0.28766035792895106
+            ],
+            "long_rmse": [
+              -51.24871309550223,
+              -42.14741452554252
+            ],
+            "mae": [
+              -8.313790299696699,
+              -0.5645978279860496
+            ],
+            "nasa_per_engine": [
+              -793107892.5757986,
+              -2222493.9599300697
+            ],
+            "rmse": [
+              -21.208266658047094,
+              -11.897812273599602
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": false,
+          "family": "ridge"
+        },
+        "tree_counts": []
+      },
+      "xgboost_normalized": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 149,
+              "sampled_cuts": 15850
+            },
+            "<=30": {
+              "engines": 149,
+              "sampled_cuts": 4206
+            },
+            ">150": {
+              "engines": 140,
+              "sampled_cuts": 9744
+            }
+          },
+          "bias": 2.125857214652652,
+          "critical_miss_rate": 0.24060865430337613,
+          "draws": 200,
+          "engines": 149,
+          "long_bias": -25.30871775809963,
+          "long_rmse": 64.26049420850939,
+          "mae": 31.543346092735963,
+          "mean_critical_misses_per_draw": 5.06,
+          "nasa_per_engine": 125283.61517892288,
+          "rmse": 44.63255788426758
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.058487916979052326,
+              0.10745796281926712
+            ],
+            "long_rmse": [
+              -52.45752083740459,
+              -39.789290503379185
+            ],
+            "mae": [
+              -13.514397928384835,
+              -6.146624011027214
+            ],
+            "nasa_per_engine": [
+              -793075294.4990934,
+              -2213951.4293040293
+            ],
+            "rmse": [
+              -25.260587185031945,
+              -15.320326189883861
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": true,
+          "family": "xgboost"
+        },
+        "tree_counts": [
+          157,
+          124,
+          80,
+          61,
+          913
+        ]
+      },
+      "xgboost_raw": {
+        "gate": {
+          "accepted": false,
+          "checks": {
+            "critical_misses_acceptable": false,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "metrics": {
+          "bands": {
+            "31-150": {
+              "engines": 149,
+              "sampled_cuts": 15850
+            },
+            "<=30": {
+              "engines": 149,
+              "sampled_cuts": 4206
+            },
+            ">150": {
+              "engines": 140,
+              "sampled_cuts": 9744
+            }
+          },
+          "bias": 1.2041833675135203,
+          "critical_miss_rate": 0.3644793152639087,
+          "draws": 200,
+          "engines": 149,
+          "long_bias": -30.944101845395977,
+          "long_rmse": 66.23629581147682,
+          "mae": 34.21970951952515,
+          "mean_critical_misses_per_draw": 7.665,
+          "nasa_per_engine": 79567.25793890186,
+          "rmse": 47.13997888345637
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.16384806666227525,
+              0.24738456513040386
+            ],
+            "long_rmse": [
+              -49.10386609845091,
+              -39.10703907328822
+            ],
+            "mae": [
+              -10.687606962799316,
+              -3.5293059557165942
+            ],
+            "nasa_per_engine": [
+              -793224982.9312348,
+              -2216077.4341919087
+            ],
+            "rmse": [
+              -22.234111294184814,
+              -13.449584785217093
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "spec": {
+          "cap": null,
+          "condition": false,
+          "family": "xgboost"
+        },
+        "tree_counts": [
+          348,
+          372,
+          72,
+          169,
+          1496
+        ]
+      }
+    }
+  }
+}

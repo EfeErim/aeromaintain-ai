@@ -68,6 +68,11 @@ clusters inside each training partition and standardizes sensors within each con
 | XGBoost, raw features | FD004 | n/a | 21.82 | 2,345 | n/a |
 | **XGBoost, normalized** | FD004 | 14.60 | **19.61** | 1,764 | 0.84 |
 
+[Protocol v4](protocol_v4.md) compared these capped models with uncapped alternatives on
+new development partitions. Uncapped models reduced long-RUL error but missed more
+critical cycles than its frozen limit allowed, so the capped specification and the
+weights below are unchanged. See the [v4 results](results_v4.md).
+
 ## Locked official-test evaluation: six conditions
 
 FD002 and FD004 are clean single-open tests of protocol v3. Ranges are 95% bootstrap

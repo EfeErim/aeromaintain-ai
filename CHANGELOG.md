@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+Protocol v4 tests whether uncapped targets fix long-RUL underprediction. They do not pass
+the frozen rules, so the capped v3 model stays. The demo remains on its v3 bundle.
+
+### Results
+
+- C-MAPSS development engines, not a clean test: every uncapped candidate improved RMSE
+  above 150 cycles on FD002 and FD004, and every one failed the critical-miss gate on both.
+- Intervals on v4 evaluation engines: Mondrian coverage 91.7% and 92.4%, split conformal
+  88.1% and 88.6%. Split conformal covered only 50.6% and 63.6% above 150 cycles.
+- N-CMAPSS DS03-DS07, 20 evaluation engines, simulation only: Ridge RMSE 15.51 against a
+  23.56 baseline and coverage 92.8%. Both gates passed; the critical miss rate is 48.3%.
+- DS08 was dropped before any label was read: the archive did not match the 54-unit
+  assumption, and DS08d was truncated.
+
+### Added
+
+- `aeromaintain.models.v4`, `aeromaintain.evaluation.v4` and `aeromaintain.data.ncmapss`,
+  with an optional `ncmapss` dependency group.
+- `scripts/fetch_ncmapss.py` and `scripts/publish_v4_evidence.py`.
+
+### Changed
+
+- Holdout claims now use an interprocess lock and atomic ledger writes.
+
 ## 0.3.0
 
 Protocol v3 tests the approach under six operating conditions, on the two subsets whose

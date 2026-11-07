@@ -23,6 +23,23 @@ labels opened once. One operating condition held up, and six did not:
 
 ## Results
 
+### Removing the RUL cap: protocol v4
+
+[Protocol v4](docs/protocol_v4.md) asked whether uncapped targets fix the long-RUL
+underprediction found under v3, without losing critical engines. They do not clear that
+bar, so **the capped v3 model is retained**. On v4 development engines, uncapped XGBoost
+lowered RMSE on engines above 150 cycles from 79.3 to 52.1 on FD002 and from 110.3 to
+64.3 on FD004, but its critical miss rate rose from 16.4% to 21.4% and from 15.8% to
+24.1%, past the predeclared limit of +2 points. Every uncapped candidate failed that
+gate on both subsets.
+
+These are not clean tests: official test labels were not used, but the training engines
+and hyperparameters were seen under v3. Mondrian intervals covered 92% overall and at
+least 90% in each RUL band, at the cost of widths of 180–240 cycles above 150. A Ridge
+benchmark on 20 held-out N-CMAPSS simulation engines passed its two predeclared gates
+(RMSE 15.51 against a 23.56 baseline, coverage 92.8%), yet still predicted above 30 on
+48% of sampled critical cycles. See the [full v4 results](docs/results_v4.md).
+
 ### Six operating conditions: protocol v3
 
 [Protocol v3](docs/protocol_v3.md) added operating-condition normalization and was
@@ -214,6 +231,8 @@ pytest --cov=src/aeromaintain --cov-fail-under=80
 ## Documentation
 
 - [Reference run results](docs/results.md)
+- [Protocol v4](docs/protocol_v4.md), its [results](docs/results_v4.md) and
+  [evidence](docs/protocol_v4_evidence.json)
 - [Protocol v3](docs/protocol_v3.md) and its
   [development evidence](docs/protocol_v3_development.json)
 - [Protocol v2](docs/protocol_v2.md)
@@ -228,7 +247,8 @@ pytest --cov=src/aeromaintain --cov-fail-under=80
 
 - The data is simulated; it is not operational fleet telemetry.
 - The RUL cap limits predictions to about 127 cycles, so engines with more life left
-  are underpredicted, and on FD002 and FD004 their intervals usually miss.
+  are underpredicted, and on FD002 and FD004 their intervals usually miss. Protocol v4
+  found no uncapped model that fixes this without missing more critical engines.
 - Interval coverage on FD002 and FD004 fell short of its nominal 90%.
 - Critical-engine figures rest on 20–61 engines, so their intervals are wide.
 - FD001 and FD003 development RMSE and interval-width targets were missed.
