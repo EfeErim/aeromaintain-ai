@@ -17,6 +17,11 @@ labels opened once. One operating condition held up, and six did not:
 | FD002, protocol v3 | 6 | 1 | 259 | **27.36** (23.77–30.82) | 83% (78–87%) |
 | FD004, protocol v3 | 6 | 2 | 248 | **27.40** (24.53–30.23) | 83% (78–87%) |
 
+These RMSE figures use the official, uncapped truth. Most papers cap the truth at 125
+or 130 cycles; scored that way after the fact, the same FD002 and FD004 predictions give
+14.74 and 15.33, close to recent published results, though capping hides the long-life
+engines the model misses ([retrospective comparison](docs/results_retrospective.md)).
+
 > C-MAPSS contains simulated degradation trajectories. AeroMaintain AI is an
 > educational portfolio project, not an airworthiness, maintenance-approval, or
 > production-fleet system.

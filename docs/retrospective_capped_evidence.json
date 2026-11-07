@@ -1,0 +1,224 @@
+{
+  "datasets": {
+    "FD001": {
+      "engines": 100,
+      "label": "test previously seen",
+      "predictions_sha256": "9eab9e6b963cc1bf91bdded1f95f9f1ad86f35fb89d1c8840a18260f9306df0a",
+      "run": "fd001-v3",
+      "truth": {
+        "capped_125": {
+          "bootstrap_95": {
+            "nasa_score": [
+              190.88435099800307,
+              568.254317296786
+            ],
+            "rmse": [
+              11.454281884654057,
+              17.394500663865962
+            ]
+          },
+          "engines_with_truth_above_cap": 11,
+          "nasa_score": 345.925382619806,
+          "rmse": 14.393541081565246
+        },
+        "capped_130": {
+          "bootstrap_95": {
+            "nasa_score": [
+              207.25193488485397,
+              588.5526160818771
+            ],
+            "rmse": [
+              12.048208127815357,
+              17.94892273851969
+            ]
+          },
+          "engines_with_truth_above_cap": 8,
+          "nasa_score": 365.12946604146816,
+          "rmse": 14.952811549573806
+        },
+        "uncapped": {
+          "bootstrap_95": {
+            "nasa_score": [
+              232.97509843985677,
+              624.6703768017946
+            ],
+            "rmse": [
+              12.866960173973196,
+              18.781198385034187
+            ]
+          },
+          "engines_with_truth_above_cap": 0,
+          "nasa_score": 398.3093549744923,
+          "rmse": 15.795547328093768
+        }
+      }
+    },
+    "FD002": {
+      "engines": 259,
+      "label": "clean single-open test",
+      "predictions_sha256": "d5cd393bd711af02172d1a43967e7295051e04a9584d4785b37bb994693672af",
+      "run": "fd002-v3-clean",
+      "truth": {
+        "capped_125": {
+          "bootstrap_95": {
+            "nasa_score": [
+              672.6797039621854,
+              1145.9742768705198
+            ],
+            "rmse": [
+              13.281904637737867,
+              16.153978468698647
+            ]
+          },
+          "engines_with_truth_above_cap": 57,
+          "nasa_score": 893.0080691450794,
+          "rmse": 14.744403362496882
+        },
+        "capped_130": {
+          "bootstrap_95": {
+            "nasa_score": [
+              754.9789184142762,
+              1229.5870696486434
+            ],
+            "rmse": [
+              14.275923786343343,
+              17.139788608841727
+            ]
+          },
+          "engines_with_truth_above_cap": 55,
+          "nasa_score": 978.0427316795143,
+          "rmse": 15.731718608796099
+        },
+        "uncapped": {
+          "bootstrap_95": {
+            "nasa_score": [
+              5192.625402222308,
+              16823.09850473379
+            ],
+            "rmse": [
+              23.766597077790916,
+              30.816926912323684
+            ]
+          },
+          "engines_with_truth_above_cap": 0,
+          "nasa_score": 10387.850081553588,
+          "rmse": 27.36156473401475
+        }
+      }
+    },
+    "FD003": {
+      "engines": 100,
+      "label": "test previously seen",
+      "predictions_sha256": "bddac269e59a1cbf49db8d83e4e852dbe40c0117aeeb53394d5a0b5205935075",
+      "run": "fd003-v3",
+      "truth": {
+        "capped_125": {
+          "bootstrap_95": {
+            "nasa_score": [
+              203.5420183483157,
+              490.45926710868054
+            ],
+            "rmse": [
+              11.31960707735459,
+              15.91485245599977
+            ]
+          },
+          "engines_with_truth_above_cap": 15,
+          "nasa_score": 332.37127810556103,
+          "rmse": 13.694810097049906
+        },
+        "capped_130": {
+          "bootstrap_95": {
+            "nasa_score": [
+              219.30012296924545,
+              513.8406094663883
+            ],
+            "rmse": [
+              11.942778059888289,
+              16.52588243570563
+            ]
+          },
+          "engines_with_truth_above_cap": 11,
+          "nasa_score": 351.1367979529267,
+          "rmse": 14.293463917632781
+        },
+        "uncapped": {
+          "bootstrap_95": {
+            "nasa_score": [
+              251.39428018304721,
+              584.3832335753773
+            ],
+            "rmse": [
+              12.914404479772628,
+              17.9490665868548
+            ]
+          },
+          "engines_with_truth_above_cap": 0,
+          "nasa_score": 400.70741858824806,
+          "rmse": 15.453216290586715
+        }
+      }
+    },
+    "FD004": {
+      "engines": 248,
+      "label": "clean single-open test",
+      "predictions_sha256": "92ca2d8ad4fa13e47ae738a02f10c053a192efb48a9880163a8028f1e67f7fd6",
+      "run": "fd004-v3-clean",
+      "truth": {
+        "capped_125": {
+          "bootstrap_95": {
+            "nasa_score": [
+              702.2385143645522,
+              1391.2084757271318
+            ],
+            "rmse": [
+              13.694780871765337,
+              17.048250084003154
+            ]
+          },
+          "engines_with_truth_above_cap": 67,
+          "nasa_score": 1011.3024737836412,
+          "rmse": 15.328922314314353
+        },
+        "capped_130": {
+          "bootstrap_95": {
+            "nasa_score": [
+              793.0724667956724,
+              1484.6561591835266
+            ],
+            "rmse": [
+              14.584550602846106,
+              17.999015104191663
+            ]
+          },
+          "engines_with_truth_above_cap": 60,
+          "nasa_score": 1107.3629310610895,
+          "rmse": 16.269888357621664
+        },
+        "uncapped": {
+          "bootstrap_95": {
+            "nasa_score": [
+              3626.9634177391554,
+              6816.481275330683
+            ],
+            "rmse": [
+              24.532194187103496,
+              30.227816015258245
+            ]
+          },
+          "engines_with_truth_above_cap": 0,
+          "nasa_score": 5125.7400876565425,
+          "rmse": 27.395316168375448
+        }
+      }
+    }
+  },
+  "method": {
+    "bootstrap": "engine-level percentile, 2000 resamples, seed 42",
+    "nasa_score": "sum over engines of the asymmetric penalty (a1=13, a2=10)",
+    "prediction": "stored v3 official-test prediction, unchanged",
+    "truth": "official RUL_FD00x truth, optionally min(truth, cap)"
+  },
+  "model_training_cap": 125,
+  "status": "retrospective; all C-MAPSS test labels were opened before this analysis"
+}

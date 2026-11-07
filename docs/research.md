@@ -53,6 +53,23 @@ have engines with far more remaining life than FD001 or FD003, up to 195 cycles 
 7. Romano et al., [Conformalized Quantile Regression](https://arxiv.org/abs/1905.03222).
 8. Wilson, [Probable Inference, the Law of Succession, and Statistical Inference](https://doi.org/10.1080/01621459.1927.10502953).
 
+## Comparison with published results
+
+Checked: 2026-11-07. Published C-MAPSS RMSE is usually scored against test truth capped
+at 125 or 130 cycles, and the official test set is often reused during model
+development. The project's headline uses uncapped truth and single-open tests, so a
+direct comparison needs rescoring on the same scale. That rescoring is retrospective and
+lives in [`results_retrospective.md`](results_retrospective.md).
+
+9. Babu et al., CNN regression for RUL (2016), and Zheng et al., LSTM for RUL (2017),
+   as tabulated in [Deep learning models for predictive maintenance](https://arxiv.org/abs/2010.03207).
+10. Li, Ding and Sun, [RUL estimation using deep convolution neural networks](https://econpapers.repec.org/RePEc:eee:reensy:v:172:y:2018:i:c:p:1-11),
+    Reliability Engineering & System Safety 172 (2018).
+11. Chowdhury et al., [Bi-cLSTM for aero-engine RUL estimation](https://arxiv.org/abs/2603.00745)
+    (2026), including its Table V comparison.
+12. Gupta, [audit of normalization and pipeline choices on C-MAPSS](https://engrxiv.org/preprint/view/8145).
+13. Javanmardi and Hüllermeier, [conformal prediction intervals for RUL](https://arxiv.org/abs/2212.14612).
+
 ## Boundaries
 
 - A simulated result does not validate an operational fleet.
