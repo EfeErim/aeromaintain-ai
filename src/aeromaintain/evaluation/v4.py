@@ -132,9 +132,18 @@ def interval_metrics(truth, low, high, engines, *, alpha=0.1):
 
 
 def replay_alarms(
-    frame: pd.DataFrame, values: np.ndarray, *, persistence=3, threshold=30
+    frame: pd.DataFrame,
+    values: np.ndarray,
+    *,
+    persistence=3,
+    threshold=30,
+    min_rul=0,
 ):
-    """Confirm on the persistence-th cycle; merge contiguous alert runs only."""
+    """Confirm on the persistence-th cycle; merge contiguous alert runs only.
+
+    An engine counts as detected only while a confirmed alarm is active at a cycle
+    whose true RUL lies in ``[min_rul, threshold]``; v4 used ``min_rul=0``.
+    """
     if persistence < 1 or len(frame) != len(values):
         raise ValueError("Invalid replay persistence or prediction length")
     data = frame[["unit_id", "cycle", "rul_true"]].copy()
@@ -154,7 +163,7 @@ def replay_alarms(
                 if first_lead is None:
                     first_lead = float(row.rul_true)
                 false_events += int(row.rul_true > threshold)
-            if streak >= persistence and row.rul_true <= threshold:
+            if streak >= persistence and min_rul <= row.rul_true <= threshold:
                 detected = True
         critical_observed = bool((history.rul_true <= threshold).any())
         records.append(
