@@ -1,0 +1,19 @@
+{
+  "seed": 42,
+  "folds": 5,
+  "draws": 200,
+  "bootstrap_resamples": 2000,
+  "critical_miss_tolerance": 0.02,
+  "coverage": 0.9,
+  "persistence_cycles": 3,
+  "datasets": ["FD002", "FD004"],
+  "xgboost": {
+    "max_depth": 5,
+    "learning_rate": 0.04,
+    "min_child_weight": 10,
+    "colsample_bytree": 0.7,
+    "subsample": 1.0,
+    "reg_alpha": 1.0,
+    "reg_lambda": 5.0
+  }
+}

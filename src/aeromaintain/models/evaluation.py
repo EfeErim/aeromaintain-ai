@@ -14,6 +14,7 @@ from xgboost import XGBRegressor
 
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.evaluation import alert_rule_metrics, prediction_metrics
+from aeromaintain.evaluation.ledger import claim_holdout
 from aeromaintain.evaluation.protocol import (
     apply_mondrian_cqr,
     apply_mondrian_interval,
@@ -189,23 +190,13 @@ def _claim_single_open(project_root: Path, run_id: str, lock: dict[str, Any]) ->
     if lock["protocol"]["test_status"] != TEST_CLEAN_SINGLE_OPEN:
         return
     ledger_path = project_root / "runs" / HOLDOUT_LEDGER
-    ledger = (
-        _read_locked_json(ledger_path, "Holdout ledger")
-        if ledger_path.is_file()
-        else {}
-    )
     dataset = lock["dataset"]
     lock_hash = sha256_file(project_root / "runs" / run_id / "model_lock.json")
     entry = {"run_id": run_id, "model_lock_sha256": lock_hash}
-    if dataset in ledger:
-        if ledger[dataset] != entry:
-            raise ModelingError(
-                f"{dataset} test labels were already opened by run "
-                f"{ledger[dataset].get('run_id')}; a clean holdout opens only once"
-            )
-        return
-    ledger[dataset] = entry
-    ledger_path.write_bytes(_json_bytes(ledger))
+    try:
+        claim_holdout(ledger_path, dataset, entry)
+    except (ValueError, OSError) as error:
+        raise ModelingError(str(error)) from error
 
 
 def evaluate_locked(

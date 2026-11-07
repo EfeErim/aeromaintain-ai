@@ -3,6 +3,9 @@
 Model and data-derived files are Git-ignored. Sanitized aggregate evidence is stored
 in [`reference_evidence.json`](reference_evidence.json).
 
+Protocol v4 changed no reference model. Its development comparison and N-CMAPSS
+simulation benchmark are reported separately in [`results_v4.md`](results_v4.md).
+
 ## Protocol v3 runs
 
 Produced on 2026-11-05 under the frozen [protocol v3](protocol_v3.md). The locks and
