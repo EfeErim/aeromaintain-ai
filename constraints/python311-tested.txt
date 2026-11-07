@@ -1,6 +1,7 @@
 # Direct runtime and development dependencies used by the verified Python 3.11
 # environment. Install through pyproject.toml with this file as a constraint;
 # transitive packages remain resolver-managed and are recorded in each run.
+h5py==3.16.0
 joblib==1.5.3
 numpy==2.4.6
 pandas==3.0.5
