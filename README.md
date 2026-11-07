@@ -222,7 +222,7 @@ run for that subset.
 Run the repository quality gate with:
 
 ```powershell
-python -m pip install -c constraints/python311-tested.txt -e ".[dev]"
+python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
 ruff check .
 ruff format --check .
 pytest --cov=src/aeromaintain --cov-fail-under=80
