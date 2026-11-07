@@ -6,6 +6,10 @@ in [`reference_evidence.json`](reference_evidence.json).
 Protocol v4 changed no reference model. Its development comparison and N-CMAPSS
 simulation benchmark are reported separately in [`results_v4.md`](results_v4.md).
 
+A retrospective rescoring of the stored v3 test predictions against truth capped at 125
+and 130, for comparison with published results, is in
+[`results_retrospective.md`](results_retrospective.md).
+
 ## Protocol v3 runs
 
 Produced on 2026-11-05 under the frozen [protocol v3](protocol_v3.md). The locks and

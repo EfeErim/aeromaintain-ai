@@ -86,10 +86,12 @@ Proje şu dördü sağlanınca kapanır:
 
 ### 2. Literatürle aynı ölçekte geriye dönük kıyas
 
-- [ ] Saklı v3 test tahminlerinden (`runs/fd00x-v3-clean/official_test/predictions.parquet`) gerçek RUL'u 125'te sınırlayarak RMSE ve NASA skoru hesapla. Bu adımda model ya da eğitim değişmez.
-- [ ] Aynı son döngü protokolünü kullanan 3–5 makaleden FD002/FD004 sonuçlarını, kullandıkları üst sınırla birlikte bir tabloya koy. `research.md`'yi bu bölümün kaynaklarıyla güncelle.
+- [x] Saklı v3 test tahminlerinden (`runs/fd00x-v3-clean/official_test/predictions.parquet`) gerçek RUL'u 125'te sınırlayarak RMSE ve NASA skoru hesapla. Bu adımda model ya da eğitim değişmez.
+- [x] Aynı son döngü protokolünü kullanan 3–5 makaleden FD002/FD004 sonuçlarını, kullandıkları üst sınırla birlikte bir tabloya koy. `research.md`'yi bu bölümün kaynaklarıyla güncelle.
 
 **Tamamlanma ölçütü:** Tablo "geriye dönük, test etiketleri önceden açıldı" olarak etiketli ve README'de tek cümleyle özetlenmiş.
+
+**Sonuç (7 Kasım 2026):** Tamamlandı. Gerçek RUL 125'te sınırlanınca temiz v3 test RMSE'si FD002'de 27,36'dan 14,74'e (13,28–16,15), FD004'te 27,40'tan 15,33'e (13,69–17,05) iniyor. Bu, 2016–2018 derin modellerinden (22–30) belirgin biçimde iyi, 2024–2026 sonuçlarına (14–19) yakın. Ancak FD002'de 57, FD004'te 67 motorun gerçek ömrü 125'i aşıyor ve sınırlama tam bu motorlardaki hatayı gizliyor. Bu yüzden başlık değeri sınırsız 27,4 olarak kalıyor. Belge: [results_retrospective.md](results_retrospective.md). Betik: `scripts/retrospective_capped_metrics.py`.
 
 ### 3. Protokol v5'i yaz ve dondur
 

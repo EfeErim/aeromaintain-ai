@@ -15,12 +15,18 @@ the frozen rules, so the capped v3 model stays. The demo remains on its v3 bundl
   23.56 baseline and coverage 92.8%. Both gates passed; the critical miss rate is 48.3%.
 - DS08 was dropped before any label was read: the archive did not match the 54-unit
   assumption, and DS08d was truncated.
+- Retrospective, labels already opened: with test truth capped at 125, the stored v3
+  predictions score RMSE 14.74 on FD002 and 15.33 on FD004, for comparison with
+  published results. The uncapped 27.4 remains the headline.
+- 35 never-labelled N-CMAPSS engines (DS01, DS08a, DS08c) are reserved as the final
+  clean holdout.
 
 ### Added
 
 - `aeromaintain.models.v4`, `aeromaintain.evaluation.v4` and `aeromaintain.data.ncmapss`,
   with an optional `ncmapss` dependency group.
-- `scripts/fetch_ncmapss.py` and `scripts/publish_v4_evidence.py`.
+- `scripts/fetch_ncmapss.py`, `scripts/publish_v4_evidence.py` and
+  `scripts/retrospective_capped_metrics.py`.
 
 ### Changed
 
