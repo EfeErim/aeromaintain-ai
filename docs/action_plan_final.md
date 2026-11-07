@@ -99,24 +99,30 @@ v5'in iki parçası var. İkisi de hiçbir sonuç hesaplanmadan önce yazılır 
 
 **3a. C-MAPSS hibrit kural (yalnızca geliştirme).**
 
-- [ ] Kural sabit ve ayarsız olacak: üst sınırlı tahmin 115'in altındaysa onu kullan, değilse üst sınırsız normalize XGBoost tahminini kullan. Mantık şu: kritik bölgede üst sınırlı model, doygunluk bölgesinde üst sınırsız model karar verir.
-- [ ] Kural, saklı v4 seçim tahminleri (`oof.parquet`) ve aynı kesimler üzerinde v4 kapılarıyla değerlendirilir. Bu yüzden yeni model eğitimi gerekmez.
-- [ ] Kural v4 sonuçları görüldükten sonra tasarlandığı için sonuç yalnızca geliştirme kanıtı sayılır.
+- [x] Kural sabit ve ayarsız olacak: üst sınırlı tahmin 115'in altındaysa onu kullan, değilse üst sınırsız normalize XGBoost tahminini kullan. Mantık şu: kritik bölgede üst sınırlı model, doygunluk bölgesinde üst sınırsız model karar verir.
+- [x] Kural, saklı v4 seçim tahminleri (`oof.parquet`) ve aynı kesimler üzerinde v4 kapılarıyla değerlendirilir. Bu yüzden yeni model eğitimi gerekmez.
+- [x] Kural v4 sonuçları görüldükten sonra tasarlandığı için sonuç yalnızca geliştirme kanıtı sayılır.
 
 **3b. N-CMAPSS son temiz testi.**
 
-- [ ] **Veri:** DS02–DS07'nin tüm motorlarıyla eğit. Bu motorların etiketleri açıldı ama eğitimde kullanmak serbest. DS01, DS08a ve DS08c'deki 35 motorda tek seferlik değerlendirme yap.
-- [ ] **Bunun ne ölçtüğü:** Test, alt kümeler arası genelleme testidir. Uçuş sınıfı ve arıza modu farklılıkları önceden yazılır.
-- [ ] **Adaylar:** Ridge ve v3 ayarlarıyla XGBoost, aynı 72 döngü özelliğiyle. Seçim yalnızca eğitim motorlarında, motor gruplu çapraz doğrulamayla yapılır.
-- [ ] **Aralıklar:** Mondrian birincil yöntem (v4 bulgusuna dayanarak), split konformal ikincil. Kalibrasyon için eğitim alt kümelerinden ayrı motorlar kullanılır.
-- [ ] **Önceden yazılacak kapılar:**
+- [x] **Veri:** DS02–DS07'nin tüm motorlarıyla eğit. Bu motorların etiketleri açıldı ama eğitimde kullanmak serbest. DS01, DS08a ve DS08c'deki 35 motorda tek seferlik değerlendirme yap.
+- [x] **Bunun ne ölçtüğü:** Test, alt kümeler arası genelleme testidir. Uçuş sınıfı ve arıza modu farklılıkları önceden yazılır.
+- [x] **Adaylar:** Ridge ve v3 ayarlarıyla XGBoost, aynı 72 döngü özelliğiyle. Seçim yalnızca eğitim motorlarında, motor gruplu çapraz doğrulamayla yapılır.
+- [x] **Aralıklar:** Mondrian birincil yöntem (v4 bulgusuna dayanarak), split konformal ikincil. Kalibrasyon için eğitim alt kümelerinden ayrı motorlar kullanılır.
+- [x] **Önceden yazılacak kapılar:**
   - RMSE, ortalama RUL referansından kötü olmayacak.
   - Mondrian kapsaması ≥ %85 olacak.
   - Kalıcı alarm tekrarında kaçırılan kritik motor oranı ≤ %10 olacak. Kural v4 ile aynı: üç ardışık döngü, eşik 30.
   - Örneklenen kritik kaçırma oranı ayrıca raporlanır.
-- [ ] **Kilit ve kayıt:** Model kilidi ve bölmeler yayımlanır, sonra ledger'a kayıt düşülür. Kod, özeti alınmış commit'ten çalıştırılır. Böylece v4'teki "koşu sırasında kod değişti" sorunu tekrarlanmaz.
+- [x] **Kilit ve kayıt:** Model kilidi ve bölmeler yayımlanır, sonra ledger'a kayıt düşülür. Kod, özeti alınmış commit'ten çalıştırılır. Böylece v4'teki "koşu sırasında kod değişti" sorunu tekrarlanmaz.
 
 **Tamamlanma ölçütü:** `docs/protocol_v5.md` ve kilitler `main`'e pushlanmış olur, etiketler henüz açılmamış olur.
+
+**Sonuç (7 Kasım 2026):** Tamamlandı. [protocol_v5.md](protocol_v5.md) commit `4695a75` ile donduruldu, ardından `prepare` yalnızca eğitim dosyalarıyla çalıştı. Kilit: [final_v5.json](ncmapss_locks/final_v5.json), geliştirme kanıtı: [protocol_v5_development.json](protocol_v5_development.json). Son test dosyalarına dokunulmadı.
+
+- Plandan bir sapma var: kalibrasyon için ayrı motor ayırmak yerine 64 motorun tamamında çapraz doğrulama (OOF) artıkları kullanıldı. Böylece eğitim motorları azalmadı. Bu karar protokolde sonuçlardan önce yazıldı.
+- Geliştirme (OOF) sonucuna göre XGBoost seçildi: RMSE 12,87, Ridge 15,01, ortalama referansı 23,73.
+- Zamanında nokta alarmı geliştirmede 64 motorun 8'ini kaçırıyor (%12,5). Bu, G3 sınırı olan %10'un biraz üstünde, yani G3 son testte sınırda kalabilir. Kapı değiştirilmedi.
 
 ### 4. v5'i çalıştır ve yayımla
 

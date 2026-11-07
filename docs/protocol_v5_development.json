@@ -1,0 +1,103 @@
+{
+  "chosen": "xgboost",
+  "oof_point_alarm": {
+    "critical_engines": 64,
+    "engines": 64,
+    "engines_with_alarm": 62,
+    "false_events_per_engine": 0.046875,
+    "median_first_confirmed_lead": 20.0,
+    "missed_engines": 8,
+    "missed_fraction": 0.125
+  },
+  "selection": {
+    "baseline": {
+      "bands": {
+        "31-150": {
+          "engines": 64,
+          "sampled_cuts": 7592
+        },
+        "<=30": {
+          "engines": 64,
+          "sampled_cuts": 5208
+        },
+        ">150": {
+          "engines": 0,
+          "sampled_cuts": 0
+        }
+      },
+      "bias": 0.11046875,
+      "critical_miss_rate": 1.0,
+      "draws": 200,
+      "engines": 64,
+      "long_bias": null,
+      "long_rmse": null,
+      "mae": 20.209921875,
+      "mean_critical_misses_per_draw": 26.04,
+      "nasa_per_engine": 9.906258770170362,
+      "rmse": 23.72795975676691
+    },
+    "ridge": {
+      "bands": {
+        "31-150": {
+          "engines": 64,
+          "sampled_cuts": 7592
+        },
+        "<=30": {
+          "engines": 64,
+          "sampled_cuts": 5208
+        },
+        ">150": {
+          "engines": 0,
+          "sampled_cuts": 0
+        }
+      },
+      "bias": 0.8726122748150468,
+      "critical_miss_rate": 0.47753456221198154,
+      "draws": 200,
+      "engines": 64,
+      "long_bias": null,
+      "long_rmse": null,
+      "mae": 11.94142889824023,
+      "mean_critical_misses_per_draw": 12.435,
+      "nasa_per_engine": 3.6013325867610546,
+      "rmse": 15.006699161012035
+    },
+    "xgboost": {
+      "bands": {
+        "31-150": {
+          "engines": 64,
+          "sampled_cuts": 7592
+        },
+        "<=30": {
+          "engines": 64,
+          "sampled_cuts": 5208
+        },
+        ">150": {
+          "engines": 0,
+          "sampled_cuts": 0
+        }
+      },
+      "bias": 0.37162584016827166,
+      "critical_miss_rate": 0.2565284178187404,
+      "draws": 200,
+      "engines": 64,
+      "long_bias": null,
+      "long_rmse": null,
+      "mae": 9.171702727791562,
+      "mean_critical_misses_per_draw": 6.68,
+      "nasa_per_engine": 2.7469082423988733,
+      "rmse": 12.870658984580292
+    }
+  },
+  "status": "development evidence; out-of-fold on previously opened engines",
+  "tree_counts": {
+    "ridge": [],
+    "xgboost": [
+      679,
+      869,
+      1500,
+      1476,
+      850
+    ]
+  }
+}
