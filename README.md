@@ -28,6 +28,22 @@ engines the model misses ([retrospective comparison](docs/results_retrospective.
 
 ## Results
 
+### Final clean test on N-CMAPSS: protocol v5
+
+[Protocol v5](docs/protocol_v5.md) locked an XGBoost model trained on 64 simulated
+N-CMAPSS engines (DS02–DS07) and pushed the lock before opening 35 never-read engines
+from DS01, DS08a and DS08c. **All three predeclared gates passed:**
+
+- RMSE was 13.06 (95% CI 8.92–13.15), against 22.70 for the mean baseline.
+- Mondrian interval coverage was 92.5% (88.0–98.0%).
+- A persistent point alarm missed 3 of 35 engines inside the 10–30 cycle window, exactly
+  at the 10% limit.
+
+Coverage drops to 76% above 60 remaining cycles, and 28% of sampled critical cycles are
+still predicted above 30. A capped/uncapped hybrid rule passed the v4 gates on C-MAPSS
+development data, but it was designed after seeing v4, so the demo model is unchanged.
+See the [full v5 results](docs/results_v5.md).
+
 ### Removing the RUL cap: protocol v4
 
 [Protocol v4](docs/protocol_v4.md) asked whether uncapped targets fix the long-RUL
