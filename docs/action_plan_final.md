@@ -135,19 +135,21 @@ v5'in iki parçası var. İkisi de hiçbir sonuç hesaplanmadan önce yazılır 
 
 ### 5. Belgeleri tek bir son duruma indir
 
-- [ ] README'yi sonuçtan başlayan bir anlatıya çevir. Sıra şöyle olsun:
+- [x] README'yi sonuçtan başlayan bir anlatıya çevir. Sıra şöyle olsun:
   1. Ne kanıtlandı: temiz test tablosu (v2, v3, v5).
   2. Ne kanıtlanmadı: üst sınır ödünleşimi, literatür ölçeğindeki fark.
   3. Yöntem: dondurulmuş protokol ve ledger.
-- [ ] Protokol geçmişini ayrı bir belgeye taşı.
-- [ ] Model kartına son modeli, veri kartına N-CMAPSS'i ekle. `research.md`'ye 2. adımdaki literatürü ekle.
-- [ ] "Gelecek çalışma" bölümünü yaz. Uygulanmayacak fikirler şunlar:
+- [x] Protokol geçmişini ayrı bir belgeye taşı.
+- [x] Model kartına son modeli, veri kartına N-CMAPSS'i ekle. `research.md`'ye 2. adımdaki literatürü ekle.
+- [x] "Gelecek çalışma" bölümünü yaz. Uygulanmayacak fikirler şunlar:
   - asimetrik konformal kantil regresyon,
   - derin modeller,
   - CruiseBench protokolü,
   - gerçek filo verisi.
 
 **Tamamlanma ölçütü:** Yeni bir okuyucu README'nin ilk ekranında projenin neyi kanıtladığını ve neyi kanıtlayamadığını görebiliyor.
+
+**Sonuç (8 Kasım 2026):** Tamamlandı. README artık sırasıyla şunları anlatıyor: neyin kanıtlandığı (dört temiz test), neyin kanıtlanamadığı, yöntem, gelecek çalışma ve sınırlılıklar. v2–v4 ayrıntıları [protocol_history.md](protocol_history.md) belgesine taşındı. Model kartına son N-CMAPSS modeli, veri kartına N-CMAPSS bölümü eklendi. `research.md` 2. adımda güncellenmişti.
 
 ### 6. Sürüm ve kapanış
 

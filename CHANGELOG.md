@@ -9,6 +9,8 @@ predeclared gates on 35 never-read engines.
   Mondrian coverage 92.5%, timely point alarm missed 3 of 35 engines (limit 3).
 - C-MAPSS hybrid rule, development only: kept the critical miss rate and cut RMSE above
   150 cycles from 79.3 to 55.9 (FD002) and 110.3 to 67.5 (FD004).
+- README rewritten around the final results; protocol details moved to
+  `docs/protocol_history.md`. Model and data cards cover N-CMAPSS.
 - Added `aeromaintain.models.v5`, `configs/protocol_v5.json` and a `min_rul` option
   for alarm replay.
 

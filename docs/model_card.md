@@ -15,6 +15,25 @@ engine-equal sample weights, plus a Mondrian empirical interval and a risk thres
 | `fd003-v3` | FD003 | previously seen | 403 (`all`) | 125 | 184, five seeds | `interval_low <= 25` |
 | `fd001-v3` | FD001 | previously seen | 403 (`all`) | 125 | 123 | `interval_low <= 20` |
 
+### Final N-CMAPSS model (protocol v5)
+
+A separate model was locked for the project's final clean test. It is not the demo
+model, which stays on the v3 C-MAPSS bundle.
+
+| Item | Value |
+|---|---|
+| Data | N-CMAPSS DS02–DS07, 64 simulated engines, all cycles |
+| Features | 72 measured cycle summaries: mean, std, min and max of 14 `X_s` sensors and 4 `W` operating channels |
+| Excluded inputs | Cycle index, unit ID, flight class, `X_v`, `T`, health parameters |
+| Target | Uncapped RUL, engine-equal weights |
+| Selection | XGBoost (v3 settings, 869 trees) over Ridge, by out-of-fold RMSE 12.87 against 15.01 |
+| Interval | Mondrian on out-of-fold residuals; split conformal as secondary |
+| Lock | [`final_v5.json`](ncmapss_locks/final_v5.json), SHA-256 `e058e97837741323782d6ea46c7532df8a5ca3134d3ea3445fc04918cdb71844` |
+| Final test | 35 engines from DS01, DS08a and DS08c: RMSE 13.06 against a 22.70 baseline, Mondrian coverage 92.5%, 3 of 35 engines without a timely alarm |
+
+All three predeclared gates passed; the alarm gate passed at its limit. See
+[`results_v5.md`](results_v5.md).
+
 This is an educational benchmark prototype, not an airworthiness,
 maintenance-approval, production-readiness, or real-fleet system.
 
