@@ -14,7 +14,7 @@ as far as the remaining clean data allows, and no further experiments are planne
 
 ### Results
 
-- **Protocol v5, final N-CMAPSS clean test.** Opened once from `7df9e98` on 35
+- **Protocol v5, final N-CMAPSS clean test.** Opened once from `1272ed1` on 35
   never-read engines from DS01, DS08a and DS08c, it passed all three predeclared gates:
   - XGBoost RMSE 13.06 against a 22.70 baseline;
   - Mondrian coverage 92.5%;
