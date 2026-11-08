@@ -9,6 +9,10 @@ histories into per-engine RUL estimates, empirical prediction intervals, risk al
 model explanations. Its focus is honest evaluation: every protocol was frozen before the
 labels it was tested on were opened, and each test set was opened once.
 
+**Status: complete (2026-11-08, v1.0.0).** The final clean test has been run and
+published, and no further experiments are planned. Open ideas are listed under
+[Future work](#future-work).
+
 > The data is simulated. AeroMaintain AI is an educational portfolio project, not an
 > airworthiness, maintenance-approval, or production-fleet system.
 

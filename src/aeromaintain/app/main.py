@@ -63,6 +63,7 @@ APP_CSS = """
 </style>
 """
 
+PROJECT_URL = "https://github.com/EfeErim/aeromaintain-ai"
 PLOT_COLORS = ["#315C4C", "#748078", "#A67C52", "#786D7D"]
 RISK_COLORS = {
     "Critical": "#B24C3D",
@@ -427,6 +428,10 @@ def main() -> None:
     st.sidebar.write(artifacts.run_id)
     st.sidebar.caption(f"{artifacts.model_lock['dataset']} · simulated benchmark")
     st.sidebar.caption(artifacts.model_lock["protocol"]["label"])
+    st.sidebar.caption(
+        "Project complete. Final results across all protocols: "
+        f"[README]({PROJECT_URL}#what-was-shown)"
+    )
 
     if page == "Overview":
         _overview(artifacts)

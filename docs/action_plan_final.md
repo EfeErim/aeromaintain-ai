@@ -153,12 +153,14 @@ v5'in iki parçası var. İkisi de hiçbir sonuç hesaplanmadan önce yazılır 
 
 ### 6. Sürüm ve kapanış
 
-- [ ] **CI:** `ubuntu-latest` yerine sabit bir Ubuntu sürümü kullan. GitHub, `ubuntu-latest`'in Ubuntu 26'ya geçeceği uyarısını verdi.
-- [ ] **Demo:** Hibrit kural yalnızca geliştirme kanıtıyla desteklendiği için v3 paketinde kalsın. Etiketlerini ve bağlantılarını son belgelere göre güncelle. Demo smoke testini çalıştır.
-- [ ] **Sürüm:** `pyproject.toml` sürümünü 1.0.0 yap. CHANGELOG'u tamamla, `v1.0.0` etiketini ve GitHub sürümünü yayımla.
-- [ ] **Kapanış:** README'ye "Proje tamamlandı" notunu ve tarihini ekle.
+- [x] **CI:** `ubuntu-latest` yerine sabit bir Ubuntu sürümü kullan. GitHub, `ubuntu-latest`'in Ubuntu 26'ya geçeceği uyarısını verdi.
+- [x] **Demo:** Hibrit kural yalnızca geliştirme kanıtıyla desteklendiği için v3 paketinde kalsın. Etiketlerini ve bağlantılarını son belgelere göre güncelle. Demo smoke testini çalıştır.
+- [x] **Sürüm:** `pyproject.toml` sürümünü 1.0.0 yap. CHANGELOG'u tamamla, `v1.0.0` etiketini ve GitHub sürümünü yayımla.
+- [x] **Kapanış:** README'ye "Proje tamamlandı" notunu ve tarihini ekle.
 
 **Tamamlanma ölçütü:** Bitiş tanımındaki dört koşul sağlanmış.
+
+**Sonuç (8 Kasım 2026):** Tamamlandı. CI `ubuntu-24.04` üzerinde sabitlendi. Demo v3 FD004 paketinde kaldı, kenar çubuğuna son sonuçlara bağlantı eklendi ve demo smoke testi geçti. Sürüm 1.0.0'a yükseltildi, `v1.0.0` etiketi ve GitHub sürümü yayımlandı. README'ye kapanış notu eklendi. Bitiş tanımındaki dört koşul sağlandı; proje kapandı.
 
 ## Sıra ve gerekçe
 

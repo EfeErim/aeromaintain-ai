@@ -8,7 +8,7 @@ from aeromaintain.runtime import runtime_fingerprint
 
 
 def test_package_has_a_version() -> None:
-    assert __version__ == "0.3.0"
+    assert __version__ == "1.0.0"
 
 
 def test_runtime_fingerprint_requires_tested_constraints(tmp_path: Path) -> None:

@@ -1,48 +1,49 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 (2026-11-08)
 
-Protocol v5 is the final experiment. Its N-CMAPSS clean test passed all three
-predeclared gates on 35 never-read engines.
-
-- Final test, opened once from `7df9e98`: XGBoost RMSE 13.06 against a 22.70 baseline,
-  Mondrian coverage 92.5%, timely point alarm missed 3 of 35 engines (limit 3).
-- C-MAPSS hybrid rule, development only: kept the critical miss rate and cut RMSE above
-  150 cycles from 79.3 to 55.9 (FD002) and 110.3 to 67.5 (FD004).
-- README rewritten around the final results; protocol details moved to
-  `docs/protocol_history.md`. Model and data cards cover N-CMAPSS.
-- Added `aeromaintain.models.v5`, `configs/protocol_v5.json` and a `min_rul` option
-  for alarm replay.
-
-Protocol v4 tests whether uncapped targets fix long-RUL underprediction. They do not pass
-the frozen rules, so the capped v3 model stays. The demo remains on its v3 bundle.
+Final release. The project is complete: protocols v4 and v5 close the open questions
+as far as the remaining clean data allows, and no further experiments are planned.
 
 ### Results
 
-- C-MAPSS development engines, not a clean test: every uncapped candidate improved RMSE
-  above 150 cycles on FD002 and FD004, and every one failed the critical-miss gate on both.
-- Intervals on v4 evaluation engines: Mondrian coverage 91.7% and 92.4%, split conformal
-  88.1% and 88.6%. Split conformal covered only 50.6% and 63.6% above 150 cycles.
-- N-CMAPSS DS03-DS07, 20 evaluation engines, simulation only: Ridge RMSE 15.51 against a
-  23.56 baseline and coverage 92.8%. Both gates passed; the critical miss rate is 48.3%.
-- DS08 was dropped before any label was read: the archive did not match the 54-unit
-  assumption, and DS08d was truncated.
-- Retrospective, labels already opened: with test truth capped at 125, the stored v3
-  predictions score RMSE 14.74 on FD002 and 15.33 on FD004, for comparison with
-  published results. The uncapped 27.4 remains the headline.
-- 35 never-labelled N-CMAPSS engines (DS01, DS08a, DS08c) are reserved as the final
-  clean holdout.
+- **Protocol v5, final N-CMAPSS clean test.** Opened once from `7df9e98` on 35
+  never-read engines from DS01, DS08a and DS08c, it passed all three predeclared gates:
+  - XGBoost RMSE 13.06 against a 22.70 baseline;
+  - Mondrian coverage 92.5%;
+  - the timely point alarm missed 3 of 35 engines, exactly the limit.
+- **Protocol v5, C-MAPSS hybrid rule (development only).** The rule kept the critical
+  miss rate and cut RMSE above 150 cycles from 79.3 to 55.9 on FD002 and from 110.3 to
+  67.5 on FD004. It was designed after v4 results were seen, so the demo model is
+  unchanged.
+- **Protocol v4 (development, not a clean test).** Every uncapped candidate improved RMSE
+  above 150 cycles on FD002 and FD004, and every one failed the critical-miss gate, so
+  the capped v3 model stays.
+  - On v4 evaluation engines, Mondrian coverage was 91.7% and 92.4%, and split conformal
+    88.1% and 88.6%. Split conformal covered only 50.6% and 63.6% above 150 cycles.
+  - The N-CMAPSS DS03–DS07 Ridge benchmark scored RMSE 15.51 against a 23.56 baseline,
+    with 92.8% coverage. Both gates passed, but the critical miss rate was 48.3%.
+- **Retrospective comparison (labels already opened).** With test truth capped at 125,
+  the stored v3 predictions score RMSE 14.74 on FD002 and 15.33 on FD004.
 
 ### Added
 
+- `aeromaintain.models.v5` and `configs/protocol_v5.json`.
+  - The v5 evaluator runs only from a clean tree and only with a lock committed
+    unchanged in `HEAD`.
 - `aeromaintain.models.v4`, `aeromaintain.evaluation.v4` and `aeromaintain.data.ncmapss`,
   with an optional `ncmapss` dependency group.
 - `scripts/fetch_ncmapss.py`, `scripts/publish_v4_evidence.py` and
   `scripts/retrospective_capped_metrics.py`.
+- A `min_rul` option for alarm replay, used for v5's timely-alarm gate.
+- `docs/protocol_history.md`, plus N-CMAPSS sections in the model and data cards.
 
 ### Changed
 
-- Holdout claims now use an interprocess lock and atomic ledger writes.
+- The README now opens with what was and was not shown, and has a future-work list.
+- Holdout claims use an interprocess lock and atomic ledger writes.
+- CI runs on `ubuntu-24.04` instead of `ubuntu-latest`.
+- The demo stays on the v3 FD004 bundle and links to the final results.
 
 ## 0.3.0
 
