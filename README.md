@@ -1,203 +1,115 @@
 # AeroMaintain AI
 
 [![CI](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml)
-[![Open demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromaintain-ai-demo.streamlit.app/)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromaintain-ai-demo.streamlit.app/)
 
-AeroMaintain AI is a reproducible remaining-useful-life (RUL) evaluation project on
-NASA's simulated turbofan benchmarks, C-MAPSS and N-CMAPSS. It turns engine sensor
-histories into per-engine RUL estimates, empirical prediction intervals, risk alarms and
-model explanations. Its focus is honest evaluation: every protocol was frozen before the
-labels it was tested on were opened, and each test set was opened once.
+Remaining-useful-life (RUL) prediction for turbofan engines on NASA's C-MAPSS and
+N-CMAPSS benchmarks, with prediction intervals, maintenance alarms and a Streamlit
+review app.
 
-**Status: complete (2026-11-08, v1.0.0).** The final clean test has been run and
-published, and no further experiments are planned. Open ideas are listed under
-[Future work](#future-work).
+Most C-MAPSS results are tuned against the official test set many times. I wanted
+numbers I could defend, so every test set here was opened exactly once, after the
+model and its thresholds were locked and committed.
 
-> The data is simulated. AeroMaintain AI is an educational portfolio project, not an
-> airworthiness, maintenance-approval, or production-fleet system.
+![Overview page](docs/screenshots/overview.png)
 
-## What was shown
+## Results
 
-Four clean tests, each with its protocol and model lock published before the test labels
-were read, and each test set opened exactly once:
+| Test set | Engines | RMSE (95% CI) | 90% interval coverage |
+|---|---:|---:|---:|
+| C-MAPSS FD003 | 100 | 15.07 (12.61–17.50) | 92% |
+| C-MAPSS FD002 | 259 | 27.36 (23.77–30.82) | 83% |
+| C-MAPSS FD004 | 248 | 27.40 (24.53–30.23) | 83% |
+| N-CMAPSS DS01, DS08a, DS08c | 35 | 13.06 (8.92–13.15), baseline 22.70 | 92.5% |
 
-| Clean test | Data | Engines | RMSE (95% CI) | Mean baseline RMSE | Interval coverage, nominal 90% |
-|---|---|---:|---:|---:|---:|
-| Protocol v2 | C-MAPSS FD003, 1 condition | 100 | **15.07** (12.61–17.50) | – | 92% (86–97%) |
-| Protocol v3 | C-MAPSS FD002, 6 conditions | 259 | **27.36** (23.77–30.82) | – | 83% (78–87%) |
-| Protocol v3 | C-MAPSS FD004, 6 conditions | 248 | **27.40** (24.53–30.23) | – | 83% (78–87%) |
-| Protocol v5 | N-CMAPSS DS01, DS08a, DS08c | 35 | **13.06** (8.92–13.15) | 22.70 | 92.5% (88.0–98.0%) |
+- On the final N-CMAPSS test the alarm fired for 32 of 35 engines while 10–30 cycles
+  remained. The predeclared limit was 3 misses, so it passed with no margin.
+- Scored the way most papers do (true RUL capped at 125), FD002 and FD004 come out at
+  14.74 and 15.33. That rescoring was done after the labels were open, so I report it
+  separately ([comparison](docs/results_retrospective.md)).
+- FD002/FD004 error comes mostly from long-life engines: the training target is capped
+  at 125, so the model underpredicts them. Removing the cap fixed that but missed more
+  critical engines, so I kept the capped model ([details](docs/results_v4.md)).
 
-- **One operating condition held up.** On FD003 the frozen v2 protocol met its nominal
-  interval coverage, and the lower-bound alert rule caught all 20 critical engines.
-- **The final test passed every predeclared gate.** Protocol v5 trained on 64 N-CMAPSS
-  engines from DS02–DS07 and tested once on 35 engines from other simulation subsets.
-  It beat the mean baseline, kept coverage above 85%, and had a confirmed alarm on 32 of
-  35 engines while 10–30 cycles remained. The alarm gate allowed at most 3 misses, and 3
-  were missed, so it passed at the limit. See the [v5 results](docs/results_v5.md).
-- **On the literature's scale, C-MAPSS accuracy is competitive.** With test truth capped
-  at 125, as most papers report, the same FD002 and FD004 predictions score 14.74 and
-  15.33. That rescoring is retrospective, after the labels were opened
-  ([comparison](docs/results_retrospective.md)).
-
-## What was not shown
-
-- **The RUL cap problem is still open.** The C-MAPSS model caps training targets at 125,
-  so it underpredicts engines with more life left. Those engines produce most of the
-  FD002/FD004 error, and coverage there fell to 83%. Uncapped models fixed the long-life
-  error but missed more critical engines (protocol v4). A hybrid rule kept both on
-  development data, but it was designed after seeing v4 and no clean C-MAPSS test is
-  left to confirm it, so the demo keeps the capped model.
-- **Single-cycle predictions near failure are still optimistic.** On the final test, 28%
-  of sampled critical cycles were predicted above 30, and coverage dropped to 76% above
-  60 remaining cycles. The persistent alarm passes because three alert cycles in a row
-  suffice.
-- **No state-of-the-art claim.** Published deep models report similar or lower capped
-  RMSE, but usually after repeated use of the official test set. Differences of about one
-  cycle do not rank methods.
-- **Nothing here transfers to real engines.** Both benchmarks are simulations, and the
-  final test rests on 35 engines.
-
-The full experiment sequence, with every table, is in the
+The full sequence of experiments, including the ones that failed, is in the
 [protocol history](docs/protocol_history.md).
 
-## Method
-
-- **Freeze first.** Each protocol fixes data roles, candidates, selection rules, interval
-  method and pass/fail gates in a committed document before any result it governs is
-  computed.
-- **Lock, then open once.** The selected model, its intervals and thresholds are hashed
-  into a lock that is published before test labels are read. A holdout ledger refuses a
-  second model on the same test set. In v5 the evaluator also refuses to run from a dirty
-  tree or with a lock that differs from the one committed.
-- **Publish what comes out.** Failed and borderline results (v3's coverage, v4's
-  rejected candidates, v5's alarm gate at its limit) are reported in the same detail as
-  passes.
-
-## Application
-
-The Streamlit application opens one explicitly selected, hash-verified run.
-
-- **Overview** presents test metrics, both alert rules side by side, interval
-  coverage, fleet risk distribution, and run identity.
-- **Engine risk** presents the ranked engine list, RUL interval, sensor history, and
-  model explanation.
-
-The [hosted demo](https://aeromaintain-ai-demo.streamlit.app/) reads a
-[row-free bundle](demo/): NASA's dataset page specifies no
-license, so the bundle holds aggregate metrics and model outputs only, without
-source rows or true RUL.
-
-### Overview
-
-[![AeroMaintain overview](docs/screenshots/overview.png)](docs/screenshots/overview.png)
-
-### Engine risk
-
-[![AeroMaintain engine risk](docs/screenshots/engine-health.png)](docs/screenshots/engine-health.png)
-
-## Evaluation workflow (C-MAPSS)
+## How it works
 
 ```text
-Verify the NASA archive
-    → validate and prepare engine trajectories
-    → compare Ridge and XGBoost on test-like truncated rows
-    → cross-fit the interval and risk threshold on training engines
-    → lock the model
-    → open official test labels only after the lock
-    → review aggregate metrics and engine-level predictions
+NASA archive (size + SHA-256 checked)
+  → engine-level train/validation splits, causal rolling features
+  → Ridge vs. XGBoost, selected on truncated rows that look like the test set
+  → empirical (conformal-style) intervals and alarm threshold, cross-fitted per engine
+  → model lock: model, intervals and thresholds hashed and committed
+  → test labels loaded only if the lock verifies; a ledger refuses a second lock
 ```
 
-### Leakage controls
+Leakage controls that matter most:
 
-- Splits and cross-validation operate on complete engines, never individual cycle
-  rows.
-- Rolling features use only the current and previous cycles.
-- Preprocessing is fitted inside each active training partition.
-- XGBoost early stopping uses an inner engine split, never the scored fold.
-- Official test RUL labels are stored separately, and the evaluator loads them only
-  after `model_lock.json` and its hashes validate.
-- A ledger refuses to open a clean holdout for a second model lock.
-- Existing run directories are never overwritten, and persisted artefacts are
-  connected by SHA-256 hashes.
+- splits and CV folds are by engine, never by cycle row;
+- rolling features only look backwards;
+- XGBoost early stopping uses an inner engine split, not the scored fold;
+- test labels live in a separate file that the evaluator reads only after the lock
+  hash validates.
 
-## Run locally
+Design notes are in [architecture](docs/architecture.md), the
+[model card](docs/model_card.md) and the [data card](docs/data_card.md).
 
-Python `>=3.11,<3.12` is required. From PowerShell:
+## Quickstart
 
-```powershell
+Requires Python 3.11.
+
+```bash
 git clone https://github.com/EfeErim/aeromaintain-ai.git
 cd aeromaintain-ai
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -c constraints/python311-tested.txt -e .
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -c constraints/python311-tested.txt -e .
+
 aeromaintain doctor
-aeromaintain pipeline --run-id fd001-demo
+aeromaintain pipeline --run-id fd001-demo   # downloads and verifies the NASA archive
 aeromaintain app --run-id fd001-demo
 ```
 
-If the NASA archive is not already present, the pipeline downloads it and verifies
-its byte size and SHA-256 before extraction. A verified local archive can be supplied
-with `--archive PATH`. `--dataset` selects FD001 through FD004. Opening the labels of
-FD002, FD003, or FD004 with a new lock is refused once your local ledger has recorded a
-run for that subset.
+`--dataset` selects FD001–FD004, and `--archive PATH` uses a local copy of the archive.
 
-Run the repository quality gate with:
+Development checks:
 
-```powershell
-python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
-ruff check .
-ruff format --check .
+```bash
+pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
+pre-commit install            # optional: pipx install pre-commit
+ruff check . && ruff format --check .
 pytest --cov=src/aeromaintain --cov-fail-under=80
 ```
 
-## Documentation
+## Project layout
 
-- [Protocol history](docs/protocol_history.md): every experiment and its tables
-- Protocols: [v2](docs/protocol_v2.md), [v3](docs/protocol_v3.md),
-  [v4](docs/protocol_v4.md), [v5](docs/protocol_v5.md)
-- Results: [v2 and v3](docs/results.md), [v4](docs/results_v4.md),
-  [retrospective literature comparison](docs/results_retrospective.md),
-  [v5](docs/results_v5.md)
-- Evidence: [reference](docs/reference_evidence.json),
-  [v3 development](docs/protocol_v3_development.json),
-  [v4](docs/protocol_v4_evidence.json), [v5](docs/protocol_v5_evidence.json),
-  [N-CMAPSS locks](docs/ncmapss_locks/)
-- [RUL model card](docs/model_card.md) and [data card](docs/data_card.md)
-- [Architecture and trust boundaries](docs/architecture.md)
-- [Research basis](docs/research.md)
-- [Changelog](CHANGELOG.md)
+```text
+src/aeromaintain/   data pipeline, features, models, evaluation, Streamlit app
+configs/            frozen experiment configurations
+docs/               protocols, results, model and data cards
+demo/               aggregate-only bundle used by the hosted demo
+tests/              unit and protocol tests
+```
 
-## Future work
-
-These ideas are recorded and deliberately not implemented in this project:
-
-- **Asymmetric conformal intervals** (for example conformalized quantile regression with
-  a tighter lower tail), aimed at optimistic predictions near failure.
-- **Deep sequence models** (CNN, LSTM, transformer). Without an unopened C-MAPSS test,
-  any gain could not be confirmed independently.
-- **The CruiseBench N-CMAPSS protocol**, which uses cruise-phase windows instead of cycle
-  summaries.
-- **A clean test of the capped/uncapped hybrid rule** on data that was never used to
-  design it.
-- **Real fleet data**, which would need a new data agreement, new validation, and
-  different safety claims.
+Protocol documents and their `models/v*.py` implementations are versioned on purpose:
+their SHA-256 hashes are part of the published model locks, so they are never edited
+after a test is run.
 
 ## Limitations
 
-- The data is simulated; it is not operational fleet telemetry.
-- The C-MAPSS RUL cap limits predictions to about 127 cycles, so long-life engines are
-  underpredicted, and on FD002 and FD004 their intervals usually miss.
-- Interval coverage on FD002 and FD004 fell short of its nominal 90%.
-- The final N-CMAPSS test has 35 engines; per-file results rest on 10–15 engines, and
-  the alarm gate passed with no margin.
-- Critical-engine figures rest on 20–61 engines, so their intervals are wide.
-- FD001 and FD003 development RMSE and interval-width targets were missed.
-- The C-MAPSS eligibility window of 150 was an analysis choice that hid the cap's cost
-  during development.
-- The nominal empirical interval is not a safety guarantee.
+- Both benchmarks are simulated. Nothing here says anything about real engines.
+- The final test has 35 engines, and per-subset results rest on 10–15 engines.
+- Coverage on FD002 and FD004 fell short of the nominal 90%.
+- Single-cycle predictions close to failure are still optimistic. The alarm works
+  because it needs three alert cycles in a row, not because each prediction is good.
+- I make no state-of-the-art claim. Published deep models report similar or lower
+  capped RMSE, usually after repeated use of the test set.
 
-## License
+## Data and license
 
-Project code and documentation are licensed under the MIT License. This does not
-grant rights to redistribute NASA source data.
+Code and documentation are MIT licensed. NASA's dataset page specifies no license, so
+the repository and the hosted demo contain no source rows or true RUL values, only
+aggregate metrics and model outputs.
