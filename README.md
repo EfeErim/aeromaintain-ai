@@ -3,161 +3,72 @@
 [![CI](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/EfeErim/aeromaintain-ai/actions/workflows/ci.yml)
 [![Open demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromaintain-ai-demo.streamlit.app/)
 
-AeroMaintain AI is a reproducible remaining-useful-life (RUL) evaluation project
-on NASA's simulated C-MAPSS turbofan benchmark. It turns multivariate engine sensor
-histories into per-engine RUL estimates, empirical prediction intervals, risk
-rankings, and model-behavior explanations.
+AeroMaintain AI is a reproducible remaining-useful-life (RUL) evaluation project on
+NASA's simulated turbofan benchmarks, C-MAPSS and N-CMAPSS. It turns engine sensor
+histories into per-engine RUL estimates, empirical prediction intervals, risk alarms and
+model explanations. Its focus is honest evaluation: every protocol was frozen before the
+labels it was tested on were opened, and each test set was opened once.
 
-The main result is three clean checks, each with its protocol frozen and its test
-labels opened once. One operating condition held up, and six did not:
+> The data is simulated. AeroMaintain AI is an educational portfolio project, not an
+> airworthiness, maintenance-approval, or production-fleet system.
 
-| Clean test | Conditions | Fault modes | Engines | RMSE (95% CI) | Interval coverage, nominal 90% |
-|---|---:|---:|---:|---:|---:|
-| FD003, protocol v2 | 1 | 2 | 100 | **15.07** (12.61–17.50) | 92% (86–97%) |
-| FD002, protocol v3 | 6 | 1 | 259 | **27.36** (23.77–30.82) | 83% (78–87%) |
-| FD004, protocol v3 | 6 | 2 | 248 | **27.40** (24.53–30.23) | 83% (78–87%) |
+## What was shown
 
-These RMSE figures use the official, uncapped truth. Most papers cap the truth at 125
-or 130 cycles; scored that way after the fact, the same FD002 and FD004 predictions give
-14.74 and 15.33, close to recent published results, though capping hides the long-life
-engines the model misses ([retrospective comparison](docs/results_retrospective.md)).
+Four clean tests, each with its protocol and model lock published before the test labels
+were read, and each test set opened exactly once:
 
-> C-MAPSS contains simulated degradation trajectories. AeroMaintain AI is an
-> educational portfolio project, not an airworthiness, maintenance-approval, or
-> production-fleet system.
-
-## Results
-
-### Final clean test on N-CMAPSS: protocol v5
-
-[Protocol v5](docs/protocol_v5.md) locked an XGBoost model trained on 64 simulated
-N-CMAPSS engines (DS02–DS07) and pushed the lock before opening 35 never-read engines
-from DS01, DS08a and DS08c. **All three predeclared gates passed:**
-
-- RMSE was 13.06 (95% CI 8.92–13.15), against 22.70 for the mean baseline.
-- Mondrian interval coverage was 92.5% (88.0–98.0%).
-- A persistent point alarm missed 3 of 35 engines inside the 10–30 cycle window, exactly
-  at the 10% limit.
-
-Coverage drops to 76% above 60 remaining cycles, and 28% of sampled critical cycles are
-still predicted above 30. A capped/uncapped hybrid rule passed the v4 gates on C-MAPSS
-development data, but it was designed after seeing v4, so the demo model is unchanged.
-See the [full v5 results](docs/results_v5.md).
-
-### Removing the RUL cap: protocol v4
-
-[Protocol v4](docs/protocol_v4.md) asked whether uncapped targets fix the long-RUL
-underprediction found under v3, without losing critical engines. They do not clear that
-bar, so **the capped v3 model is retained**. On v4 development engines, uncapped XGBoost
-lowered RMSE on engines above 150 cycles from 79.3 to 52.1 on FD002 and from 110.3 to
-64.3 on FD004, but its critical miss rate rose from 16.4% to 21.4% and from 15.8% to
-24.1%, past the predeclared limit of +2 points. Every uncapped candidate failed that
-gate on both subsets.
-
-These are not clean tests: official test labels were not used, but the training engines
-and hyperparameters were seen under v3. Mondrian intervals covered 92% overall and at
-least 90% in each RUL band, at the cost of widths of 180–240 cycles above 150. A Ridge
-benchmark on 20 held-out N-CMAPSS simulation engines passed its two predeclared gates
-(RMSE 15.51 against a 23.56 baseline, coverage 92.8%), yet still predicted above 30 on
-48% of sampled critical cycles. See the [full v4 results](docs/results_v4.md).
-
-### Six operating conditions: protocol v3
-
-[Protocol v3](docs/protocol_v3.md) added operating-condition normalization and was
-frozen before FD002 or FD004 labels opened. Normalization lowered development RMSE by
-10.6% on FD002 and 10.1% on FD004, which met its 10% target. The clean tests then came
-in far above development: RMSE 27.4 against 18.9 and 19.6, with interval coverage below
-its nominal 90%.
-
-| Metric | FD002, clean | FD004, clean |
-|---|---:|---:|
-| Run | `fd002-v3-clean` | `fd004-v3-clean` |
-| RMSE | **27.36** (23.77–30.82) | **27.40** (24.53–30.23) |
-| MAE | 18.46 (15.96–21.01) | 19.65 (17.30–21.99) |
-| Signed bias | -8.98 (-12.12 to -5.71) | -9.34 (-12.62 to -6.31) |
-| NASA score, total | 10,388 (5,193–16,823) | 5,126 (3,627–6,816) |
-| NASA score per engine | 40.1 | 20.7 |
-| Interval coverage, nominal 90% | 82.6% (78.0–87.3%) | 82.7% (77.8–87.1%) |
-| Mean interval width | 55.8 (52.9–58.7) | 58.5 (55.6–61.3) |
-
-**Why the gap: a diagnosis made after opening.** Predictions top out near 127 cycles
-because training targets are capped at 125, while true RUL reaches 194–195 on these
-tests. The 14–17% of engines above 150 cycles produce 67–69% of the squared error. The
-development window of 150 excluded such rows, so development scoring could not warn of
-this. FD001 and FD003 never exposed it, since their true RUL stops at 145.
-
-| Engines by true RUL | FD002 RMSE, coverage | FD004 RMSE, coverage |
-|---|---:|---:|
-| At most 150 | 16.39, 92% (223 engines) | 17.38, 93% (206 engines) |
-| Above 150 | 61.00, 25% (36 engines) | 54.31, 31% (42 engines) |
-
-These subgroup figures are explanatory and do not replace the headline results. Both
-tests have now been opened, so a fix would need a new protocol and could not call
-either one clean again.
-
-Alert results hold up better, because critical engines sit far from the cap:
-
-| Rule | Dataset | Recall | Precision | Missed | False alarms |
+| Clean test | Data | Engines | RMSE (95% CI) | Mean baseline RMSE | Interval coverage, nominal 90% |
 |---|---|---:|---:|---:|---:|
-| `prediction <= 30` | FD002 | 57/61, 93% (84–97%) | 93% (84–97%) | 4 | 4 |
-| `interval_low <= 25` | FD002 | 60/61, 98% (91–100%) | 73% (63–82%) | 1 | 22 |
-| `prediction <= 30` | FD004 | 45/53, 85% (73–92%) | 90% (79–96%) | 8 | 5 |
-| `interval_low <= 20` | FD004 | 51/53, 96% (87–99%) | 76% (65–85%) | 2 | 16 |
+| Protocol v2 | C-MAPSS FD003, 1 condition | 100 | **15.07** (12.61–17.50) | – | 92% (86–97%) |
+| Protocol v3 | C-MAPSS FD002, 6 conditions | 259 | **27.36** (23.77–30.82) | – | 83% (78–87%) |
+| Protocol v3 | C-MAPSS FD004, 6 conditions | 248 | **27.40** (24.53–30.23) | – | 83% (78–87%) |
+| Protocol v5 | N-CMAPSS DS01, DS08a, DS08c | 35 | **13.06** (8.92–13.15) | 22.70 | 92.5% (88.0–98.0%) |
 
-### One operating condition: protocol v2
+- **One operating condition held up.** On FD003 the frozen v2 protocol met its nominal
+  interval coverage, and the lower-bound alert rule caught all 20 critical engines.
+- **The final test passed every predeclared gate.** Protocol v5 trained on 64 N-CMAPSS
+  engines from DS02–DS07 and tested once on 35 engines from other simulation subsets.
+  It beat the mean baseline, kept coverage above 85%, and had a confirmed alarm on 32 of
+  35 engines while 10–30 cycles remained. The alarm gate allowed at most 3 misses, and 3
+  were missed, so it passed at the limit. See the [v5 results](docs/results_v5.md).
+- **On the literature's scale, C-MAPSS accuracy is competitive.** With test truth capped
+  at 125, as most papers report, the same FD002 and FD004 predictions score 14.74 and
+  15.33. That rescoring is retrospective, after the labels were opened
+  ([comparison](docs/results_retrospective.md)).
 
-Both runs use the same frozen [protocol v2](docs/protocol_v2.md). Ranges are 95%
-engine-level bootstrap intervals. Secondary v3 results on these subsets, labeled
-`test previously seen`, are in [the results page](docs/results.md).
+## What was not shown
 
-| Metric | FD003, clean single-open test | FD001, test previously seen |
-|---|---:|---:|
-| Run | `fd003-v2-clean` | `fd001-v2` |
-| RMSE | **15.07** (12.61–17.50) | 15.80 (12.87–18.78) |
-| MAE | 11.23 (9.34–13.28) | 11.15 (9.10–13.43) |
-| Motor-normalized NASA score | 399 (240–620) | 398 (233–625) |
-| Interval coverage, nominal 90% | 92% (86–97%) | 94% (89–98%) |
-| Mean interval width | 53.3 (49.3–57.3) | 55.4 (51.2–59.4) |
+- **The RUL cap problem is still open.** The C-MAPSS model caps training targets at 125,
+  so it underpredicts engines with more life left. Those engines produce most of the
+  FD002/FD004 error, and coverage there fell to 83%. Uncapped models fixed the long-life
+  error but missed more critical engines (protocol v4). A hybrid rule kept both on
+  development data, but it was designed after seeing v4 and no clean C-MAPSS test is
+  left to confirm it, so the demo keeps the capped model.
+- **Single-cycle predictions near failure are still optimistic.** On the final test, 28%
+  of sampled critical cycles were predicted above 30, and coverage dropped to 76% above
+  60 remaining cycles. The persistent alarm passes because three alert cycles in a row
+  suffice.
+- **No state-of-the-art claim.** Published deep models report similar or lower capped
+  RMSE, but usually after repeated use of the official test set. Differences of about one
+  cycle do not rank methods.
+- **Nothing here transfers to real engines.** Both benchmarks are simulations, and the
+  final test rests on 35 engines.
 
-**Read the FD001 column with care.** Its test labels were seen before v2 was
-designed, so it is not independent evidence. Seed 42 is also the best of ten seeds
-on FD001: across seeds, RMSE averages 16.03 (SD 0.14, range 15.80–16.21).
+The full experiment sequence, with every table, is in the
+[protocol history](docs/protocol_history.md).
 
-#### Critical-engine alerts
+## Method
 
-A truly critical engine has at most 30 remaining cycles. Each threshold was chosen
-on training engines to reach 95% recall with the fewest alarms. Ranges here are
-Wilson 95% intervals.
-
-| Rule | Dataset | Recall | Precision | Missed | False alarms |
-|---|---|---:|---:|---:|---:|
-| `prediction <= 30` | FD003 | 16/20, 80% (58–92%) | 94% (73–99%) | 4 | 1 |
-| `interval_low <= 25` | FD003 | 20/20, 100% (84–100%) | 71% (53–85%) | 0 | 8 |
-| `prediction <= 30` | FD001 | 20/25, 80% (61–91%) | 100% (84–100%) | 5 | 0 |
-| `interval_low <= 20` | FD001 | 24/25, 96% (80–99%) | 86% (69–94%) | 1 | 4 |
-
-The interface uses the interval rule: it misses fewer critical engines and raises
-more false alarms. The interval is not a safety guarantee.
-
-### Targets
-
-| Target | Result | Status |
-|---|---|---|
-| FD001 and FD003 development RMSE at most about 16.6 | v2: 18.57, 17.62. v3: 18.57, 17.86 | **Missed** |
-| FD001 and FD003 mean interval width below 45 | v2 training: 55.7, 52.0. v3 training: 55.7, 53.2 | **Missed** |
-| FD002 and FD004 development RMSE at least 10% below raw features | 10.6%, 10.1% | Met |
-| Risk rule at 95% development recall | FD001 96%, FD002 98%, FD003 100%, FD004 97% | Met |
-| One clean holdout check per subset | FD002, FD003, and FD004 each opened once | Met |
-
-No target was set for FD002 or FD004 test RMSE, so 27.4 misses no written figure, but
-the coverage shortfall is real: both bootstrap ranges stop below 90%. On FD001 and
-FD003, test RMSE falls below 16.6, but that target was defined on development data and
-stays missed.
-
-The other v3 candidates did not change the picture. Training emphasis passed nowhere,
-and the five-seed ensemble passed only on FD003. Quantile regression with its own tuned
-tree counts still produced intervals 54–80% wider than Mondrian on FD001 and FD003. In
-v2, LSTM reached 18.39 on FD001 with a worse NASA score.
+- **Freeze first.** Each protocol fixes data roles, candidates, selection rules, interval
+  method and pass/fail gates in a committed document before any result it governs is
+  computed.
+- **Lock, then open once.** The selected model, its intervals and thresholds are hashed
+  into a lock that is published before test labels are read. A holdout ledger refuses a
+  second model on the same test set. In v5 the evaluator also refuses to run from a dirty
+  tree or with a lock that differs from the one committed.
+- **Publish what comes out.** Failed and borderline results (v3's coverage, v4's
+  rejected candidates, v5's alarm gate at its limit) are reported in the same detail as
+  passes.
 
 ## Application
 
@@ -181,7 +92,7 @@ source rows or true RUL.
 
 [![AeroMaintain engine risk](docs/screenshots/engine-health.png)](docs/screenshots/engine-health.png)
 
-## Evaluation workflow
+## Evaluation workflow (C-MAPSS)
 
 ```text
 Verify the NASA archive
@@ -205,19 +116,6 @@ Verify the NASA archive
 - A ledger refuses to open a clean holdout for a second model lock.
 - Existing run directories are never overwritten, and persisted artefacts are
   connected by SHA-256 hashes.
-
-### Model selection
-
-Development scoring matches the test: one random row per engine, scored against
-true RUL, repeated over 200 seeded draws. XGBoost can replace Ridge only by lowering
-median RMSE at least 5% without a worse median NASA score. It did so on all four
-datasets and won at least 99% of paired draws on each.
-
-These draws use rows with true RUL of at most 150. That window was chosen after
-FD001 test labels had been seen, so each run reports the alternatives: XGBoost also
-wins at 130 and 175, while Ridge wins with no window because of its better NASA
-score. Scores with no window are far worse for both models, because random cuts then
-reach rows with more remaining life than any test engine has.
 
 ## Run locally
 
@@ -251,36 +149,49 @@ pytest --cov=src/aeromaintain --cov-fail-under=80
 
 ## Documentation
 
-- [Reference run results](docs/results.md)
-- [Protocol v4](docs/protocol_v4.md), its [results](docs/results_v4.md) and
-  [evidence](docs/protocol_v4_evidence.json)
-- [Protocol v3](docs/protocol_v3.md) and its
-  [development evidence](docs/protocol_v3_development.json)
-- [Protocol v2](docs/protocol_v2.md)
-- [Machine-readable reference evidence](docs/reference_evidence.json)
-- [RUL model card](docs/model_card.md)
-- [C-MAPSS data card](docs/data_card.md)
+- [Protocol history](docs/protocol_history.md): every experiment and its tables
+- Protocols: [v2](docs/protocol_v2.md), [v3](docs/protocol_v3.md),
+  [v4](docs/protocol_v4.md), [v5](docs/protocol_v5.md)
+- Results: [v2 and v3](docs/results.md), [v4](docs/results_v4.md),
+  [retrospective literature comparison](docs/results_retrospective.md),
+  [v5](docs/results_v5.md)
+- Evidence: [reference](docs/reference_evidence.json),
+  [v3 development](docs/protocol_v3_development.json),
+  [v4](docs/protocol_v4_evidence.json), [v5](docs/protocol_v5_evidence.json),
+  [N-CMAPSS locks](docs/ncmapss_locks/)
+- [RUL model card](docs/model_card.md) and [data card](docs/data_card.md)
 - [Architecture and trust boundaries](docs/architecture.md)
 - [Research basis](docs/research.md)
 - [Changelog](CHANGELOG.md)
 
+## Future work
+
+These ideas are recorded and deliberately not implemented in this project:
+
+- **Asymmetric conformal intervals** (for example conformalized quantile regression with
+  a tighter lower tail), aimed at optimistic predictions near failure.
+- **Deep sequence models** (CNN, LSTM, transformer). Without an unopened C-MAPSS test,
+  any gain could not be confirmed independently.
+- **The CruiseBench N-CMAPSS protocol**, which uses cruise-phase windows instead of cycle
+  summaries.
+- **A clean test of the capped/uncapped hybrid rule** on data that was never used to
+  design it.
+- **Real fleet data**, which would need a new data agreement, new validation, and
+  different safety claims.
+
 ## Limitations
 
 - The data is simulated; it is not operational fleet telemetry.
-- The RUL cap limits predictions to about 127 cycles, so engines with more life left
-  are underpredicted, and on FD002 and FD004 their intervals usually miss. Protocol v4
-  found no uncapped model that fixes this without missing more critical engines.
+- The C-MAPSS RUL cap limits predictions to about 127 cycles, so long-life engines are
+  underpredicted, and on FD002 and FD004 their intervals usually miss.
 - Interval coverage on FD002 and FD004 fell short of its nominal 90%.
+- The final N-CMAPSS test has 35 engines; per-file results rest on 10–15 engines, and
+  the alarm gate passed with no margin.
 - Critical-engine figures rest on 20–61 engines, so their intervals are wide.
 - FD001 and FD003 development RMSE and interval-width targets were missed.
-- The eligibility window of 150 was an analysis choice. It hid the cap's cost during
-  development on FD002 and FD004, and removing it changes the Ridge-versus-XGBoost
-  outcome on all four subsets.
-- FD002 and FD004 used a shorter search than FD001 and FD003, under
-  [Amendment 1](docs/protocol_v3.md#amendment-1), so a better setting may have been
-  missed.
-- The nominal empirical interval is not a safety guarantee, and results do not
-  establish performance under real distribution shift.
+- The C-MAPSS eligibility window of 150 was an analysis choice that hid the cap's cost
+  during development.
+- The nominal empirical interval is not a safety guarantee.
 
 ## License
 

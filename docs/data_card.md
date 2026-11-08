@@ -1,4 +1,4 @@
-# C-MAPSS Data Card
+# C-MAPSS and N-CMAPSS Data Card
 
 Checked: 2026-11-05. The project uses subsets FD001 through FD004.
 
@@ -158,3 +158,44 @@ scientific misuse and overclaiming rather than personal privacy.
 Known limitations include one or six simulated operating conditions, one or two modeled
 degradation modes, simulated sensor noise, a fixed historical benchmark, and no real
 maintenance resource or cost information.
+
+## N-CMAPSS (protocols v4 and v5)
+
+Checked: 2026-11-08.
+
+- **Name.** Turbofan Engine Degradation Simulation Data Set 2 (N-CMAPSS), from the NASA
+  Prognostics Center of Excellence.
+- **Archive.** `17. Turbofan Engine Degradation Simulation Data Set 2.zip` on NASA's PHM
+  data mirror, 15,760,443,389 bytes. The URL and ETag are recorded locally in
+  `data/raw/ncmapss/source.json`. Per-file SHA-256 hashes are in the published locks.
+- **Reference.** Arias Chao et al., *Aircraft Engine Run-to-Failure Dataset under Real
+  Flight Conditions for Prognostics and Diagnostics*, Data 6(1), 2021.
+- **What it represents.** Simulated run-to-failure trajectories driven by real recorded
+  flight conditions, sampled at 1 Hz within each flight cycle. It is still simulation,
+  not fleet telemetry.
+- **Inputs used.** Only the measured sensors `X_s` (14 channels) and the operating
+  conditions `W` (4 channels), summarized per flight cycle. Virtual sensors `X_v`,
+  model parameters `T`, health parameters `hs` and flight class `Fc` are never used as
+  inputs. `Y` (RUL) is the target only.
+
+### Roles
+
+| Files | Engines | Role |
+|---|---:|---|
+| DS02-006 | 9 | v4 descriptive pilot; v5 training |
+| DS03-012, DS04, DS05, DS06, DS07 | 55 | v4 benchmark; v5 training |
+| DS01-005, DS08a-009, DS08c-008 | 35 | v5 final clean test, opened once |
+| DS08d-010 | – | Excluded; the archive member is truncated |
+
+- **Engine IDs.** IDs are namespaced by file, because equal unit numbers in different
+  files are different engines.
+- **Final test reservation.** The 35 final test engines were reserved in
+  [`final_holdout_reservation.json`](ncmapss_locks/final_holdout_reservation.json)
+  before the v5 protocol existed. Until the lock was committed, only their unit IDs
+  were read. Per-engine cycle counts were not computed either, because in run-to-failure
+  data they reveal engine life.
+- **Distribution shift.** Per-subset failure modes and flight classes for DS01 and DS08
+  were not verified from a primary source, so the v5 test's shift is defined only by
+  file identity.
+- **Redistribution.** As with C-MAPSS, no N-CMAPSS rows are redistributed.
+
