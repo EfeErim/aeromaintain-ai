@@ -2,20 +2,20 @@
 # environment. Install through pyproject.toml with this file as a constraint;
 # transitive packages remain resolver-managed and are recorded in each run.
 h5py==3.16.0
-joblib==1.5.3
+joblib==1.6.0
 numpy==2.4.6
-pandas==3.0.5
-plotly==6.9.0
-pyarrow==24.0.0
-pydantic==2.13.4
+pandas==3.1.1
+plotly==7.1.0
+pyarrow==26.0.1
+pydantic==2.14.3
 PyYAML==6.0.3
-scikit-learn==1.9.0
+scikit-learn==1.9.1
 shap==0.51.0
-streamlit==1.60.0
-typer==0.27.0
+streamlit==1.66.1
+typer==0.27.3
 xgboost==3.2.0
 
 # Development gate
-pytest==9.1.1
+pytest==9.2.0
 pytest-cov==7.1.0
-ruff==0.16.0
+ruff==0.17.3
