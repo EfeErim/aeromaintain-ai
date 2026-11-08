@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+Protocol v5 is the final experiment. Its N-CMAPSS clean test passed all three
+predeclared gates on 35 never-read engines.
+
+- Final test, opened once from `7df9e98`: XGBoost RMSE 13.06 against a 22.70 baseline,
+  Mondrian coverage 92.5%, timely point alarm missed 3 of 35 engines (limit 3).
+- C-MAPSS hybrid rule, development only: kept the critical miss rate and cut RMSE above
+  150 cycles from 79.3 to 55.9 (FD002) and 110.3 to 67.5 (FD004).
+- Added `aeromaintain.models.v5`, `configs/protocol_v5.json` and a `min_rul` option
+  for alarm replay.
+
 Protocol v4 tests whether uncapped targets fix long-RUL underprediction. They do not pass
 the frozen rules, so the capped v3 model stays. The demo remains on its v3 bundle.
 

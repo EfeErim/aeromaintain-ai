@@ -126,10 +126,12 @@ v5'in iki parçası var. İkisi de hiçbir sonuç hesaplanmadan önce yazılır 
 
 ### 4. v5'i çalıştır ve yayımla
 
-- [ ] 3a ve 3b'yi çalıştır. Çalıştırmadan önce çalışma ağacının temiz olduğunu ve commit özetini kayda geçir.
-- [ ] Kanıtı v4 yayımlama betiğiyle aynı yapıda yayımla. Geçen ve kalan kapıları, motor sayısını ve güven aralıklarını göster.
+- [x] 3a ve 3b'yi çalıştır. Çalıştırmadan önce çalışma ağacının temiz olduğunu ve commit özetini kayda geçir.
+- [x] Kanıtı v4 yayımlama betiğiyle aynı yapıda yayımla. Geçen ve kalan kapıları, motor sayısını ve güven aralıklarını göster.
 
 **Tamamlanma ölçütü:** `docs/results_v5.md` ve kanıt JSON'u yayımlanmış ve ledger'da tek kayıt var.
+
+**Sonuç (8 Kasım 2026):** Tamamlandı. Son test `7df9e98`'den bir kez açıldı, ledger'da tek `FINAL-v5` kaydı var. Üç kapı da geçti: RMSE 13,06'ya karşı referans 22,70, Mondrian kapsaması %92,5, zamanında alarm 35 motorda 3 kaçırma (sınırda). A parçasında hibrit kural iki alt kümede de v4 kapılarını geçti; bu yalnızca geliştirme kanıtı. Belge: [results_v5.md](results_v5.md).
 
 ### 5. Belgeleri tek bir son duruma indir
 

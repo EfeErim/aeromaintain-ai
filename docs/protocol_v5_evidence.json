@@ -1,0 +1,694 @@
+{
+  "ledger_entry": {
+    "data_sha256": {
+      "N-CMAPSS_DS01-005.h5": "3abdcee2a3c8136e8880e5d43ac8cdf12ab9f7f3ab37145f23b24c11335afbed",
+      "N-CMAPSS_DS08a-009.h5": "10ddf52e5441a05e3d0d8d797a34e0e5a9ac73dce8ae35d7b22d1ef224d24836",
+      "N-CMAPSS_DS08c-008.h5": "150bf696dcf4bbac84518f439ac0d491410037881e214c5b10c048a71770bb38"
+    },
+    "git_commit": "7df9e989d20cbe93b2dc9d9654797b382b8a03aa",
+    "model_lock_sha256": "e058e97837741323782d6ea46c7532df8a5ca3134d3ea3445fc04918cdb71844",
+    "protocol_sha256": "801bed1e0deac96feefbd11de1e181f95314b82ab849f7a0784905426b3d2d8e"
+  },
+  "part_a_hybrid_development": {
+    "accepted_on_all": true,
+    "datasets": {
+      "FD002": {
+        "gate": {
+          "accepted": true,
+          "checks": {
+            "critical_misses_acceptable": true,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "inputs_sha256": {
+          "cuts.npy": "e510eb66bbc8ef6e5bd89c0521145abf36adf09224eda66e21e849170f98317f",
+          "oof.parquet": "23f581fd562c4dc275eb2c2fc51949c2f0c0895983dd77b5e590e15381747960"
+        },
+        "metrics": {
+          "hybrid": {
+            "bands": {
+              "31-150": {
+                "engines": 156,
+                "sampled_cuts": 19024
+              },
+              "<=30": {
+                "engines": 156,
+                "sampled_cuts": 5094
+              },
+              ">150": {
+                "engines": 138,
+                "sampled_cuts": 7082
+              }
+            },
+            "bias": -3.276320897171226,
+            "critical_miss_rate": 0.1635257165292501,
+            "draws": 200,
+            "engines": 156,
+            "long_bias": -35.95801115049477,
+            "long_rmse": 55.88235754337426,
+            "mae": 23.036780909073943,
+            "mean_critical_misses_per_draw": 4.165,
+            "nasa_per_engine": 1188.8763999457121,
+            "rmse": 33.92526375589519
+          },
+          "reference": {
+            "bands": {
+              "31-150": {
+                "engines": 156,
+                "sampled_cuts": 19024
+              },
+              "<=30": {
+                "engines": 156,
+                "sampled_cuts": 5094
+              },
+              ">150": {
+                "engines": 138,
+                "sampled_cuts": 7082
+              }
+            },
+            "bias": -16.152249591333838,
+            "critical_miss_rate": 0.1635257165292501,
+            "draws": 200,
+            "engines": 156,
+            "long_bias": -71.29708055142325,
+            "long_rmse": 79.27497105904476,
+            "mae": 27.13831062492986,
+            "mean_critical_misses_per_draw": 4.165,
+            "nasa_per_engine": 19766.950617746756,
+            "rmse": 41.2122121832149
+          },
+          "uncapped": {
+            "bands": {
+              "31-150": {
+                "engines": 156,
+                "sampled_cuts": 19024
+              },
+              "<=30": {
+                "engines": 156,
+                "sampled_cuts": 5094
+              },
+              ">150": {
+                "engines": 138,
+                "sampled_cuts": 7082
+              }
+            },
+            "bias": 0.7975013843828287,
+            "critical_miss_rate": 0.2137809187279152,
+            "draws": 200,
+            "engines": 156,
+            "long_bias": -32.75194105338458,
+            "long_rmse": 52.09818505310436,
+            "mae": 23.4886710345363,
+            "mean_critical_misses_per_draw": 5.445,
+            "nasa_per_engine": 951.4398665482448,
+            "rmse": 33.34810526098669
+          }
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.0,
+              0.0
+            ],
+            "long_rmse": [
+              -25.922122675607703,
+              -21.19453795445976
+            ],
+            "mae": [
+              -5.609950411130242,
+              -2.5251632072497583
+            ],
+            "nasa_per_engine": [
+              -49272.24261076561,
+              -1444.932148784997
+            ],
+            "rmse": [
+              -9.139657971297034,
+              -5.38321663318982
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "switched_cut_fraction": 0.31887820512820514
+      },
+      "FD004": {
+        "gate": {
+          "accepted": true,
+          "checks": {
+            "critical_misses_acceptable": true,
+            "long_rmse_improves": true,
+            "nasa_not_worse": true,
+            "overall_rmse_not_worse": true
+          }
+        },
+        "inputs_sha256": {
+          "cuts.npy": "f9a5e14cc9ce6cb232728d230976d6a23d62291d9c40dc4745b7342c04064f24",
+          "oof.parquet": "d36846d6d5f57cf13605cfee18146341848f304fe3a41fe7ff49b0944febcaf2"
+        },
+        "metrics": {
+          "hybrid": {
+            "bands": {
+              "31-150": {
+                "engines": 149,
+                "sampled_cuts": 15850
+              },
+              "<=30": {
+                "engines": 149,
+                "sampled_cuts": 4206
+              },
+              ">150": {
+                "engines": 140,
+                "sampled_cuts": 9744
+              }
+            },
+            "bias": -3.185881943141404,
+            "critical_miss_rate": 0.15786970993818356,
+            "draws": 200,
+            "engines": 149,
+            "long_bias": -28.558299002242205,
+            "long_rmse": 67.47009732612787,
+            "mae": 30.535771632488792,
+            "mean_critical_misses_per_draw": 3.32,
+            "nasa_per_engine": 194659.5463111206,
+            "rmse": 45.03536242250022
+          },
+          "reference": {
+            "bands": {
+              "31-150": {
+                "engines": 149,
+                "sampled_cuts": 15850
+              },
+              "<=30": {
+                "engines": 149,
+                "sampled_cuts": 4206
+              },
+              ">150": {
+                "engines": 140,
+                "sampled_cuts": 9744
+              }
+            },
+            "bias": -30.914977827374916,
+            "critical_miss_rate": 0.15786970993818356,
+            "draws": 200,
+            "engines": 149,
+            "long_bias": -96.22330324466789,
+            "long_rmse": 110.32648728540285,
+            "mae": 41.308207431645855,
+            "mean_critical_misses_per_draw": 3.32,
+            "nasa_per_engine": 272899533.84668195,
+            "rmse": 65.06482746068667
+          },
+          "uncapped": {
+            "bands": {
+              "31-150": {
+                "engines": 149,
+                "sampled_cuts": 15850
+              },
+              "<=30": {
+                "engines": 149,
+                "sampled_cuts": 4206
+              },
+              ">150": {
+                "engines": 140,
+                "sampled_cuts": 9744
+              }
+            },
+            "bias": 2.125857214652652,
+            "critical_miss_rate": 0.24060865430337613,
+            "draws": 200,
+            "engines": 149,
+            "long_bias": -25.30871775809963,
+            "long_rmse": 64.26049420850939,
+            "mae": 31.543346092735963,
+            "mean_critical_misses_per_draw": 5.06,
+            "nasa_per_engine": 125283.61517892288,
+            "rmse": 44.63255788426758
+          }
+        },
+        "paired_comparison": {
+          "intervals_95": {
+            "critical_miss_rate": [
+              0.0,
+              0.0
+            ],
+            "long_rmse": [
+              -49.001988989003266,
+              -36.81140614948819
+            ],
+            "mae": [
+              -14.038965833612727,
+              -7.513900384320507
+            ],
+            "nasa_per_engine": [
+              -792879313.317792,
+              -2213574.700374132
+            ],
+            "rmse": [
+              -24.55618848619248,
+              -15.28008225231885
+            ]
+          },
+          "method": "paired engine-column bootstrap; candidate minus reference",
+          "resamples": 2000,
+          "seed": 44
+        },
+        "switched_cut_fraction": 0.4033892617449664
+      }
+    },
+    "protocol_sha256": "801bed1e0deac96feefbd11de1e181f95314b82ab849f7a0784905426b3d2d8e",
+    "rule": "reference if reference < 115, else xgboost_normalized",
+    "status": "development evidence only; rule designed after v4 results"
+  },
+  "part_b_final_test": {
+    "baseline": {
+      "bands": {
+        "31-150": {
+          "engines": 35,
+          "sampled_cuts": 3757
+        },
+        "<=30": {
+          "engines": 35,
+          "sampled_cuts": 3243
+        },
+        ">150": {
+          "engines": 0,
+          "sampled_cuts": 0
+        }
+      },
+      "bias": 4.181785714285715,
+      "critical_miss_rate": 1.0,
+      "draws": 200,
+      "engines": 35,
+      "long_bias": null,
+      "long_rmse": null,
+      "mae": 18.950178571428573,
+      "mean_critical_misses_per_draw": 16.215,
+      "nasa_per_engine": 9.785202534225428,
+      "rmse": 22.70364262387992
+    },
+    "bootstrap_95": {
+      "baseline_rmse": [
+        20.465096047905565,
+        29.33524171112282
+      ],
+      "mondrian_coverage": [
+        0.88,
+        0.98
+      ],
+      "rmse": [
+        8.916301718731797,
+        13.144971463318123
+      ]
+    },
+    "chosen": "xgboost",
+    "gates": {
+      "checks": {
+        "G1_rmse_not_worse_than_baseline": true,
+        "G2_mondrian_coverage": true,
+        "G3_timely_point_alarm": true
+      },
+      "passed": true
+    },
+    "git_commit": "7df9e989d20cbe93b2dc9d9654797b382b8a03aa",
+    "intervals": {
+      "mondrian": {
+        "file_N-CMAPSS_DS01-005.h5": {
+          "above_upper": 214,
+          "below_lower": 3,
+          "coverage": 0.8915,
+          "cuts": 2000,
+          "engines": 10,
+          "interval_score": 57.62766720843315,
+          "mean_width": 42.003637221574785,
+          "small_group": true
+        },
+        "file_N-CMAPSS_DS08a-009.h5": {
+          "above_upper": 130,
+          "below_lower": 113,
+          "coverage": 0.919,
+          "cuts": 3000,
+          "engines": 15,
+          "interval_score": 56.78603487607837,
+          "mean_width": 41.849365311831235,
+          "small_group": true
+        },
+        "file_N-CMAPSS_DS08c-008.h5": {
+          "above_upper": 27,
+          "below_lower": 38,
+          "coverage": 0.9675,
+          "cuts": 2000,
+          "engines": 10,
+          "interval_score": 45.324708322629334,
+          "mean_width": 41.30773776446283,
+          "small_group": true
+        },
+        "overall": {
+          "above_upper": 371,
+          "below_lower": 154,
+          "coverage": 0.925,
+          "cuts": 7000,
+          "engines": 35,
+          "interval_score": 53.75183652719429,
+          "mean_width": 41.738692272509844,
+          "small_group": false
+        },
+        "rul_31-60": {
+          "above_upper": 116,
+          "below_lower": 0,
+          "coverage": 0.9588360539389638,
+          "cuts": 2818,
+          "engines": 35,
+          "interval_score": 57.173476676047486,
+          "mean_width": 51.39247484796008,
+          "small_group": false
+        },
+        "rul_<=30": {
+          "above_upper": 31,
+          "below_lower": 154,
+          "coverage": 0.9429540548874499,
+          "cuts": 3243,
+          "engines": 35,
+          "interval_score": 39.72260571801659,
+          "mean_width": 30.085381284195297,
+          "small_group": false
+        },
+        "rul_>60": {
+          "above_upper": 224,
+          "below_lower": 0,
+          "coverage": 0.7614483493077743,
+          "cuts": 939,
+          "engines": 20,
+          "interval_score": 91.93566355029868,
+          "mean_width": 53.01380221658368,
+          "small_group": false
+        }
+      },
+      "split_conformal": {
+        "file_N-CMAPSS_DS01-005.h5": {
+          "above_upper": 234,
+          "below_lower": 3,
+          "coverage": 0.8815,
+          "cuts": 2000,
+          "engines": 10,
+          "interval_score": 65.75525233840942,
+          "mean_width": 43.217124938964844,
+          "small_group": true
+        },
+        "file_N-CMAPSS_DS08a-009.h5": {
+          "above_upper": 74,
+          "below_lower": 132,
+          "coverage": 0.9313333333333333,
+          "cuts": 3000,
+          "engines": 15,
+          "interval_score": 58.752479530334476,
+          "mean_width": 43.198123931884766,
+          "small_group": true
+        },
+        "file_N-CMAPSS_DS08c-008.h5": {
+          "above_upper": 7,
+          "below_lower": 42,
+          "coverage": 0.9755,
+          "cuts": 2000,
+          "engines": 10,
+          "interval_score": 45.37786380958557,
+          "mean_width": 43.3259391784668,
+          "small_group": true
+        },
+        "overall": {
+          "above_upper": 315,
+          "below_lower": 177,
+          "coverage": 0.9297142857142857,
+          "cuts": 7000,
+          "engines": 35,
+          "interval_score": 56.9319529838562,
+          "mean_width": 43.24007034301758,
+          "small_group": false
+        },
+        "rul_31-60": {
+          "above_upper": 23,
+          "below_lower": 8,
+          "coverage": 0.988999290276792,
+          "cuts": 2818,
+          "engines": 35,
+          "interval_score": 47.63105909159371,
+          "mean_width": 46.931175231933594,
+          "small_group": false
+        },
+        "rul_<=30": {
+          "above_upper": 0,
+          "below_lower": 169,
+          "coverage": 0.9478877582485353,
+          "cuts": 3243,
+          "engines": 35,
+          "interval_score": 49.91547349452826,
+          "mean_width": 38.95658493041992,
+          "small_group": false
+        },
+        "rul_>60": {
+          "above_upper": 292,
+          "below_lower": 0,
+          "coverage": 0.6890308839190629,
+          "cuts": 939,
+          "engines": 20,
+          "interval_score": 109.07717340162641,
+          "mean_width": 46.95660400390625,
+          "small_group": false
+        }
+      }
+    },
+    "lock_sha256": "e058e97837741323782d6ea46c7532df8a5ca3134d3ea3445fc04918cdb71844",
+    "per_file": {
+      "N-CMAPSS_DS01-005.h5": {
+        "baseline": {
+          "bands": {
+            "31-150": {
+              "engines": 10,
+              "sampled_cuts": 1319
+            },
+            "<=30": {
+              "engines": 10,
+              "sampled_cuts": 681
+            },
+            ">150": {
+              "engines": 0,
+              "sampled_cuts": 0
+            }
+          },
+          "bias": -5.7835,
+          "critical_miss_rate": 1.0,
+          "draws": 200,
+          "engines": 10,
+          "long_bias": null,
+          "long_rmse": null,
+          "mae": 23.05375,
+          "mean_critical_misses_per_draw": 3.405,
+          "nasa_per_engine": 12.276534604510827,
+          "rmse": 26.936307398193986
+        },
+        "point": {
+          "bands": {
+            "31-150": {
+              "engines": 10,
+              "sampled_cuts": 1319
+            },
+            "<=30": {
+              "engines": 10,
+              "sampled_cuts": 681
+            },
+            ">150": {
+              "engines": 0,
+              "sampled_cuts": 0
+            }
+          },
+          "bias": -6.962408574819565,
+          "critical_miss_rate": 0.08223201174743025,
+          "draws": 200,
+          "engines": 10,
+          "long_bias": null,
+          "long_rmse": null,
+          "mae": 10.208324272155762,
+          "mean_critical_misses_per_draw": 0.28,
+          "nasa_per_engine": 2.6984183507939226,
+          "rmse": 14.515406111204458
+        }
+      },
+      "N-CMAPSS_DS08a-009.h5": {
+        "baseline": {
+          "bands": {
+            "31-150": {
+              "engines": 15,
+              "sampled_cuts": 1559
+            },
+            "<=30": {
+              "engines": 15,
+              "sampled_cuts": 1441
+            },
+            ">150": {
+              "engines": 0,
+              "sampled_cuts": 0
+            }
+          },
+          "bias": 6.0335,
+          "critical_miss_rate": 1.0,
+          "draws": 200,
+          "engines": 15,
+          "long_bias": null,
+          "long_rmse": null,
+          "mae": 17.737291666666668,
+          "mean_critical_misses_per_draw": 7.205,
+          "nasa_per_engine": 8.723998102347366,
+          "rmse": 21.185339614538478
+        },
+        "point": {
+          "bands": {
+            "31-150": {
+              "engines": 15,
+              "sampled_cuts": 1559
+            },
+            "<=30": {
+              "engines": 15,
+              "sampled_cuts": 1441
+            },
+            ">150": {
+              "engines": 0,
+              "sampled_cuts": 0
+            }
+          },
+          "bias": 1.1154894369939963,
+          "critical_miss_rate": 0.3178348369188064,
+          "draws": 200,
+          "engines": 15,
+          "long_bias": null,
+          "long_rmse": null,
+          "mae": 9.322754833092292,
+          "mean_critical_misses_per_draw": 2.29,
+          "nasa_per_engine": 4.182405965123824,
+          "rmse": 13.12029221177573
+        }
+      },
+      "N-CMAPSS_DS08c-008.h5": {
+        "baseline": {
+          "bands": {
+            "31-150": {
+              "engines": 10,
+              "sampled_cuts": 879
+            },
+            "<=30": {
+              "engines": 10,
+              "sampled_cuts": 1121
+            },
+            ">150": {
+              "engines": 0,
+              "sampled_cuts": 0
+            }
+          },
+          "bias": 11.3695,
+          "critical_miss_rate": 1.0,
+          "draws": 200,
+          "engines": 10,
+          "long_bias": null,
+          "long_rmse": null,
+          "mae": 16.6659375,
+          "mean_critical_misses_per_draw": 5.605,
+          "nasa_per_engine": 8.885677111757126,
+          "rmse": 20.13209579874882
+        },
+        "point": {
+          "bands": {
+            "31-150": {
+              "engines": 10,
+              "sampled_cuts": 879
+            },
+            "<=30": {
+              "engines": 10,
+              "sampled_cuts": 1121
+            },
+            ">150": {
+              "engines": 0,
+              "sampled_cuts": 0
+            }
+          },
+          "bias": 5.104271525487304,
+          "critical_miss_rate": 0.3639607493309545,
+          "draws": 200,
+          "engines": 10,
+          "long_bias": null,
+          "long_rmse": null,
+          "mae": 9.07800827409327,
+          "mean_critical_misses_per_draw": 2.04,
+          "nasa_per_engine": 2.0487977936354036,
+          "rmse": 11.303553425710065
+        }
+      }
+    },
+    "point": {
+      "bands": {
+        "31-150": {
+          "engines": 35,
+          "sampled_cuts": 3757
+        },
+        "<=30": {
+          "engines": 35,
+          "sampled_cuts": 3243
+        },
+        ">150": {
+          "engines": 0,
+          "sampled_cuts": 0
+        }
+      },
+      "bias": -0.0528293982403619,
+      "critical_miss_rate": 0.284304656182547,
+      "draws": 200,
+      "engines": 35,
+      "long_bias": null,
+      "long_rmse": null,
+      "mae": 9.505847084539278,
+      "mean_critical_misses_per_draw": 4.61,
+      "nasa_per_engine": 3.148807169175732,
+      "rmse": 13.056803767764121
+    },
+    "replay": {
+      "mondrian_lower_timely": {
+        "critical_engines": 35,
+        "engines": 35,
+        "engines_with_alarm": 35,
+        "false_events_per_engine": 2.5714285714285716,
+        "median_first_confirmed_lead": 55.0,
+        "missed_engines": 0,
+        "missed_fraction": 0.0
+      },
+      "point_any": {
+        "critical_engines": 35,
+        "engines": 35,
+        "engines_with_alarm": 33,
+        "false_events_per_engine": 0.2571428571428571,
+        "median_first_confirmed_lead": 22.0,
+        "missed_engines": 2,
+        "missed_fraction": 0.05714285714285714
+      },
+      "point_timely": {
+        "critical_engines": 35,
+        "engines": 35,
+        "engines_with_alarm": 33,
+        "false_events_per_engine": 0.2571428571428571,
+        "median_first_confirmed_lead": 22.0,
+        "missed_engines": 3,
+        "missed_fraction": 0.08571428571428572
+      },
+      "split_lower_timely": {
+        "critical_engines": 35,
+        "engines": 35,
+        "engines_with_alarm": 35,
+        "false_events_per_engine": 2.6285714285714286,
+        "median_first_confirmed_lead": 55.0,
+        "missed_engines": 0,
+        "missed_fraction": 0.0
+      }
+    }
+  },
+  "published_lock": "docs/ncmapss_locks/final_v5.json"
+}
