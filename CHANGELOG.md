@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Rewrote the README around results and setup; removed internal planning notes.
+- Added pre-commit hooks (Ruff, whitespace) and Dependabot for pip and GitHub Actions.
+
 ## 1.0.0 (2026-11-08)
 
 Final release. The project is complete: protocols v4 and v5 close the open questions

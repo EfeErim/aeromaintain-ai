@@ -36,3 +36,6 @@ runs/
 .env
 .env.*
 !.env.example
+
+# Personal notes and working files
+.local/
