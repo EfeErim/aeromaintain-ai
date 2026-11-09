@@ -21,11 +21,6 @@ import yaml
 from sklearn.model_selection import train_test_split
 
 ARCHIVE_NAME = "CMAPSSData.zip"
-EXPECTED_MEMBERS = {
-    "train": "train_FD001.txt",
-    "test": "test_FD001.txt",
-    "test_rul": "RUL_FD001.txt",
-}
 DATASET_SHAPES = {
     "FD001": {
         "train_rows": 20_631,
@@ -711,19 +706,4 @@ def prepare_dataset(
         development_engines=len(split_manifest["development_engine_ids"]),
         calibration_engines=len(split_manifest["calibration_engine_ids"]),
         artifact_hashes=artifact_hashes,
-    )
-
-
-def prepare_fd001(
-    project_root: Path,
-    *,
-    archive_path: Path | None = None,
-    contract: DataContract | None = None,
-) -> PrepareResult:
-    """Prepare the FD001 subset."""
-    return prepare_dataset(
-        project_root,
-        dataset="FD001",
-        archive_path=archive_path,
-        contract=contract,
     )

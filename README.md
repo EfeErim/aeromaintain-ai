@@ -68,7 +68,6 @@ cd aeromaintain-ai
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -c constraints/python311-tested.txt -e .
 
-aeromaintain doctor
 aeromaintain pipeline --run-id fd001-demo   # downloads and verifies the NASA archive
 aeromaintain app --run-id fd001-demo
 ```
@@ -79,7 +78,6 @@ Development checks:
 
 ```bash
 pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
-pre-commit install            # optional: pipx install pre-commit
 ruff check . && ruff format --check .
 pytest --cov=src/aeromaintain --cov-fail-under=80
 ```

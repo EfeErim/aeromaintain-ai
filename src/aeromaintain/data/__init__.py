@@ -5,7 +5,6 @@ from aeromaintain.data.pipeline import (
     DataPipelineError,
     PrepareResult,
     prepare_dataset,
-    prepare_fd001,
 )
 
 __all__ = [
@@ -13,5 +12,4 @@ __all__ = [
     "DataPipelineError",
     "PrepareResult",
     "prepare_dataset",
-    "prepare_fd001",
 ]

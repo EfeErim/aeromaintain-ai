@@ -19,7 +19,7 @@ from aeromaintain.data.pipeline import (
     extract_fd001_members,
     load_data_contract,
     parse_sensor_table,
-    prepare_fd001,
+    prepare_dataset,
     validate_sensor_table,
     verify_archive,
 )
@@ -268,8 +268,12 @@ def test_prepare_writes_isolated_labels_reports_and_stable_hashes(
     )
     project_root = tmp_path / "project"
 
-    first = prepare_fd001(project_root, archive_path=archive, contract=contract)
-    second = prepare_fd001(project_root, archive_path=archive, contract=contract)
+    first = prepare_dataset(
+        project_root, dataset="FD001", archive_path=archive, contract=contract
+    )
+    second = prepare_dataset(
+        project_root, dataset="FD001", archive_path=archive, contract=contract
+    )
     assert first.artifact_hashes == second.artifact_hashes
     assert first.development_engines == 16
     assert first.calibration_engines == 4

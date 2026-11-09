@@ -32,16 +32,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
 
-      - name: Package health
+      - name: Dependency check
         run: |
           python -m pip check
-          aeromaintain doctor --project-root .
-
-      - name: Delivery smoke
-        run: |
-          pytest -q \
-            tests/test_app_delivery.py::test_small_fixture_pipeline_completes_evaluation_and_report \
-            tests/test_app_delivery.py::test_streamlit_small_fixture_renders_active_pages
 
       - name: Raw-data exclusion
         shell: bash

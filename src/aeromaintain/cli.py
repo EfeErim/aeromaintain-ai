@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
-import importlib.util
 import os
 import subprocess
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from aeromaintain.config import (
-    REQUIRED_CONFIG_FILES,
-    REQUIRED_LOCAL_DATA_DIRS,
-    resolve_project_root,
-)
+from aeromaintain.config import resolve_project_root
 from aeromaintain.data import DataPipelineError, prepare_dataset
 from aeromaintain.delivery import DeliveryError, finish_locked_run, run_pipeline
 from aeromaintain.models import (
@@ -35,112 +29,9 @@ app = typer.Typer(
 )
 
 
-@dataclass(frozen=True)
-class DoctorCheck:
-    """One deterministic environment health check."""
-
-    name: str
-    passed: bool
-    detail: str
-
-
-def collect_doctor_checks(
-    project_root: Path,
-    version_info: tuple[int, int, int] | None = None,
-) -> tuple[DoctorCheck, ...]:
-    """Collect environment checks without printing or changing project files."""
-    version = version_info or (
-        sys.version_info.major,
-        sys.version_info.minor,
-        sys.version_info.micro,
-    )
-    supported_python = version[:2] == (3, 11)
-
-    missing_configs = [
-        name
-        for name in REQUIRED_CONFIG_FILES
-        if not (project_root / "configs" / name).is_file()
-    ]
-    missing_directories = [
-        name for name in REQUIRED_LOCAL_DATA_DIRS if not (project_root / name).is_dir()
-    ]
-    package_available = importlib.util.find_spec("aeromaintain") is not None
-    writable_root = project_root.is_dir() and os.access(project_root, os.W_OK)
-    local_directories_ready = not missing_directories or writable_root
-
-    return (
-        DoctorCheck(
-            "python",
-            supported_python,
-            f"{version[0]}.{version[1]}.{version[2]} (required >=3.11,<3.12)",
-        ),
-        DoctorCheck(
-            "package",
-            package_available,
-            "aeromaintain import is available"
-            if package_available
-            else "aeromaintain import is unavailable",
-        ),
-        DoctorCheck(
-            "configs",
-            not missing_configs,
-            "project.yaml found"
-            if not missing_configs
-            else f"missing: {', '.join(missing_configs)}",
-        ),
-        DoctorCheck(
-            "local directories",
-            local_directories_ready,
-            "raw, processed, and artifacts directories found"
-            if not missing_directories
-            else (
-                "created on first run: " + ", ".join(missing_directories)
-                if writable_root
-                else "missing and project root is not writable: "
-                + ", ".join(missing_directories)
-            ),
-        ),
-        DoctorCheck(
-            "project root",
-            writable_root,
-            f"writable: {project_root}"
-            if writable_root
-            else f"not writable: {project_root}",
-        ),
-    )
-
-
 @app.callback()
 def main() -> None:
     """Run AeroMaintain AI commands."""
-
-
-@app.command()
-def doctor(
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root to inspect. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
-) -> None:
-    """Report whether the local Python and project environment are usable."""
-    root = resolve_project_root(project_root)
-    checks = collect_doctor_checks(root)
-
-    typer.echo("AeroMaintain AI environment doctor")
-    for check in checks:
-        marker = "PASS" if check.passed else "FAIL"
-        typer.echo(f"[{marker}] {check.name}: {check.detail}")
-
-    passed = sum(check.passed for check in checks)
-    typer.echo(f"Summary: {passed}/{len(checks)} checks passed")
-    if passed != len(checks):
-        raise typer.Exit(code=1)
 
 
 @app.command()
@@ -509,10 +400,6 @@ def app_command(
             resolve_path=True,
         ),
     ] = None,
-    smoke: Annotated[
-        bool,
-        typer.Option("--smoke", help="Render once with Streamlit's test runtime."),
-    ] = False,
 ) -> None:
     """Open the local Streamlit application for one verified run."""
     from aeromaintain.app import ArtifactValidationError, load_verified_run
@@ -528,34 +415,6 @@ def app_command(
     environment = os.environ.copy()
     environment["AEROMAINTAIN_RUN_ID"] = run_id
     environment["AEROMAINTAIN_PROJECT_ROOT"] = str(root)
-    if smoke:
-        previous_run = os.environ.get("AEROMAINTAIN_RUN_ID")
-        previous_root = os.environ.get("AEROMAINTAIN_PROJECT_ROOT")
-        os.environ.update(
-            {
-                "AEROMAINTAIN_RUN_ID": run_id,
-                "AEROMAINTAIN_PROJECT_ROOT": str(root),
-            }
-        )
-        try:
-            from streamlit.testing.v1 import AppTest
-
-            tested = AppTest.from_file(str(script), default_timeout=30).run()
-        finally:
-            if previous_run is None:
-                os.environ.pop("AEROMAINTAIN_RUN_ID", None)
-            else:
-                os.environ["AEROMAINTAIN_RUN_ID"] = previous_run
-            if previous_root is None:
-                os.environ.pop("AEROMAINTAIN_PROJECT_ROOT", None)
-            else:
-                os.environ["AEROMAINTAIN_PROJECT_ROOT"] = previous_root
-        if tested.exception:
-            typer.echo(f"Application smoke failed: {tested.exception}", err=True)
-            raise typer.Exit(code=1)
-        typer.echo(f"Streamlit smoke passed for verified run: {run_id}")
-        return
-
     completed = subprocess.run(
         [
             sys.executable,
