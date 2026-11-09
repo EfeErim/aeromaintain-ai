@@ -16,7 +16,7 @@ from aeromaintain.data.pipeline import (
     add_train_rul,
     build_eda_summary,
     create_engine_split,
-    extract_fd001_members,
+    extract_members,
     load_data_contract,
     parse_sensor_table,
     prepare_dataset,
@@ -141,7 +141,7 @@ def test_archive_hash_and_path_traversal_are_rejected(tmp_path: Path) -> None:
         malicious_member="../escaped.txt",
     )
     with pytest.raises(DataPipelineError, match="Unsafe ZIP member path"):
-        extract_fd001_members(malicious, tmp_path / "raw")
+        extract_members(malicious, tmp_path / "raw", "FD001")
     assert not (tmp_path / "escaped.txt").exists()
 
 
@@ -153,18 +153,18 @@ def test_extraction_selects_only_fd001_and_refuses_changed_raw_file(
     _write_archive(archive, train_rows=rows, test_rows=rows, labels=[1])
     destination = tmp_path / "raw"
 
-    extracted = extract_fd001_members(archive, destination)
+    extracted = extract_members(archive, destination, "FD001")
     assert set(extracted) == {"train", "test", "test_rul"}
     assert sorted(path.name for path in destination.iterdir()) == [
         "RUL_FD001.txt",
         "test_FD001.txt",
         "train_FD001.txt",
     ]
-    assert extract_fd001_members(archive, destination) == extracted
+    assert extract_members(archive, destination, "FD001") == extracted
 
     extracted["train"].write_text("changed", encoding="utf-8")
     with pytest.raises(DataPipelineError, match="Refusing to overwrite"):
-        extract_fd001_members(archive, destination)
+        extract_members(archive, destination, "FD001")
 
 
 def test_parser_and_contract_reject_bad_schema_duplicate_and_nonfinite(

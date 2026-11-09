@@ -298,11 +298,6 @@ def extract_members(
         raise DataPipelineError(f"Invalid ZIP archive {archive_path}: {exc}") from exc
 
 
-def extract_fd001_members(archive_path: Path, destination: Path) -> dict[str, Path]:
-    """Safely select and materialize only the three FD001 source members."""
-    return extract_members(archive_path, destination, "FD001")
-
-
 def parse_sensor_table(path: Path) -> pd.DataFrame:
     """Parse a whitespace-delimited C-MAPSS table into the fixed schema."""
     try:

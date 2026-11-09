@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=75"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,8 @@ version = "1.0.0"
 description = "Educational NASA C-MAPSS remaining-useful-life evaluation prototype"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "EfeErim" }]
 keywords = [
   "predictive-maintenance",
@@ -17,9 +18,8 @@ keywords = [
   "streamlit",
 ]
 classifiers = [
-  "Development Status :: 2 - Pre-Alpha",
+  "Development Status :: 7 - Inactive",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3.11",
 ]
 dependencies = [

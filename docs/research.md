@@ -1,4 +1,4 @@
-# Research Basis and Method Decisions
+# Research basis and method decisions
 
 Checked: 2026-11-05
 

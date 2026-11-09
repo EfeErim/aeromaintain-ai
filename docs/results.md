@@ -1,4 +1,4 @@
-# Reference Run Results
+# Reference run results
 
 Model and data-derived files are Git-ignored. Sanitized aggregate evidence is stored
 in [`reference_evidence.json`](reference_evidence.json).
