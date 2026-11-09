@@ -59,6 +59,28 @@ Leakage controls that matter most:
 - test labels live in a separate file that the evaluator reads only after the lock
   hash validates.
 
+## Design decisions
+
+- **Open each test set once.** The usual practice is to report the best of many runs
+  against the official test set. That makes every number optimistic by an unknown
+  amount, so each protocol here is committed before its test, and a holdout ledger
+  refuses a second model lock. The cost is that a bad result stays published (protocol
+  v4 was a negative result, and v5 passed G3 with no margin).
+- **Score development on one random cut per engine.** Scoring every cycle row would
+  weight long-lived engines more and reward easy late-life rows. The test has one
+  prediction per engine, so development draws 200 random cuts per engine and takes the
+  median. The window of 150 cycles for those cuts is a disclosed choice.
+- **Keep the RUL cap at 125.** An uncapped target fixed the underprediction of
+  long-life engines on FD002/FD004 but missed more engines near failure, which is the
+  costly error for maintenance ([v4 results](docs/results_v4.md)).
+- **Alarm on three consecutive cycles, not one.** Single predictions near failure are
+  noisy and optimistic. On the v5 test the persistent point alarm confirmed a median
+  22 cycles before failure with 0.26 false events per engine. Alarming on the interval
+  lower bound instead gave 55 cycles of lead but 2.57 false events per engine.
+- **Empirical intervals banded by predicted RUL (Mondrian), not one global margin.**
+  Errors grow with predicted life, so a single margin is too wide near failure and too
+  narrow far from it. Coverage is measured on the test, not assumed.
+
 Design notes are in [architecture](docs/architecture.md), the
 [model card](docs/model_card.md) and the [data card](docs/data_card.md). Method
 choices and the literature they rest on are in [research notes](docs/research.md).
@@ -78,6 +100,9 @@ aeromaintain app --run-id fd001-demo
 ```
 
 `--dataset` selects FD001–FD004, and `--archive PATH` uses a local copy of the archive.
+The FD001 pipeline takes about 11 minutes on CPU. [docs/demo.md](docs/demo.md) has the
+captured output of these commands from a fresh clone. The hosted demo sleeps when idle
+and takes a minute to wake.
 
 Development checks:
 
@@ -97,9 +122,12 @@ demo/               aggregate-only bundle used by the hosted demo
 tests/              unit and protocol tests
 ```
 
-Protocol documents and their `models/v*.py` implementations are versioned on purpose:
-their SHA-256 hashes are part of the published model locks, so they are never edited
-after a test is run.
+Protocol documents, configs and the code they ran (`models/v*.py`, `models/rul.py`,
+`evaluation/`, `data/ncmapss.py`) are versioned on purpose: their SHA-256 hashes are
+part of the published model locks, so they are never edited after a test is run.
+`tests/test_protocol_v5.py` fails if any file pinned by the v5 lock changes. Known
+defects in frozen code are corrected in the results pages instead, as with the
+[v5 bootstrap erratum](docs/results_v5.md#erratum-bootstrap-ranges-2026-11-09).
 
 ## Limitations
 
