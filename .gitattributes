@@ -2,3 +2,4 @@
 
 # Exact bytes are hashed into the holdout ledger; never normalize these.
 docs/ncmapss_locks/*.json -text
+docs/protocol_v5_development.json -text
