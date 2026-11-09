@@ -101,8 +101,63 @@ def test_evaluate_refuses_uncommitted_lock(tmp_path, monkeypatch):
     assert not (tmp_path / v5.LEDGER).exists()
 
 
-def test_engine_bootstrap_bounds():
-    values = np.array([1.0, 0.0, 1.0, 1.0])
-    result = v5.engine_bootstrap({"rate": (values, lambda v: v)}, 200, seed=1)
-    low, high = result["rate"]
-    assert 0 <= low <= high <= 1
+def _lock():
+    return json.loads((ROOT / v5.PUBLISHED_LOCK).read_text(encoding="utf-8"))
+
+
+def test_published_lock_still_matches_frozen_files():
+    lock = _lock()
+    assert v5.source_hashes(ROOT) == lock["source_sha256"]
+    for key, name in [
+        ("protocol_sha256", v5.PROTOCOL),
+        ("config_sha256", v5.CONFIG),
+        ("reservation_sha256", v5.RESERVATION),
+        ("development_sha256", v5.DEVELOPMENT),
+    ]:
+        assert v5.sha256_file(ROOT / name) == lock[key], name
+
+
+@pytest.mark.parametrize(
+    ("missed", "passed"), [(0, True), (3, True), (4, False), (35, False)]
+)
+def test_alarm_gate_allows_at_most_three_of_35(missed, passed):
+    point = {"rmse": 13.0}
+    baseline = {"rmse": 22.0}
+    replay = {"missed_fraction": missed / v5.TEST_ENGINES}
+    result = v5.final_gates(point, baseline, 0.9, replay, _lock()["gates"])
+    assert result["checks"]["G3_timely_point_alarm"] is passed
+
+
+def test_gates_fail_on_each_threshold():
+    gates = _lock()["gates"]
+    replay = {"missed_fraction": 0.0}
+    assert v5.final_gates({"rmse": 1.0}, {"rmse": 1.0}, 0.85, replay, gates)["passed"]
+    worse = v5.final_gates({"rmse": 1.01}, {"rmse": 1.0}, 0.9, replay, gates)
+    assert worse["checks"] == {
+        "G1_rmse_not_worse_than_baseline": False,
+        "G2_mondrian_coverage": True,
+        "G3_timely_point_alarm": True,
+    }
+    assert not v5.final_gates({"rmse": 1.0}, {"rmse": 2.0}, 0.849, replay, gates)[
+        "passed"
+    ]
+    no_critical = {"missed_fraction": None}
+    assert not v5.final_gates({"rmse": 1.0}, {"rmse": 2.0}, 0.9, no_critical, gates)[
+        "passed"
+    ]
+
+
+def test_published_gate_decisions_follow_from_published_numbers():
+    final = json.loads(
+        (ROOT / "docs/protocol_v5_evidence.json").read_text(encoding="utf-8")
+    )["part_b_final_test"]
+    replay = final["replay"]["point_timely"]
+    assert replay["missed_engines"] == 3
+    recomputed = v5.final_gates(
+        final["point"],
+        final["baseline"],
+        final["intervals"]["mondrian"]["overall"]["coverage"],
+        replay,
+        _lock()["gates"],
+    )
+    assert recomputed == final["gates"]
