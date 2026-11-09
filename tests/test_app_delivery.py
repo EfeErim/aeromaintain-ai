@@ -171,7 +171,6 @@ def test_verified_app_loader_excludes_truth_and_only_exposes_risk_download(
     assert artifacts.run_id == "fixture"
     assert "rul_true" not in artifacts.risk_ranking.columns
     assert artifacts.risk_ranking.loc[0, "prediction"] == 9.5
-    assert set(artifacts.downloads) == {"risk_ranking.csv"}
     assert list(artifacts.sensor_history["unit_id"]) == [1]
 
 

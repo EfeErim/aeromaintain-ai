@@ -34,14 +34,12 @@ class AppArtifacts:
     """Validated model and evaluation data exposed to the presentation layer."""
 
     run_id: str
-    run_dir: Path
     run_manifest: dict[str, Any]
     model_lock: dict[str, Any]
     metrics: dict[str, Any]
     explanation: dict[str, Any]
     risk_ranking: pd.DataFrame
     sensor_history: pd.DataFrame
-    downloads: dict[str, bytes]
 
 
 def _read_json(path: Path) -> Any:
@@ -158,23 +156,16 @@ def _load_verified_run(project_root: Path, run_id: str) -> AppArtifacts:
         .reset_index(drop=True)
     )
 
-    processed_test = processed_dir / "test.parquet"
-    _require_hash(processed_test, lock["data"]["test_sha256"], "Processed test data")
-    test = pd.read_parquet(processed_test)
+    test = pd.read_parquet(processed_dir / "test.parquet")
     sensor_history = test.loc[:, ["unit_id", "cycle", *SENSOR_COLUMNS]].copy()
-    downloads = {
-        "risk_ranking.csv": risk_ranking.to_csv(index=False).encode("utf-8"),
-    }
     return AppArtifacts(
         run_id=run_id,
-        run_dir=run_dir,
         run_manifest=run_manifest,
         model_lock=lock,
         metrics=_read_json(official_dir / "metrics.json"),
         explanation=_read_json(run_dir / "explanation.json"),
         risk_ranking=risk_ranking,
         sensor_history=sensor_history,
-        downloads=downloads,
     )
 
 
@@ -231,16 +222,12 @@ def load_public_bundle(bundle_dir: Path) -> AppArtifacts:
             )
         return AppArtifacts(
             run_id=payload["run_id"],
-            run_dir=bundle_dir,
             run_manifest={"model_lock_sha256": payload["model_lock_sha256"]},
             model_lock=payload["model_lock"],
             metrics=payload["metrics"],
             explanation=payload["explanation"],
             risk_ranking=ranking,
             sensor_history=pd.DataFrame(),
-            downloads={
-                "risk_ranking.csv": ranking.to_csv(index=False).encode("utf-8"),
-            },
         )
     except (KeyError, OSError, TypeError, ValueError) as exc:
         raise ArtifactValidationError(

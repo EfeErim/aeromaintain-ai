@@ -28,6 +28,33 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+ProjectRoot = Annotated[
+    Path | None,
+    typer.Option(
+        "--project-root",
+        help="Project root. Defaults to the current directory.",
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+    ),
+]
+Archive = Annotated[
+    Path | None,
+    typer.Option(
+        "--archive",
+        help="Verified local CMAPSSData.zip; otherwise download from NASA.",
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        resolve_path=True,
+    ),
+]
+Dataset = Annotated[
+    str,
+    typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
+]
+
 
 @app.callback()
 def main() -> None:
@@ -36,32 +63,9 @@ def main() -> None:
 
 @app.command()
 def prepare(
-    archive: Annotated[
-        Path | None,
-        typer.Option(
-            "--archive",
-            help="Verified local CMAPSSData.zip; otherwise download from NASA.",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
-            resolve_path=True,
-        ),
-    ] = None,
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
-    dataset: Annotated[
-        str,
-        typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
-    ] = "FD001",
+    archive: Archive = None,
+    project_root: ProjectRoot = None,
+    dataset: Dataset = "FD001",
 ) -> None:
     """Prepare one frozen NASA C-MAPSS subset."""
     root = resolve_project_root(project_root)
@@ -90,20 +94,8 @@ def train(
             help="New immutable run directory name under runs/.",
         ),
     ],
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
-    dataset: Annotated[
-        str,
-        typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
-    ] = "FD001",
+    project_root: ProjectRoot = None,
+    dataset: Dataset = "FD001",
 ) -> None:
     """Select, fit, calibrate, explain, persist, and lock an RUL model."""
     root = resolve_project_root(project_root)
@@ -129,16 +121,7 @@ def evaluate(
             help="Existing run with a verified model_lock.json.",
         ),
     ],
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Evaluate one verified model lock against isolated official test labels."""
     root = resolve_project_root(project_root)
@@ -172,16 +155,7 @@ def robustness(
         int,
         typer.Option("--first-seed", help="First seed in the sweep."),
     ] = 42,
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Repeat a locked specification across seeds on already seen test labels."""
     root = resolve_project_root(project_root)
@@ -212,16 +186,7 @@ def escalation_study(
         str,
         typer.Option("--method", help="Challenger: lstm or cqr."),
     ],
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Score a protocol amendment challenger without opening test labels."""
     from aeromaintain.models.escalation import run_cqr_study, run_lstm_study
@@ -244,16 +209,7 @@ def escalation_study(
 def compare_runs_command(
     first: Annotated[str, typer.Option("--first", help="First run ID.")],
     second: Annotated[str, typer.Option("--second", help="Second run ID.")],
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Report which files of two runs repeat byte for byte."""
     root = resolve_project_root(project_root)
@@ -278,32 +234,9 @@ def pipeline(
             help="New immutable end-to-end run directory name under runs/.",
         ),
     ],
-    archive: Annotated[
-        Path | None,
-        typer.Option(
-            "--archive",
-            help="Verified local CMAPSSData.zip; otherwise download from NASA.",
-            exists=True,
-            file_okay=True,
-            dir_okay=False,
-            readable=True,
-            resolve_path=True,
-        ),
-    ] = None,
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
-    dataset: Annotated[
-        str,
-        typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
-    ] = "FD001",
+    archive: Archive = None,
+    project_root: ProjectRoot = None,
+    dataset: Dataset = "FD001",
 ) -> None:
     """Run prepare, train/lock, evaluate, and report."""
     root = resolve_project_root(project_root)
@@ -329,16 +262,7 @@ def finish(
         str,
         typer.Option("--run-id", help="Existing locked run to evaluate and report."),
     ],
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Open official labels for an existing lock and write its report."""
     root = resolve_project_root(project_root)
@@ -361,16 +285,7 @@ def export_demo(
         Path,
         typer.Option("--output-dir", help="Directory for the row-free demo bundle."),
     ] = Path("demo"),
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Export aggregate metrics and predictions, without NASA rows or true RUL."""
     from aeromaintain.app import ArtifactValidationError, export_public_bundle
@@ -390,16 +305,7 @@ def app_command(
         str,
         typer.Option("--run-id", help="Explicit verified run to display."),
     ],
-    project_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--project-root",
-            help="Project root. Defaults to the current directory.",
-            file_okay=False,
-            dir_okay=True,
-            resolve_path=True,
-        ),
-    ] = None,
+    project_root: ProjectRoot = None,
 ) -> None:
     """Open the local Streamlit application for one verified run."""
     from aeromaintain.app import ArtifactValidationError, load_verified_run

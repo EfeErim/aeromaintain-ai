@@ -309,7 +309,7 @@ def _engine_risk(artifacts) -> None:
         )
         st.download_button(
             "Download risk_ranking.csv",
-            artifacts.downloads["risk_ranking.csv"],
+            artifacts.risk_ranking.to_csv(index=False).encode("utf-8"),
             file_name="risk_ranking.csv",
             mime="text/csv",
             width="stretch",

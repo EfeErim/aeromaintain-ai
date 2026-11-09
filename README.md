@@ -56,7 +56,8 @@ Leakage controls that matter most:
   hash validates.
 
 Design notes are in [architecture](docs/architecture.md), the
-[model card](docs/model_card.md) and the [data card](docs/data_card.md).
+[model card](docs/model_card.md) and the [data card](docs/data_card.md). Method
+choices and the literature they rest on are in [research notes](docs/research.md).
 
 ## Quickstart
 
