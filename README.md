@@ -22,7 +22,11 @@ model and its thresholds were locked and committed.
 | C-MAPSS FD003 | 100 | 15.07 (12.61–17.50) | 92% |
 | C-MAPSS FD002 | 259 | 27.36 (23.77–30.82) | 83% |
 | C-MAPSS FD004 | 248 | 27.40 (24.53–30.23) | 83% |
-| N-CMAPSS DS01, DS08a, DS08c | 35 | 13.06 (8.92–13.15), baseline 22.70 | 92.5% |
+| N-CMAPSS DS01, DS08a, DS08c | 35 | 13.06 (11.13–15.00), baseline 22.70 | 92.5% |
+
+The N-CMAPSS range was corrected on 2026-11-09: the frozen v5 bootstrap resampled only
+two engines. The point values and pass/fail results are unchanged
+([erratum](docs/results_v5.md#erratum-bootstrap-ranges-2026-11-09)).
 
 - On the final N-CMAPSS test the alarm fired for 32 of 35 engines while 10–30 cycles
   remained. The predeclared limit was 3 misses, so it passed with no margin.

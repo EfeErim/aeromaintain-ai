@@ -26,17 +26,38 @@ engines from DS01, DS08a and DS08c. The model is XGBoost, trained on the 64 DS02
 engines and selected on out-of-fold development evidence.
 
 Ranges are 95% engine-level bootstrap intervals (2,000 resamples). Scores average 200
-random cuts per engine, and the 35 engines are the unit of evidence.
+random cuts per engine, and the 35 engines are the unit of evidence. The ranges below
+are the corrected ones; see the erratum after the table.
 
 | Gate | Result | Threshold | Status |
 |---|---:|---:|---|
-| G1 point accuracy | RMSE **13.06** (8.92–13.15), against a mean baseline of 22.70 (20.47–29.34) | Not worse than baseline | Pass |
-| G2 interval coverage | Mondrian **92.5%** (88.0–98.0%) | At least 85% | Pass |
+| G1 point accuracy | RMSE **13.06** (11.13–15.00), against a mean baseline of 22.70 (21.40–23.99) | Not worse than baseline | Pass |
+| G2 interval coverage | Mondrian **92.5%** (88.4–95.9%) | At least 85% | Pass |
 | G3 timely alarm | **3 of 35** engines (8.6%) not alerted with 10–30 cycles left | At most 10%, so at most 3 engines | Pass, at the limit |
 
-The upper end of the RMSE interval sits close to the point estimate. A few engines with
-large errors dominate the squared error, so resamples that leave them out pull RMSE
-down.
+### Erratum: bootstrap ranges (2026-11-09)
+
+The ranges first published here, and still stored in
+[`protocol_v5_evidence.json`](protocol_v5_evidence.json), were wrong. The frozen
+`engine_bootstrap` in `models/v5.py` took the engine count from a
+`(values, transform)` tuple, which has length 2, so every resample drew only engines 0
+and 1. An earlier version of this page explained the odd RMSE range with a story about
+a few high-error engines; that explanation was wrong.
+
+| Metric | Point | Published range | Corrected range |
+|---|---:|---:|---:|
+| RMSE | 13.06 | 8.92–13.15 | 11.13–15.00 |
+| Mean baseline RMSE | 22.70 | 20.47–29.34 | 21.40–23.99 |
+| Mondrian coverage | 92.5% | 88.0–98.0% | 88.4–95.9% |
+
+Point values and all three gate decisions are unchanged, since none of them used the
+bootstrap. The model's RMSE is below the baseline's in all 2,000 corrected resamples.
+`models/v5.py` stays as it was, because its hash is part of the published lock. The
+corrected ranges come from
+[`scripts/v5_bootstrap_erratum.py`](../scripts/v5_bootstrap_erratum.py), which reads the
+stored evaluation without reopening labels and writes
+[`v5_bootstrap_erratum.json`](v5_bootstrap_erratum.json). `tests/test_bootstrap.py`
+covers the replacement function and pins the defect in the frozen one.
 
 ### Point accuracy
 

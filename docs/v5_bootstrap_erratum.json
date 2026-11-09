@@ -1,0 +1,41 @@
+{
+  "corrected_bootstrap_95": {
+    "baseline_rmse": [
+      21.403483311919263,
+      23.9861204743536
+    ],
+    "mondrian_coverage": [
+      0.8835714285714286,
+      0.9594321428571428
+    ],
+    "rmse": [
+      11.129550312188824,
+      15.002909972450574
+    ]
+  },
+  "defect": "models.v5.engine_bootstrap took the engine count from the (values, transform) tuple, so it resampled engines 0 and 1 only",
+  "engines": 35,
+  "evaluation_sha256": "ec8bb9743a8e680f649d48c2ac2af8562f53a6e09d263db18a41e0d920fe3ab3",
+  "method": "engine-level percentile bootstrap, 2000 resamples, seed 44; cuts seed 46",
+  "point": {
+    "baseline_rmse": 22.70364262387992,
+    "mondrian_coverage": 0.925,
+    "rmse": 13.05680376776412
+  },
+  "published_bootstrap_95": {
+    "baseline_rmse": [
+      20.465096047905565,
+      29.33524171112282
+    ],
+    "mondrian_coverage": [
+      0.88,
+      0.98
+    ],
+    "rmse": [
+      8.916301718731797,
+      13.144971463318123
+    ]
+  },
+  "resamples_where_model_beats_baseline": 1.0,
+  "status": "erratum; recomputed from stored v5 evaluation, labels not reopened"
+}
