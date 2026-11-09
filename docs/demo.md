@@ -69,14 +69,21 @@ The report summary was read with this snippet:
 
 ```python
 import json
-r = json.load(open('runs/fd001-demo/report.json'))
-t = r['official_test']; b = t['bootstrap']['intervals_95']
-print('dataset', r['dataset'], 'champion', r['model']['champion'], 'engines', t['engines'])
-print('rmse %.2f (%.2f-%.2f)' % (t['rmse'], *b['rmse']))
-print('mae %.2f (%.2f-%.2f)' % (t['mae'], *b['mae']))
-print('interval coverage (%.2f-%.2f)' % tuple(b['interval_coverage']))
-p = t['alert_rules']['point_prediction']
-print('point alert rule: recall %.2f, precision %.2f, false alarms %d' % (p['recall'], p['precision'], p['false_positive']))
+
+r = json.load(open("runs/fd001-demo/report.json"))
+t = r["official_test"]
+b = t["bootstrap"]["intervals_95"]
+print(
+    "dataset", r["dataset"], "champion", r["model"]["champion"], "engines", t["engines"]
+)
+print("rmse %.2f (%.2f-%.2f)" % (t["rmse"], *b["rmse"]))
+print("mae %.2f (%.2f-%.2f)" % (t["mae"], *b["mae"]))
+print("interval coverage (%.2f-%.2f)" % tuple(b["interval_coverage"]))
+p = t["alert_rules"]["point_prediction"]
+print(
+    "point alert rule: recall %.2f, precision %.2f, false alarms %d"
+    % (p["recall"], p["precision"], p["false_positive"])
+)
 ```
 
 ```text
