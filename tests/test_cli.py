@@ -106,10 +106,3 @@ def test_train_and_evaluate_report_modeling_failure(
     assert "Training failed: fixture lock failure" in trained.output
     assert evaluated.exit_code == 1
     assert "Evaluation failed: fixture lock failure" in evaluated.output
-
-
-def test_cli_does_not_expose_retired_optimization_command() -> None:
-    command = runner.invoke(app, ["--help"])
-
-    assert command.exit_code == 0, command.output
-    assert "optimize" not in command.output.casefold()

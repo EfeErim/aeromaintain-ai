@@ -73,7 +73,7 @@ Each whitespace-separated row has exactly 26 numeric columns:
 4. `sensor_1` through `sensor_21`
 
 `unit_id` and `cycle` are integers. Settings and sensor values are floating
-point. The M1 parser fails closed on missing, duplicated, non-finite,
+point. The parser fails closed on missing, duplicated, non-finite,
 misordered, or schema-invalid rows.
 
 ## Intended use
@@ -94,7 +94,7 @@ misordered, or schema-invalid rows.
 
 ## Acquisition and integrity policy
 
-M1 downloads only from the configured NASA URL or accepts an explicitly
+The pipeline downloads only from the configured NASA URL or accepts an explicitly
 provided local archive. Before extraction it verifies both the full archive
 size and SHA-256. Extraction materializes only the selected subset's training,
 test, and RUL members and rejects path traversal, symbolic links, duplicate source

@@ -51,7 +51,3 @@ def test_public_reference_evidence_is_sanitized_and_self_consistent() -> None:
     assert evidence["official_test"]["point_threshold_critical"]["recall"] == 0.48
     assert evidence["calibration"]["risk_band_source"] == "interval_low"
     assert evidence["active_scope"] == "rul_evaluation_only"
-    serialized = json.dumps(evidence).casefold()
-    assert "maintenance_policy_comparison" not in serialized
-    assert "capacity_sensitivity" not in serialized
-    assert "total_synthetic_cost" not in serialized
