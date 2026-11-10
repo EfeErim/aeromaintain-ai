@@ -37,10 +37,5 @@ runs/
 .env.*
 !.env.example
 
-# Personal notes and working files
+# Local working files
 .local/
-AGENTS.md
-CLAUDE.md
-
-# Interview preparation
-INTERVIEW_NOTES.md

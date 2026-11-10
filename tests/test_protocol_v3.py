@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import yaml
-from test_rul_modeling import _sensor_frame, _small_config, _write_phase1_fixture
+from test_rul_modeling import _sensor_frame, _small_config, _write_prepared_fixture
 
 from aeromaintain.data.pipeline import DATASET_SHAPES, load_data_contract, sha256_file
 from aeromaintain.evaluation.protocol import (
@@ -225,7 +225,7 @@ def test_mondrian_cqr_covers_with_narrower_intervals_on_heteroscedastic_data() -
 
 
 def _write_condition_fixture(root: Path) -> None:
-    _write_phase1_fixture(root)
+    _write_prepared_fixture(root)
     processed = root / "data" / "processed" / "fd001"
     train = pd.read_parquet(processed / "train.parquet")
     test = pd.read_parquet(processed / "test.parquet")
@@ -310,7 +310,7 @@ def test_all_v3_stages_lock_evaluate_and_repeat_with_forced_adoption(
 def test_v2_lock_schema_still_validates_but_unknown_schema_is_refused(
     tmp_path: Path,
 ) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     result = train_and_lock(tmp_path, run_id="fixture", config=_small_config())
     _validate_lock(tmp_path, "fixture")
 

@@ -64,7 +64,7 @@ def _sensor_frame(
     return frame
 
 
-def _write_phase1_fixture(root: Path) -> None:
+def _write_prepared_fixture(root: Path) -> None:
     constraints = root / "constraints"
     constraints.mkdir(parents=True)
     (constraints / "python311-tested.txt").write_text(
@@ -224,7 +224,7 @@ def test_alert_rule_reports_both_error_costs_with_wilson_intervals() -> None:
 def test_train_lock_and_official_evaluation_are_reproducible(
     tmp_path: Path,
 ) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     config = ModelingConfig(
         seed=42,
         group_folds=2,
@@ -239,7 +239,7 @@ def test_train_lock_and_official_evaluation_are_reproducible(
         interval_min_band_engines=2,
         bootstrap_resamples=50,
     )
-    result = train_and_lock(tmp_path, run_id="fixture-m2", config=config)
+    result = train_and_lock(tmp_path, run_id="fixture-run", config=config)
     assert result.model_lock.is_file()
     lock = json.loads(result.model_lock.read_text(encoding="utf-8"))
     assert lock["official_test_evaluation"].startswith("not opened")
@@ -273,12 +273,12 @@ def test_train_lock_and_official_evaluation_are_reproducible(
         == 1
     )
 
-    first = evaluate_locked(tmp_path, run_id="fixture-m2")
+    first = evaluate_locked(tmp_path, run_id="fixture-run")
     hashes = {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
         for path in first.output_dir.iterdir()
     }
-    second = evaluate_locked(tmp_path, run_id="fixture-m2")
+    second = evaluate_locked(tmp_path, run_id="fixture-run")
     assert first.metrics == second.metrics
     assert hashes == {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest()
@@ -297,7 +297,7 @@ def test_train_lock_and_official_evaluation_are_reproducible(
     assert rules["interval_low"]["recall"] >= rules["point_prediction"]["recall"]
 
     with pytest.raises(ModelingError, match="already exists"):
-        train_and_lock(tmp_path, run_id="fixture-m2", config=config)
+        train_and_lock(tmp_path, run_id="fixture-run", config=config)
     with pytest.raises(ModelingError, match="safe path"):
         train_and_lock(tmp_path, run_id="../unsafe", config=config)
 
@@ -305,7 +305,7 @@ def test_train_lock_and_official_evaluation_are_reproducible(
     original = feature_manifest.read_bytes()
     feature_manifest.write_bytes(original + b"changed")
     with pytest.raises(ModelingError, match="Locked artifact hash mismatch"):
-        evaluate_locked(tmp_path, run_id="fixture-m2")
+        evaluate_locked(tmp_path, run_id="fixture-run")
 
 
 def test_evaluation_requires_lock_before_official_label_access(
@@ -334,7 +334,7 @@ def _small_config() -> ModelingConfig:
 
 
 def test_evaluation_refuses_changed_or_unanchored_lock(tmp_path: Path) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     result = train_and_lock(tmp_path, run_id="fixture-lock", config=_small_config())
     official_dir = result.run_dir / "official_test"
     original_lock = result.model_lock.read_bytes()
@@ -361,7 +361,7 @@ def test_evaluation_refuses_changed_or_unanchored_lock(tmp_path: Path) -> None:
 def test_evaluation_reports_missing_locked_input_as_modeling_error(
     tmp_path: Path,
 ) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     train_and_lock(tmp_path, run_id="fixture-input", config=_small_config())
     (tmp_path / "data" / "processed" / "fd001" / "test.parquet").unlink()
 
@@ -378,7 +378,7 @@ def test_xgboost_champion_runs_through_evaluation_and_application(
         return {**decision, "champion": "xgboost"}
 
     monkeypatch.setattr("aeromaintain.models.rul._select_champion", force_xgboost)
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     result = train_and_lock(tmp_path, run_id="fixture-xgb", config=_small_config())
     evaluate_locked(tmp_path, run_id="fixture-xgb")
 
