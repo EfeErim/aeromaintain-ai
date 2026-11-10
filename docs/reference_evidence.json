@@ -1126,7 +1126,7 @@
       "v1_lock_hash_difference": {
         "reference_model_lock_sha256": "32e5e7a421ad8ccb81fff4e8b8c17957f49fa855954b27e4e4b16219634af829",
         "repro_model_lock_sha256": "e66d7599a1f82941b61e27ac92b3330d3538b4875c9e7de7f012ec75b9d22c1b",
-        "cause": "The repro lock adds the environment field introduced by commit 5f69de1 and has a different run_id.",
+        "cause": "The repro lock adds the environment field introduced by commit 1a13887 and has a different run_id.",
         "verification": "Removing environment from the repro lock and restoring the reference run_id reproduces the reference hash exactly, so all locked data, model, and artifact hashes match."
       }
     }

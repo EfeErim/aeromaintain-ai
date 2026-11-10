@@ -344,14 +344,14 @@ FD001 point values are slightly optimistic. The risk threshold was 20 for every 
 This does not establish byte-identical output across machines or library versions.
 
 **v1 lock hash, resolved.** The clean-clone `fd001-repro` lock hash differed from the
-v1 reference because that lock adds the `environment` field from commit `5f69de1`.
+v1 reference because that lock adds the `environment` field from commit `1a13887`.
 Removing that field and restoring the reference `run_id` reproduces the reference
 hash `32e5e7a4…f829` exactly, so every hash the lock records matched.
 
 ## Protocol v1 reference
 
 The immutable run `m4-fd001-seed42-20260729` remains published as v1, reproducible
-from commit `143f272`. Ridge was its champion under v1's all-rows selection.
+from commit `1b14801`. Ridge was its champion under v1's all-rows selection.
 
 | Metric | Result |
 |---|---:|
