@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from test_rul_modeling import _sensor_frame, _small_config, _write_phase1_fixture
+from test_rul_modeling import _sensor_frame, _small_config, _write_prepared_fixture
 
 from aeromaintain.data.pipeline import (
     expected_members,
@@ -351,7 +351,7 @@ def test_bootstrap_reports_none_when_no_resample_has_a_critical_engine() -> None
 
 
 def test_seed_sweep_and_repeat_run_comparison(tmp_path: Path) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     config = _small_config()
     train_and_lock(tmp_path, run_id="one", config=config)
     train_and_lock(tmp_path, run_id="two", config=config)
@@ -380,7 +380,7 @@ def test_seed_sweep_and_repeat_run_comparison(tmp_path: Path) -> None:
 
 
 def test_seed_sweep_refuses_a_clean_holdout(tmp_path: Path) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     train_and_lock(tmp_path, run_id="one", config=_small_config())
     run_dir = tmp_path / "runs" / "one"
     lock_path = run_dir / "model_lock.json"
@@ -415,7 +415,7 @@ def test_sequences_are_causal_and_pad_with_the_first_row() -> None:
 
 
 def test_cqr_study_compares_without_opening_labels(tmp_path: Path) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
 
     def force_xgboost(ridge, xgboost, config):
         decision = _select_champion(ridge, xgboost, config)
@@ -439,7 +439,7 @@ def test_cqr_study_compares_without_opening_labels(tmp_path: Path) -> None:
 
 def test_lstm_study_uses_the_same_folds_and_rule(tmp_path: Path) -> None:
     pytest.importorskip("torch")
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     train_and_lock(tmp_path, run_id="base", config=_small_config())
 
     report = run_lstm_study(
@@ -494,7 +494,7 @@ def test_broken_json_is_reported_as_a_modeling_error(tmp_path: Path) -> None:
 
 
 def test_clean_holdout_opens_for_one_lock_only(tmp_path: Path) -> None:
-    _write_phase1_fixture(tmp_path)
+    _write_prepared_fixture(tmp_path)
     config_path = tmp_path / "configs" / "project.yaml"
     config_text = config_path.read_text(encoding="utf-8")
     config_path.write_text(

@@ -4,17 +4,18 @@ Run on 2026-11-08 under the frozen [protocol v5](protocol_v5.md).
 
 **Order of events:**
 
-1. The protocol and code were committed in `82f56af`.
-2. The final model lock was committed in `1272ed1` and pushed before any reserved label
+1. The protocol and code were committed in `e6e66be`.
+2. The final model lock was committed in `82fe6f9` and pushed before any reserved label
    was read.
 3. The holdout ledger records one claim, `FINAL-v5`, with lock hash
    `e058e97837741323782d6ea46c7532df8a5ca3134d3ea3445fc04918cdb71844`, made from commit
-   `7df9e98` (now `1272ed1`, see the note below).
+   `7df9e98` (now `82fe6f9`, see the note below).
 
-Note: on 2026-11-08 the repository history was rewritten to remove commit-message
-trailers. File contents and commit dates are unchanged, but every commit hash changed;
-`82f56af` was `4695a75` and `1272ed1` was `7df9e98`. The lock hash above does not depend
-on commit hashes.
+Note: the repository history was rewritten twice, on 2026-11-08 to remove commit-message
+trailers and on 2026-11-10 to drop local planning files and normalize the author email.
+Apart from those planning files, file contents and commit dates are unchanged, but every
+commit hash changed: `e6e66be` was `82f56af`, originally `4695a75`, and `82fe6f9` was `1272ed1`,
+originally `7df9e98`. The lock hash above does not depend on commit hashes.
 
 Evidence is in [`protocol_v5_evidence.json`](protocol_v5_evidence.json), and development
 evidence is in [`protocol_v5_development.json`](protocol_v5_development.json).

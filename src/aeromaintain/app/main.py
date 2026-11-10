@@ -399,7 +399,7 @@ def _engine_risk(artifacts) -> None:
 def main() -> None:
     st.set_page_config(
         page_title="AeroMaintain",
-        page_icon="🛠️",
+        page_icon=":material/flight:",
         layout="wide",
         initial_sidebar_state="expanded",
     )
