@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aeromaintain-ai"
 version = "1.0.0"
-description = "Educational NASA C-MAPSS remaining-useful-life evaluation prototype"
+description = "Remaining-useful-life prediction for turbofan engines on NASA C-MAPSS and N-CMAPSS, with prediction intervals and maintenance alarms"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "EfeErim" }]
+authors = [{ name = "Efe Erim" }]
 keywords = [
   "predictive-maintenance",
   "remaining-useful-life",
@@ -54,7 +54,9 @@ lstm = [
 aeromaintain = "aeromaintain.cli:app"
 
 [project.urls]
+Homepage = "https://aeromaintain-ai-demo.streamlit.app/"
 Repository = "https://github.com/EfeErim/aeromaintain-ai"
+Releases = "https://github.com/EfeErim/aeromaintain-ai/releases"
 Documentation = "https://github.com/EfeErim/aeromaintain-ai#readme"
 
 [tool.setuptools.packages.find]
