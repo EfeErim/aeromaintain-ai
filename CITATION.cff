@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "AeroMaintain AI: remaining-useful-life prediction with single-open test protocols"
+type: software
+authors:
+  - given-names: Efe
+    family-names: Erim
+version: 1.0.0
+date-released: 2026-11-08
+license: MIT
+repository-code: "https://github.com/EfeErim/aeromaintain-ai"
+url: "https://aeromaintain-ai-demo.streamlit.app/"
+abstract: >-
+  Remaining-useful-life prediction for turbofan engines on NASA's simulated C-MAPSS
+  and N-CMAPSS benchmarks, with prediction intervals and maintenance alarms. Each test
+  set is opened once, after the model, intervals and thresholds are hashed into a
+  committed lock.
+keywords:
+  - predictive maintenance
+  - remaining useful life
+  - NASA C-MAPSS
+  - conformal prediction
