@@ -134,13 +134,21 @@ tests/              unit and protocol tests
 ```
 
 Protocol documents, configs and the code they ran (`models/v*.py`, `models/rul.py`,
-`evaluation/`, `data/ncmapss.py`) are versioned on purpose: their SHA-256 hashes are
-part of the published model locks, so they are never edited after a test is run.
+`evaluation/protocol.py`, `evaluation/v4.py`, `evaluation/ledger.py`,
+`data/ncmapss.py`) are versioned on purpose: their SHA-256 hashes are part of the
+published model locks, so they are never edited after a test is run.
 That is why `models/v4.py` and `models/v5.py` are separate files rather than one module
 that changed over time: each is the exact code its protocol ran.
 `tests/test_protocol_v5.py` fails if any file pinned by the v5 lock changes. Known
 defects in frozen code are corrected in the results pages instead, as with the
 [v5 bootstrap erratum](docs/results_v5.md#erratum-bootstrap-ranges-2026-11-09).
+Code that loads, reports and displays runs is maintained separately; the split is
+explained in [decision 0001](docs/decisions/0001-frozen-experiment-code.md).
+
+If a run stops after its model lock, `aeromaintain finish --run-id ID` picks it up:
+it reuses a recorded evaluation instead of reading labels again, accepts reports
+left with identical bytes, refuses different ones, and on a finished run only
+verifies. [Architecture](docs/architecture.md) lists what each check guarantees.
 
 ## Limitations
 

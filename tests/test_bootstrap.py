@@ -47,3 +47,15 @@ def test_frozen_v5_bootstrap_only_sees_two_engines():
     per_engine = np.array([4.0, 4.0, 1.0, 9.0, 16.0, 25.0])
     low, high = v5.engine_bootstrap(_two_metrics(per_engine), 2000, seed=0)["rmse"]
     assert low == high == 2.0
+
+
+def test_interval_draws_from_all_35_engines():
+    # Only the last engine has error. Over 2000 resamples of 35 engines it is drawn
+    # often, so the upper bound is positive; a resampler limited to the first two
+    # engines would never draw it and return [0, 0].
+    per_engine = np.zeros(35)
+    per_engine[-1] = 35.0
+    fixed = engine_bootstrap(_two_metrics(per_engine), 2000, seed=44)["rate"]
+    frozen = v5.engine_bootstrap(_two_metrics(per_engine), 2000, seed=44)["rate"]
+    assert fixed[1] > 0
+    assert frozen == [0.0, 0.0]

@@ -7,55 +7,36 @@ import json
 from pathlib import Path
 from typing import Any
 
-import joblib
 import numpy as np
 import pandas as pd
-from xgboost import XGBRegressor
 
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.evaluation import alert_rule_metrics, prediction_metrics
 from aeromaintain.evaluation.ledger import claim_holdout
-from aeromaintain.evaluation.protocol import (
-    apply_mondrian_cqr,
-    apply_mondrian_interval,
-    bootstrap_official_metrics,
-    interval_report,
-)
-from aeromaintain.features import (
-    CONDITION_FEATURE,
-    FEATURE_NAMES,
-    ConditionNormalizer,
-    FoldPreprocessor,
-    build_causal_features,
-    build_condition_features,
+from aeromaintain.evaluation.protocol import bootstrap_official_metrics, interval_report
+from aeromaintain.features import CONDITION_FEATURE, FEATURE_NAMES
+from aeromaintain.models.inference import (
+    load_locked_model,
+    locked_features,
+    locked_interval,
+    predict_model,
+    resolve_locked_artifact,
 )
 from aeromaintain.models.rul import (
     SUPPORTED_LOCK_SCHEMAS,
     TEST_CLEAN_SINGLE_OPEN,
     EvaluationResult,
     ModelingError,
-    RidgeBundle,
-    _json_bytes,
-    _parquet_bytes,
-    _predict_model,
-    _processed_dir,
-    _write_json,
-    _write_new_bytes,
-    predict_quantiles,
+)
+from aeromaintain.models.run_files import (
+    json_bytes,
+    parquet_bytes,
+    processed_dir,
+    write_json,
+    write_new_bytes,
 )
 
 HOLDOUT_LEDGER = "holdout_ledger.json"
-
-
-def _resolve_locked_artifact(run_dir: Path, relative_path: str) -> Path:
-    path = (run_dir / relative_path).resolve()
-    try:
-        path.relative_to(run_dir.resolve())
-    except ValueError as exc:
-        raise ModelingError("Model lock references an external artifact") from exc
-    if not path.is_file():
-        raise ModelingError(f"Locked artifact is missing: {relative_path}")
-    return path
 
 
 def _required_hash(path: Path) -> str:
@@ -74,7 +55,7 @@ def _read_locked_json(path: Path, label: str) -> dict[str, Any]:
     return payload
 
 
-def _validate_lock(
+def validate_lock(
     project_root: Path,
     run_id: str,
 ) -> tuple[Path, dict[str, Any]]:
@@ -96,7 +77,7 @@ def _validate_lock(
         raise ModelingError("Model lock identity or schema is invalid")
 
     try:
-        processed = _processed_dir(project_root, lock["dataset"])
+        processed = processed_dir(project_root, lock["dataset"])
         current_hashes = {
             "manifest_sha256": _required_hash(processed / "manifest.json"),
             "split_manifest_sha256": _required_hash(processed / "split_manifest.json"),
@@ -116,7 +97,7 @@ def _validate_lock(
         if not set(lock["features"]["order"]) <= {*FEATURE_NAMES, CONDITION_FEATURE}:
             raise ModelingError("Model lock feature order mismatch")
         for relative_path, expected_hash in lock["artifacts"].items():
-            artifact = _resolve_locked_artifact(run_dir, relative_path)
+            artifact = resolve_locked_artifact(run_dir, relative_path)
             if sha256_file(artifact) != expected_hash:
                 raise ModelingError(f"Locked artifact hash mismatch: {relative_path}")
     except (AttributeError, KeyError, TypeError) as exc:
@@ -124,65 +105,8 @@ def _validate_lock(
     return run_dir, lock
 
 
-def _load_locked_model(
-    run_dir: Path,
-    lock: dict[str, Any],
-) -> tuple[Any, FoldPreprocessor, str]:
-    champion = lock["champion"]
-    kind = champion["kind"]
-    if kind == "ridge":
-        bundle = joblib.load(_resolve_locked_artifact(run_dir, champion["path"]))
-        if not isinstance(bundle, RidgeBundle):
-            raise ModelingError("Trusted local Ridge artifact has wrong type")
-        return bundle, bundle.preprocessor, kind
-    if kind == "xgboost":
-        preprocessor = joblib.load(
-            _resolve_locked_artifact(run_dir, champion["preprocessor_path"])
-        )
-        if not isinstance(preprocessor, FoldPreprocessor):
-            raise ModelingError("Trusted local preprocessor has wrong type")
-        members = []
-        for path in champion.get("member_paths", [champion["path"]]):
-            member = XGBRegressor()
-            member.load_model(_resolve_locked_artifact(run_dir, path))
-            members.append(member)
-        return (members[0] if len(members) == 1 else members), preprocessor, kind
-    raise ModelingError(f"Unsupported locked champion kind: {kind}")
-
-
-def _locked_features(
-    run_dir: Path,
-    lock: dict[str, Any],
-    test: pd.DataFrame,
-) -> pd.DataFrame:
-    path = lock["champion"].get("normalizer_path")
-    if path is None:
-        return build_causal_features(test)
-    normalizer = joblib.load(_resolve_locked_artifact(run_dir, path))
-    if not isinstance(normalizer, ConditionNormalizer):
-        raise ModelingError("Trusted local normalizer has wrong type")
-    return build_condition_features(test, normalizer)
-
-
-def _locked_interval(
-    run_dir: Path,
-    calibration: dict[str, Any],
-    prediction: np.ndarray,
-    final_features: pd.DataFrame,
-) -> tuple[np.ndarray, np.ndarray]:
-    if "quantile_model_path" not in calibration:
-        return apply_mondrian_interval(prediction, calibration)
-    model = XGBRegressor()
-    model.load_model(
-        _resolve_locked_artifact(run_dir, calibration["quantile_model_path"])
-    )
-    preprocessor = joblib.load(
-        _resolve_locked_artifact(run_dir, calibration["quantile_preprocessor_path"])
-    )
-    if not isinstance(preprocessor, FoldPreprocessor):
-        raise ModelingError("Trusted local quantile preprocessor has wrong type")
-    quantiles = predict_quantiles(model, preprocessor, final_features)
-    return apply_mondrian_cqr(prediction, quantiles, calibration)
+# Older private name, still imported by robustness and escalation studies.
+_validate_lock = validate_lock
 
 
 def _claim_single_open(project_root: Path, run_id: str, lock: dict[str, Any]) -> None:
@@ -206,21 +130,21 @@ def evaluate_locked(
 ) -> EvaluationResult:
     """Evaluate a verified lock against official labels without changing it."""
     root = project_root.resolve()
-    run_dir, lock = _validate_lock(root, run_id)
-    model, preprocessor, champion = _load_locked_model(run_dir, lock)
+    run_dir, lock = validate_lock(root, run_id)
+    model, preprocessor, champion = load_locked_model(run_dir, lock)
 
-    processed = _processed_dir(root, lock["dataset"])
+    processed = processed_dir(root, lock["dataset"])
     test = pd.read_parquet(processed / "test.parquet")
-    test_features = _locked_features(run_dir, lock, test)
+    test_features = locked_features(run_dir, lock, test)
     final_mask = (
         test.groupby("unit_id", sort=False)["cycle"].transform("max").eq(test["cycle"])
     )
     final_rows = test.loc[final_mask].reset_index(drop=True)
     final_features = test_features.loc[final_mask].reset_index(drop=True)
-    prediction = _predict_model(model, preprocessor, final_features, champion)
+    prediction = predict_model(model, preprocessor, final_features, champion)
 
     calibration = lock["calibration"]
-    interval_low, interval_high = _locked_interval(
+    interval_low, interval_high = locked_interval(
         run_dir, calibration, prediction, final_features
     )
     risk_threshold = float(calibration["risk_threshold"])
@@ -316,12 +240,12 @@ def evaluate_locked(
     }
 
     output_dir = run_dir / "official_test"
-    prediction_payload = _parquet_bytes(evaluation)
-    metrics_payload = _json_bytes(metrics)
-    errors_payload = _json_bytes(error_analysis)
-    _write_new_bytes(output_dir / "predictions.parquet", prediction_payload)
-    _write_new_bytes(output_dir / "metrics.json", metrics_payload)
-    _write_new_bytes(output_dir / "error_analysis.json", errors_payload)
+    prediction_payload = parquet_bytes(evaluation)
+    metrics_payload = json_bytes(metrics)
+    errors_payload = json_bytes(error_analysis)
+    write_new_bytes(output_dir / "predictions.parquet", prediction_payload)
+    write_new_bytes(output_dir / "metrics.json", metrics_payload)
+    write_new_bytes(output_dir / "error_analysis.json", errors_payload)
     evaluation_manifest = {
         "run_id": run_id,
         "model_lock_sha256": sha256_file(run_dir / "model_lock.json"),
@@ -331,7 +255,7 @@ def evaluate_locked(
         "champion_unchanged": lock["champion"]["kind"],
         "official_labels_usage": "locked evaluation only",
     }
-    _write_json(output_dir / "evaluation_manifest.json", evaluation_manifest)
+    write_json(output_dir / "evaluation_manifest.json", evaluation_manifest)
     return EvaluationResult(
         run_id=run_id,
         output_dir=output_dir,

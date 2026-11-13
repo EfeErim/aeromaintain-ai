@@ -17,22 +17,23 @@ from aeromaintain.evaluation.protocol import (
     apply_mondrian_interval,
 )
 from aeromaintain.features import build_causal_features, build_condition_features
-from aeromaintain.models.evaluation import _validate_lock
+from aeromaintain.models.evaluation import validate_lock
+from aeromaintain.models.inference import predict_model, predict_quantiles
+
+# The sweep refits the locked specification with the frozen training code on purpose:
+# it measures seed noise in that code, so it must not use a reimplementation.
 from aeromaintain.models.rul import (
     TEST_PREVIOUSLY_SEEN,
     ModelingConfig,
     ModelingError,
     _feature_view,
-    _json_bytes,
-    _predict_model,
-    _processed_dir,
     calibrate_interval,
     cross_fit_predictions,
     fit_final_model,
     fit_quantile_fixed,
     partition_features,
-    predict_quantiles,
 )
+from aeromaintain.models.run_files import json_bytes, processed_dir
 
 SEED_METRICS = (
     "mae",
@@ -98,7 +99,7 @@ def _seed_result(
         else build_condition_features(test, normalizer)
     )
     last_features = test_features.loc[final_mask].reset_index(drop=True)
-    prediction = _predict_model(model, preprocessor, last_features, spec["family"])
+    prediction = predict_model(model, preprocessor, last_features, spec["family"])
     if kind:
         quantile_model, quantile_preprocessor = fit_quantile_fixed(
             spec,
@@ -158,7 +159,7 @@ def run_seed_sweep(
     root = project_root.resolve()
     if not seeds:
         raise ModelingError("A seed sweep requires at least one seed")
-    _, lock = _validate_lock(root, base_run_id)
+    _, lock = validate_lock(root, base_run_id)
     if lock["protocol"]["test_status"] != TEST_PREVIOUSLY_SEEN:
         raise ModelingError(
             "Seed sweeps score test labels, so they run only on a subset whose "
@@ -168,7 +169,7 @@ def run_seed_sweep(
     decision = lock["champion_rule_evidence"]
     spec = decision[decision["champion"]]["spec"]
 
-    processed = _processed_dir(root, lock["dataset"])
+    processed = processed_dir(root, lock["dataset"])
     frame = pd.read_parquet(processed / "train.parquet").reset_index(drop=True)
     features = build_causal_features(frame)
     test = pd.read_parquet(processed / "test.parquet")
@@ -276,7 +277,7 @@ def compare_runs(
 
 def write_report(path: Path, report: dict[str, Any]) -> None:
     """Write one new JSON report and refuse to replace a different one."""
-    payload = _json_bytes(report)
+    payload = json_bytes(report)
     if path.exists() and path.read_bytes() != payload:
         raise ModelingError(f"Refusing to overwrite different report: {path}")
     path.parent.mkdir(parents=True, exist_ok=True)

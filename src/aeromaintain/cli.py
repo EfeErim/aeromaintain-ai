@@ -271,7 +271,10 @@ def finish(
     except DeliveryError as exc:
         typer.echo(f"Finish failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
-    typer.echo(f"Run complete: {result.run_id}")
+    if result.already_complete:
+        typer.echo(f"Run {result.run_id} was already complete; nothing changed")
+    else:
+        typer.echo(f"Run complete: {result.run_id}")
     typer.echo(f"Report: {result.report_path}")
 
 
@@ -288,7 +291,7 @@ def export_demo(
     project_root: ProjectRoot = None,
 ) -> None:
     """Export aggregate metrics and predictions, without NASA rows or true RUL."""
-    from aeromaintain.app import ArtifactValidationError, export_public_bundle
+    from aeromaintain.artifacts import ArtifactValidationError, export_public_bundle
 
     root = resolve_project_root(project_root)
     try:
@@ -308,7 +311,7 @@ def app_command(
     project_root: ProjectRoot = None,
 ) -> None:
     """Open the local Streamlit application for one verified run."""
-    from aeromaintain.app import ArtifactValidationError, load_verified_run
+    from aeromaintain.artifacts import ArtifactValidationError, load_verified_run
 
     root = resolve_project_root(project_root)
     try:

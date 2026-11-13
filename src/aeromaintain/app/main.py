@@ -9,7 +9,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from aeromaintain.app.artifacts import (
+from aeromaintain.artifacts import (
     ArtifactValidationError,
     load_public_bundle,
     load_verified_run,

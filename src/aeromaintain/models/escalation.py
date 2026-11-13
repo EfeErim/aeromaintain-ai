@@ -19,18 +19,18 @@ from aeromaintain.evaluation.protocol import (
 )
 from aeromaintain.features import FEATURE_SETS, build_causal_features
 from aeromaintain.features.causal import SENSOR_COLUMNS, SETTING_COLUMNS
-from aeromaintain.models.evaluation import _validate_lock
+from aeromaintain.models.evaluation import validate_lock
 from aeromaintain.models.robustness import _config_from_lock
 from aeromaintain.models.rul import (
     ModelingConfig,
     ModelingError,
     _feature_view,
     _new_preprocessor,
-    _processed_dir,
     engine_equal_weights,
     group_fold_plan,
     inner_engine_split,
 )
+from aeromaintain.models.run_files import processed_dir
 
 SEQUENCE_LENGTH = 30
 SEQUENCE_COLUMNS = (*SETTING_COLUMNS, *SENSOR_COLUMNS)
@@ -178,9 +178,9 @@ def _load_base(
     root: Path,
     base_run_id: str,
 ) -> tuple[Path, dict[str, Any], ModelingConfig, pd.DataFrame]:
-    run_dir, lock = _validate_lock(root, base_run_id)
+    run_dir, lock = validate_lock(root, base_run_id)
     frame = pd.read_parquet(
-        _processed_dir(root, lock["dataset"]) / "train.parquet"
+        processed_dir(root, lock["dataset"]) / "train.parquet"
     ).reset_index(drop=True)
     return run_dir, lock, _config_from_lock(lock), frame
 
