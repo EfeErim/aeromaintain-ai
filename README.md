@@ -9,9 +9,17 @@ Remaining-useful-life (RUL) prediction for turbofan engines on NASA's C-MAPSS an
 N-CMAPSS benchmarks, with prediction intervals, maintenance alarms and a Streamlit
 review app.
 
+**In short:** an end-to-end RUL pipeline (data verification, leakage-safe features,
+Ridge/XGBoost, calibrated intervals, maintenance alarms, a review app) evaluated like
+a preregistered study: each benchmark test set opened once, after the model was
+locked. On unseen N-CMAPSS engines it cuts RMSE from 22.7 (baseline) to 13.1 with
+92.5% interval coverage. Every result, including the failures, is published.
+
 Most C-MAPSS results are tuned against the official test set many times. I wanted
-numbers I could defend, so every test set here was opened exactly once, after the
-model and its thresholds were locked and committed.
+numbers I could defend, so each test set here was opened once, after the model and its
+thresholds were locked and committed. The tooling refuses a second opening, but the
+single opening itself is my own attestation; [architecture](docs/architecture.md#what-opened-once-does-and-does-not-prove)
+lists exactly what the code does and does not enforce.
 
 ![Overview page](docs/screenshots/overview.png)
 
@@ -33,7 +41,13 @@ two engines. The point values and pass/fail results are unchanged
 ([erratum](docs/results_v5.md#erratum-bootstrap-ranges-2026-11-09)).
 
 - On the final N-CMAPSS test the alarm fired for 32 of 35 engines while 10–30 cycles
-  remained. The predeclared limit was 3 misses, so it passed with no margin.
+  remained. The predeclared limit was 3 misses, so it passed with no margin. The 95%
+  interval for the miss rate is 3–22%, and if the alarm had to start inside the
+  window, one more engine would count as missed and the gate would fail
+  ([sensitivity checks](docs/results_v5.md#sensitivity-checks-2026-11-16)).
+- The other two v5 gates were lenient (beat a constant-mean baseline; at least 85%
+  coverage for a 90% interval), so "all gates passed" mostly rests on the alarm.
+  The RMSE result holds with any one of the three test files left out.
 - Scored the way most papers do (true RUL capped at 125), FD002 and FD004 come out at
   14.74 and 15.33. That rescoring was done after the labels were open, so I report it
   separately ([comparison](docs/results_retrospective.md)).
@@ -92,7 +106,8 @@ Leakage controls that matter most:
   `models/robustness.py` refits the locked settings across ten seeds to show how much
   of a result is seed noise ([seed sensitivity](docs/results.md#seed-sensitivity)).
 
-Design notes are in [architecture](docs/architecture.md), the
+A map of all documents is in [docs/README.md](docs/README.md). Design notes are in
+[architecture](docs/architecture.md), the
 [model card](docs/model_card.md) and the [data card](docs/data_card.md). Method
 choices and the literature they rest on are in [research notes](docs/research.md).
 
@@ -115,10 +130,21 @@ The FD001 pipeline takes about 11 minutes on CPU. [docs/demo.md](docs/demo.md) h
 captured output of these commands from a fresh clone. The hosted demo sleeps when idle
 and takes a minute to wake.
 
-Development checks:
+No NASA download? Run the same pipeline on generated FD001-shaped data. It takes a
+few minutes, writes to a separate directory outside the repository, and its numbers
+describe no real engine (the app shows a banner saying so):
 
 ```bash
-pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
+aeromaintain pipeline --synthetic --run-id demo --project-root ../aeromaintain-synthetic
+aeromaintain app --run-id demo --project-root ../aeromaintain-synthetic
+```
+
+Development checks, in the exact environment CI uses (every package pinned and
+hash-checked in `constraints/python311-lock.txt`):
+
+```bash
+pip install --require-hashes -r constraints/python311-lock.txt
+pip install --no-deps -e .
 ruff check . && ruff format --check .
 pytest --cov=src/aeromaintain --cov-fail-under=80
 ```
@@ -128,7 +154,7 @@ pytest --cov=src/aeromaintain --cov-fail-under=80
 ```text
 src/aeromaintain/   data pipeline, features, models, evaluation, Streamlit app
 configs/            frozen experiment configurations
-docs/               protocols, results, model and data cards
+docs/               protocols, results, model and data cards (map: docs/README.md)
 demo/               aggregate-only bundle used by the hosted demo
 tests/              unit and protocol tests
 ```
@@ -139,7 +165,8 @@ Protocol documents, configs and the code they ran (`models/v*.py`, `models/rul.p
 published model locks, so they are never edited after a test is run.
 That is why `models/v4.py` and `models/v5.py` are separate files rather than one module
 that changed over time: each is the exact code its protocol ran.
-`tests/test_protocol_v5.py` fails if any file pinned by the v5 lock changes. Known
+`tests/test_protocol_v5.py` fails if any file pinned by the v5 lock changes, and also
+checks those hashes against the files stored at the `v1.0.0` release tag. Known
 defects in frozen code are corrected in the results pages instead, as with the
 [v5 bootstrap erratum](docs/results_v5.md#erratum-bootstrap-ranges-2026-11-09).
 Code that loads, reports and displays runs is maintained separately; the split is

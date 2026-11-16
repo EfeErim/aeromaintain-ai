@@ -237,9 +237,22 @@ def pipeline(
     archive: Archive = None,
     project_root: ProjectRoot = None,
     dataset: Dataset = "FD001",
+    synthetic: Annotated[
+        bool,
+        typer.Option(
+            "--synthetic",
+            help=(
+                "Run on generated FD001-shaped data instead of the NASA archive. "
+                "Needs --project-root: a new directory outside the repository."
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Run prepare, train/lock, evaluate, and report."""
-    root = resolve_project_root(project_root)
+    if synthetic:
+        archive, root = _synthetic_project(project_root, archive, dataset)
+    else:
+        root = resolve_project_root(project_root)
     try:
         result = run_pipeline(
             root,
@@ -254,6 +267,76 @@ def pipeline(
     typer.echo(f"Run: {result.run_id}")
     typer.echo(f"Manifest: {result.manifest_path}")
     typer.echo(f"Report: {result.report_path}")
+    if synthetic:
+        typer.echo("Data: SYNTHETIC. These numbers describe no real or NASA engine.")
+        typer.echo(
+            f"View it: aeromaintain app --run-id {result.run_id} --project-root {root}"
+        )
+
+
+def _synthetic_project(
+    project_root: Path | None, archive: Path | None, dataset: str
+) -> tuple[Path, Path]:
+    from aeromaintain.synthetic import SyntheticProjectError, build_synthetic_project
+
+    if archive is not None or dataset != "FD001":
+        typer.echo(
+            "--synthetic generates FD001 data; drop --archive/--dataset", err=True
+        )
+        raise typer.Exit(code=2)
+    if project_root is None:
+        typer.echo(
+            "--synthetic needs --project-root: a directory outside the repository",
+            err=True,
+        )
+        raise typer.Exit(code=2)
+    repo_root = resolve_project_root(None)
+    try:
+        archive_path = build_synthetic_project(repo_root, project_root)
+    except SyntheticProjectError as exc:
+        typer.echo(f"Pipeline failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"Synthetic project: {project_root}")
+    return archive_path, project_root.resolve()
+
+
+V5Output = Annotated[
+    Path,
+    typer.Option("--output", help="Output directory for this v5 stage."),
+]
+
+
+@app.command("v5")
+def v5_command(
+    stage: Annotated[
+        str,
+        typer.Argument(help="Stage of protocol v5: hybrid, prepare or evaluate."),
+    ],
+    output: V5Output,
+    project_root: ProjectRoot = None,
+) -> None:
+    """Run a protocol v5 stage (frozen code; evaluate opens the reserved labels)."""
+    import json
+
+    from aeromaintain.models import v5
+
+    stages = {"hybrid": v5.run_hybrid, "prepare": v5.prepare, "evaluate": v5.evaluate}
+    if stage not in stages:
+        typer.echo(f"Unknown v5 stage {stage!r}; use {', '.join(stages)}", err=True)
+        raise typer.Exit(code=2)
+    root = resolve_project_root(project_root)
+    try:
+        config = json.loads((root / v5.CONFIG).read_text(encoding="utf-8"))
+        stages[stage](root, output.resolve(), config)
+    except (OSError, ValueError, RuntimeError, KeyError) as exc:
+        # v5 signals refusals with these built-in errors (FileExistsError is an
+        # OSError); its code is frozen, so they are translated here.
+        typer.echo(f"v5 {stage} failed: {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+    except subprocess.CalledProcessError as exc:
+        typer.echo(f"v5 {stage} failed: git {exc.args[1]!r} did not succeed", err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(f"v5 {stage} complete: {output.resolve()}")
 
 
 @app.command()

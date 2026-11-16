@@ -1,4 +1,7 @@
+import hashlib
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -115,6 +118,59 @@ def test_published_lock_still_matches_frozen_files():
         ("development_sha256", v5.DEVELOPMENT),
     ]:
         assert v5.sha256_file(ROOT / name) == lock[key], name
+
+
+RELEASE_TAG = "v1.0.0"
+LF_NORMALIZED_AT_TAG = {v5.DEVELOPMENT}
+
+
+def _tagged_bytes(path: str) -> bytes | None:
+    """Return a file's bytes at the release tag, or None when the tag is absent."""
+    result = subprocess.run(
+        ["git", "show", f"{RELEASE_TAG}:{path}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    return result.stdout if result.returncode == 0 else None
+
+
+def test_published_lock_matches_release_tag():
+    """The published tag, not only the working tree, holds the code the lock names.
+
+    This is the provenance check: it keeps holding even if a pinned file is later
+    refactored on main. CI fetches tags, so it never skips there.
+    """
+    lock = _lock()
+    expected = dict(lock["source_sha256"])
+    for key, name in [
+        ("protocol_sha256", v5.PROTOCOL),
+        ("config_sha256", v5.CONFIG),
+        ("reservation_sha256", v5.RESERVATION),
+        ("development_sha256", v5.DEVELOPMENT),
+    ]:
+        expected[name] = lock[key]
+    tagged_lock = _tagged_bytes(v5.PUBLISHED_LOCK)
+    if tagged_lock is None:
+        if os.environ.get("CI"):
+            pytest.fail(f"Release tag {RELEASE_TAG} is not available in CI")
+        pytest.skip(f"Release tag {RELEASE_TAG} is not available")
+    assert (
+        hashlib.sha256(tagged_lock).hexdigest()
+        == hashlib.sha256((ROOT / v5.PUBLISHED_LOCK).read_bytes()).hexdigest()
+    )
+    for name, digest in expected.items():
+        content = _tagged_bytes(name)
+        assert content is not None, name
+        if name in LF_NORMALIZED_AT_TAG:
+            # The lock hashed CRLF bytes; the tag stored them LF-normalized. Fixed in
+            # ab390b5 with no content change: the tag must equal the locked bytes
+            # with only line endings normalized.
+            locked = (ROOT / name).read_bytes()
+            assert hashlib.sha256(locked).hexdigest() == digest, name
+            assert content == locked.replace(b"\r\n", b"\n"), name
+            continue
+        assert hashlib.sha256(content).hexdigest() == digest, name
 
 
 @pytest.mark.parametrize(

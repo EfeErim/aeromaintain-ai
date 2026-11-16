@@ -47,3 +47,21 @@ this decision, `models/evaluation.py` imported private helpers from `rul.py`, an
   code, not an edit to `rul.py`.
 - Before and after this change, the eight stored C-MAPSS locks gave bit-identical
   predictions and intervals on their test features (no labels read).
+
+## Amendment, 2026-11-16: provenance from the release tag
+
+An outside review pointed out that pinning files in the working tree is both the
+proof and the cost: seven files can never change on `main`, and the proof itself
+depends on `main` staying untouched.
+
+- `tests/test_protocol_v5.py` now also checks the v5 lock against the files stored at
+  the `v1.0.0` tag. That tag is the provenance record; CI fetches tags so the check
+  never skips there.
+- The working-tree check stays for now, because the seed and challenger studies
+  reuse `rul.py` and are meant to repeat the published code exactly.
+- If a pinned file ever needs to change, the change can be made on `main` with the
+  working-tree check retired for that file, as long as the tag check keeps passing
+  and the studies are rerun against the tag. `evaluation/ledger.py` and
+  `evaluation/protocol.py` are the likeliest candidates. Copying them into a
+  maintained module now would only add more duplicated code with no current need, so
+  that is deferred until a change is actually needed.

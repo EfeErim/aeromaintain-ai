@@ -1,4 +1,6 @@
-# Engineering review, November 2026
+# Engineering self-review, November 2026
+
+Written by the author, not an independent audit.
 
 Scope: artefact verification, resuming `finish`, integration tests for v5 and the
 CLI, and the line between frozen and maintained code. No model was retrained, no

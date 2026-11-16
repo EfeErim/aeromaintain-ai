@@ -93,7 +93,10 @@ sampled cuts fall below the Mondrian lower bound.
 ### Alarm replay
 
 The rule is a persistent alarm: three consecutive cycles predicted at or below 30. An
-alarm counts only if it is confirmed while true RUL is between 10 and 30.
+engine counts as alerted if a confirmed alarm is active at some cycle with true RUL
+between 10 and 30. The alarm may have been confirmed earlier, and the gate sets no
+limit on false events; see the [sensitivity checks](#sensitivity-checks-2026-11-16)
+for stricter readings.
 
 | Signal | Missed | Median lead at confirmation | False events per engine |
 |---|---:|---:|---:|
@@ -124,6 +127,53 @@ times as many false events. That is a recall-for-false-alarm trade, not a free g
   consecutive alert cycles somewhere in the window.
 - **It is simulation evidence only.** It is not airworthiness, maintenance-approval or
   fleet evidence. These 35 engines cannot be reused.
+- **G1 and G2 were lenient.** G1 only asks for an RMSE no worse than a constant mean,
+  and G2 accepts 85% coverage for a nominal 90% interval. The same model family had
+  already cleared both on v4 confirmatory engines, so G3 was the only gate at real
+  risk.
+
+### Sensitivity checks (2026-11-16)
+
+Added after an outside review. They read the stored evaluation through
+[`scripts/v5_sensitivity.py`](../scripts/v5_sensitivity.py) (no labels reopened, no
+model refit) and are written to [`v5_sensitivity.json`](v5_sensitivity.json). They do
+not change any gate decision, which was fixed in advance, but they change how much the
+G3 pass should be trusted.
+
+| Alarm reading | Missed of 35 | Would pass "at most 3"? |
+|---|---:|---|
+| Published G3: confirmed alarm active inside 10–30 | 3 (Wilson 95%: 3.0–22.4%) | Yes |
+| Alarm must be newly confirmed inside 10–30 | 4 | No |
+| Newly confirmed inside 10–30 and no false event | 9 | No |
+
+- The 95% Wilson interval for 3 of 35 runs from 3% to 22%, so the test cannot show
+  that the miss rate is at most 10%.
+- The difference between the first two rows is one engine, DS01 unit 1. Its alarm
+  confirmed at 31 cycles, one cycle before the window, and stayed on. That is a
+  reasonable alarm in practice, but under the stricter reading G3 would have failed,
+  which shows how close to the boundary the pass is.
+- The third row is not a fair gate on its own, since a single early confirmation
+  counts as a false event; it shows that the gate puts no price on early alarms.
+
+The 35 engines come from three files with opposite bias (DS01 −6.96, DS08c +5.10), so
+the engine bootstrap, which treats engines as independent, understates uncertainty.
+Resampling files first and then engines within each file gives:
+
+| Metric | Point | Engine bootstrap (erratum) | Two-stage file/engine bootstrap |
+|---|---:|---:|---:|
+| RMSE | 13.06 | 11.13–15.00 | 10.98–15.38 |
+| Mean baseline RMSE | 22.70 | 21.40–23.99 | 20.12–26.63 |
+| Mondrian coverage | 92.5% | 88.4–95.9% | 87.4–96.8% |
+
+| Left-out file | RMSE | Baseline RMSE | Mondrian coverage |
+|---|---:|---:|---:|
+| DS01 | 12.43 | 20.77 | 93.8% |
+| DS08a | 13.01 | 23.78 | 93.0% |
+| DS08c | 13.70 | 23.65 | 90.8% |
+
+The model beats the baseline in every two-stage resample and with any one file left
+out, so G1 is robust. With only three files, the two-stage ranges are themselves
+rough.
 
 ## Part A: capped/uncapped hybrid on C-MAPSS (development only)
 

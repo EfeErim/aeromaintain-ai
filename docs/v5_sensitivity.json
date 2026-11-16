@@ -1,0 +1,335 @@
+{
+  "evaluation_sha256": "ec8bb9743a8e680f649d48c2ac2af8562f53a6e09d263db18a41e0d920fe3ab3",
+  "file_sensitivity": {
+    "leave_one_file_out": {
+      "N-CMAPSS_DS01-005.h5": {
+        "baseline_rmse": 20.770452119537506,
+        "mondrian_coverage": 0.9383999999999999,
+        "rmse": 12.425512812458985
+      },
+      "N-CMAPSS_DS08a-009.h5": {
+        "baseline_rmse": 23.778834469965094,
+        "mondrian_coverage": 0.9295000000000002,
+        "rmse": 13.008984099864858
+      },
+      "N-CMAPSS_DS08c-008.h5": {
+        "baseline_rmse": 23.654112353880453,
+        "mondrian_coverage": 0.9079999999999999,
+        "rmse": 13.695402384110748
+      }
+    },
+    "method": "two-stage bootstrap: resample the 3 files, then engines within each, 2000 resamples, seed 44; cuts seed 46",
+    "point": {
+      "baseline_rmse": 22.70364262387992,
+      "mondrian_coverage": 0.925,
+      "rmse": 13.05680376776412
+    },
+    "ranges_95": {
+      "baseline_rmse": [
+        20.120264925474338,
+        26.633581944641296
+      ],
+      "mondrian_coverage": [
+        0.8741660714285714,
+        0.9677178571428573
+      ],
+      "rmse": [
+        10.98025542631844,
+        15.382010220170113
+      ]
+    },
+    "resamples_where_model_beats_baseline": 1.0
+  },
+  "g3_alarm": {
+    "engines": 35,
+    "false_events_per_engine": 0.2571428571428571,
+    "missed_engines": 3,
+    "missed_fraction_wilson_95": {
+      "high": 0.22379273965896496,
+      "low": 0.02958236826696982
+    },
+    "published_rule": "alerted if a confirmed point alarm is active at any cycle with true RUL in [10, 30], whenever it was confirmed; no false-alarm limit",
+    "stricter_readings": {
+      "engines": 35,
+      "missed_if_alarm_must_start_in_window": 4,
+      "missed_if_false_events_also_count": 9,
+      "newly_confirmed_in_window": 31,
+      "newly_confirmed_in_window_without_false_event": 26,
+      "records": [
+        {
+          "confirmations": [
+            31.0
+          ],
+          "fresh_in_window": false,
+          "unit_id": 10001
+        },
+        {
+          "confirmations": [
+            23.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10002
+        },
+        {
+          "confirmations": [
+            19.0,
+            15.0,
+            8.0,
+            2.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10003
+        },
+        {
+          "confirmations": [
+            30.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10004
+        },
+        {
+          "confirmations": [
+            26.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10005
+        },
+        {
+          "confirmations": [
+            32.0,
+            21.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10006
+        },
+        {
+          "confirmations": [
+            22.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10007
+        },
+        {
+          "confirmations": [
+            35.0,
+            31.0,
+            21.0,
+            16.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10008
+        },
+        {
+          "confirmations": [
+            21.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10009
+        },
+        {
+          "confirmations": [
+            25.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 10010
+        },
+        {
+          "confirmations": [
+            25.0,
+            14.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11001
+        },
+        {
+          "confirmations": [
+            13.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11002
+        },
+        {
+          "confirmations": [
+            23.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11003
+        },
+        {
+          "confirmations": [
+            28.0,
+            22.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11004
+        },
+        {
+          "confirmations": [
+            22.0,
+            17.0,
+            13.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11005
+        },
+        {
+          "confirmations": [
+            20.0,
+            16.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11006
+        },
+        {
+          "confirmations": [
+            18.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11007
+        },
+        {
+          "confirmations": [
+            19.0,
+            14.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11008
+        },
+        {
+          "confirmations": [
+            49.0,
+            41.0,
+            35.0,
+            30.0,
+            24.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11009
+        },
+        {
+          "confirmations": [
+            31.0,
+            24.0,
+            20.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11010
+        },
+        {
+          "confirmations": [
+            18.0,
+            14.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11011
+        },
+        {
+          "confirmations": [],
+          "fresh_in_window": false,
+          "unit_id": 11012
+        },
+        {
+          "confirmations": [
+            24.0,
+            17.0,
+            10.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11013
+        },
+        {
+          "confirmations": [
+            17.0,
+            11.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 11014
+        },
+        {
+          "confirmations": [],
+          "fresh_in_window": false,
+          "unit_id": 11015
+        },
+        {
+          "confirmations": [
+            9.0
+          ],
+          "fresh_in_window": false,
+          "unit_id": 12001
+        },
+        {
+          "confirmations": [
+            15.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12002
+        },
+        {
+          "confirmations": [
+            16.0,
+            12.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12003
+        },
+        {
+          "confirmations": [
+            11.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12004
+        },
+        {
+          "confirmations": [
+            13.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12005
+        },
+        {
+          "confirmations": [
+            31.0,
+            23.0,
+            19.0,
+            12.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12006
+        },
+        {
+          "confirmations": [
+            20.0,
+            12.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12007
+        },
+        {
+          "confirmations": [
+            19.0,
+            13.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12008
+        },
+        {
+          "confirmations": [
+            23.0,
+            14.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12009
+        },
+        {
+          "confirmations": [
+            15.0,
+            11.0
+          ],
+          "fresh_in_window": true,
+          "unit_id": 12010
+        }
+      ]
+    }
+  },
+  "status": "sensitivity; recomputed from stored v5 evaluation, labels not reopened"
+}

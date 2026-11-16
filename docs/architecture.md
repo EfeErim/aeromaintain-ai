@@ -60,6 +60,38 @@ For a clean holdout, `runs/holdout_ledger.json` also refuses any second model lo
 The public review table deliberately excludes `rul_true`, and the demo bundle holds no
 NASA rows.
 
+## What "opened once" does and does not prove
+
+The tooling refuses an accidental second opening. It cannot prove that a test set was
+opened only once; that rests on the author's word, backed by the public record below.
+
+What the code enforces:
+
+- labels are read only after the lock and every file it names match their hashes;
+- v5 evaluation runs only from a clean working tree whose `HEAD` contains the lock;
+- the ledger refuses a second, different claim on the same holdout.
+
+What it does not enforce:
+
+- **The lock was public before opening.** The code checks local `HEAD`, not that the
+  commit was pushed. The order of events is attested by the author and by GitHub's
+  push record, not by the tool.
+- **The ledger survives.** `runs/` is not committed, so deleting the ledger file
+  re-arms a holdout, and nothing stops a notebook from reading the label files
+  directly.
+- **Commit hashes are stable.** History was rewritten twice after the v5 test (see
+  [results v5](results_v5.md)), so commit hashes recorded in locks no longer exist.
+  Locks rely on file hashes, which did not change. The `v1.0.0` tag holds the exact
+  files the v5 lock names, and `tests/test_protocol_v5.py` checks the lock against
+  that tag as well as against the working tree. One file,
+  `protocol_v5_development.json`, is stored at the tag with LF line endings while the
+  lock hashed its CRLF bytes; the test checks that only line endings differ (fixed in
+  commit `ab390b5`).
+
+For any future holdout, anchor the lock outside this repository before opening: push
+a signed tag and record its hash with a third party (for example OpenTimestamps or a
+release on another host), and never rewrite history after that.
+
 ## What artefact verification guarantees
 
 `artifacts.load_verified_run` and `load_public_bundle` check, before returning:
