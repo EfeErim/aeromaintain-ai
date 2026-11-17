@@ -235,7 +235,7 @@ def _overview(artifacts) -> None:
         identity = pd.DataFrame(
             [
                 ("Run", artifacts.run_id),
-                ("Dataset", artifacts.model_lock["dataset"]),
+                ("Dataset", dataset),
                 ("Protocol", artifacts.model_lock["protocol"]["label"]),
                 ("Champion model", artifacts.model_lock["champion"]["kind"]),
                 ("Seed", artifacts.model_lock["seed"]),
@@ -286,10 +286,8 @@ def _engine_risk(artifacts) -> None:
     risk_view = ranking.rename(
         columns={
             "unit_id": "Engine",
-            "cycle": "Observed cycle",
             "prediction": "Point RUL",
             "interval_low": "Interval low",
-            "interval_high": "Interval high",
             "risk_band": "Band",
         }
     )

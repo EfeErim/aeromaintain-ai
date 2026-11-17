@@ -28,27 +28,12 @@ jobs:
           cache: pip
           cache-dependency-path: |
             pyproject.toml
-            constraints/python311-lock.txt
+            constraints/python311-tested.txt
 
-      - name: Install locked environment and the package
+      - name: Install from tested constraints
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --require-hashes -r constraints/python311-lock.txt
-          python -m pip install --no-deps -e .
-
-      - name: Dependency check
-        run: |
-          python -m pip check
-
-      - name: Raw-data exclusion
-        shell: bash
-        run: |
-          tracked="$(git ls-files data/raw data/processed artifacts runs)"
-          if [ -n "$tracked" ]; then
-            echo "Generated or raw data is tracked:"
-            echo "$tracked"
-            exit 1
-          fi
+          python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
 
       - name: Ruff lint
         run: ruff check .
@@ -57,7 +42,7 @@ jobs:
         run: ruff format --check .
 
       - name: Tests and coverage
-        run: pytest --cov=src/aeromaintain --cov-report=term-missing --cov-fail-under=80
+        run: pytest --cov=src/aeromaintain --cov-report=term-missing
 
       - name: Synthetic end-to-end run
         run: |

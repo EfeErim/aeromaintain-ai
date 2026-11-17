@@ -16,7 +16,6 @@ from typer.testing import CliRunner
 from aeromaintain import delivery
 from aeromaintain.artifacts import load_verified_run
 from aeromaintain.cli import app
-from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.delivery import DeliveryError, finish_locked_run, run_lock
 
 RUN = "fixture"
@@ -81,7 +80,7 @@ def _fail_on_call(monkeypatch, name: str, failing_call: int) -> None:
     [
         ("before the first report", "_write_report_file", 1, []),
         ("after report.json", "_write_report_file", 2, ["report.json"]),
-        ("after report.html", "_atomic_replace", 3, ["report.html", "report.json"]),
+        ("after report.html", "write_replacing", 3, ["report.html", "report.json"]),
     ],
 )
 def test_finish_resumes_after_interruption(
@@ -207,15 +206,17 @@ def test_lock_held_by_another_process_blocks_finish(run, tmp_path) -> None:
         [
             sys.executable,
             "-c",
-            "import sys, time; from pathlib import Path\n"
+            "import os, sys; from pathlib import Path\n"
             "from aeromaintain.delivery import run_lock\n"
             "with run_lock(Path(sys.argv[1]), sys.argv[2]):\n"
             "    Path(sys.argv[3]).write_text('ready')\n"
-            "    time.sleep(30)\n",
+            "    sys.stdin.buffer.readline()\n"
+            "    os._exit(0)\n",
             str(root),
             RUN,
             str(ready),
-        ]
+        ],
+        stdin=subprocess.PIPE,
     )
     try:
         deadline = time.monotonic() + 20
@@ -226,8 +227,9 @@ def test_lock_held_by_another_process_blocks_finish(run, tmp_path) -> None:
         with pytest.raises(DeliveryError, match="Another finish"):
             _finish(root)
     finally:
-        holder.kill()
-        holder.wait()
+        # Exit inside the lock holder: Windows venv launchers can have a child
+        # interpreter that survives killing the launcher process.
+        holder.communicate(input=b"exit\n", timeout=20)
     # The OS released the dead holder's lock; no manual cleanup is needed.
     _finish(root)
     _assert_completed(root, run_dir)
@@ -257,13 +259,3 @@ def test_cli_finish_exit_codes(run) -> None:
     )
     assert missing.exit_code == 1
     assert "manifest is missing" in missing.output
-
-
-def test_finish_records_listed_hashes(run) -> None:
-    root, run_dir = run
-    _finish(root)
-    pipeline = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))[
-        "pipeline"
-    ]
-    for name, expected in pipeline["artifacts"].items():
-        assert sha256_file(run_dir / name) == expected

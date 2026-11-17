@@ -23,7 +23,7 @@ from aeromaintain.features import (
 )
 from aeromaintain.features.causal import FeatureContractError
 from aeromaintain.models import compare_runs, evaluate_locked, rul, run_seed_sweep
-from aeromaintain.models.evaluation import _validate_lock
+from aeromaintain.models.evaluation import validate_lock
 from aeromaintain.models.rul import (
     ModelingConfig,
     ModelingError,
@@ -312,7 +312,7 @@ def test_v2_lock_schema_still_validates_but_unknown_schema_is_refused(
 ) -> None:
     _write_prepared_fixture(tmp_path)
     result = train_and_lock(tmp_path, run_id="fixture", config=_small_config())
-    _validate_lock(tmp_path, "fixture")
+    validate_lock(tmp_path, "fixture")
 
     lock = json.loads(result.model_lock.read_text(encoding="utf-8"))
     lock["schema_version"] = 99
@@ -322,7 +322,7 @@ def test_v2_lock_schema_still_validates_but_unknown_schema_is_refused(
     manifest["model_lock_sha256"] = sha256_file(result.model_lock)
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ModelingError, match="identity or schema"):
-        _validate_lock(tmp_path, "fixture")
+        validate_lock(tmp_path, "fixture")
 
 
 def test_project_config_stays_unchanged_for_earlier_locks() -> None:

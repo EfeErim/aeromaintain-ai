@@ -1,7 +1,7 @@
 """RUL modeling components."""
 
 from aeromaintain.models.evaluation import evaluate_locked
-from aeromaintain.models.robustness import compare_runs, run_seed_sweep, write_report
+from aeromaintain.models.robustness import compare_runs, run_seed_sweep
 from aeromaintain.models.rul import (
     EvaluationResult,
     ModelingConfig,
@@ -19,5 +19,4 @@ __all__ = [
     "evaluate_locked",
     "run_seed_sweep",
     "train_and_lock",
-    "write_report",
 ]

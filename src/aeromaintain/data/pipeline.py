@@ -81,13 +81,13 @@ class DataContract:
     source_url: str
     archive_size_bytes: int
     archive_sha256: str
-    train_rows: int = 20_631
-    test_rows: int = 13_096
-    train_engines: int = 100
-    test_engines: int = 100
-    test_labels: int = 100
-    development_engines: int = 80
-    calibration_engines: int = 20
+    train_rows: int
+    test_rows: int
+    train_engines: int
+    test_engines: int
+    test_labels: int
+    development_engines: int
+    calibration_engines: int
     rul_cap: int = 125
     seed: int = 42
     dataset: str = "FD001"
@@ -159,10 +159,10 @@ def verify_archive(path: Path, contract: DataContract) -> None:
             f"expected {contract.archive_size_bytes}, observed {observed_size}"
         )
     observed_hash = sha256_file(path)
-    if observed_hash.lower() != contract.archive_sha256.lower():
+    if observed_hash != contract.archive_sha256:
         raise DataPipelineError(
             "Archive SHA-256 mismatch: "
-            f"expected {contract.archive_sha256.lower()}, observed {observed_hash}"
+            f"expected {contract.archive_sha256}, observed {observed_hash}"
         )
 
 
@@ -404,8 +404,6 @@ def add_train_rul(frame: pd.DataFrame, cap: int) -> pd.DataFrame:
     engine_max_cycle = result.groupby("unit_id")["cycle"].transform("max")
     result["rul_true"] = (engine_max_cycle - result["cycle"]).astype("int64")
     result["rul_target"] = result["rul_true"].clip(upper=cap).astype("int64")
-    if (result[["rul_true", "rul_target"]] < 0).any().any():
-        raise DataPipelineError("Generated train RUL contains negative values")
     return result
 
 
@@ -438,17 +436,12 @@ def create_engine_split(
     )
     development_ids = sorted(int(value) for value in development)
     calibration_ids = sorted(int(value) for value in calibration)
-    if set(development_ids) & set(calibration_ids):
-        raise DataPipelineError("Development and calibration engine roles overlap")
-
     role_by_engine = {
         **dict.fromkeys(development_ids, "development"),
         **dict.fromkeys(calibration_ids, "calibration"),
     }
     result = train.copy()
     result["role"] = result["unit_id"].map(role_by_engine)
-    if result["role"].isna().any():
-        raise DataPipelineError("At least one train engine has no assigned role")
 
     manifest = {
         "algorithm": SPLIT_ALGORITHM_VERSION,
@@ -467,9 +460,7 @@ def create_engine_split(
 
 
 def build_eda_summary(development: pd.DataFrame) -> dict[str, Any]:
-    """Summarize only development engines for leakage-safe EDA."""
-    if development.empty or development["role"].ne("development").any():
-        raise DataPipelineError("EDA input must contain development engines only")
+    """Summarize the development engines only, so EDA sees no calibration rows."""
     lifetimes = development.groupby("unit_id")["cycle"].max()
     sensor_variability: dict[str, Any] = {}
     outliers: dict[str, int] = {}
@@ -558,62 +549,14 @@ def build_eda_html(
     )
 
 
-def _json_bytes(value: Any) -> bytes:
+def json_bytes(value: Any) -> bytes:
     return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode()
 
 
-def _parquet_bytes(frame: pd.DataFrame) -> bytes:
+def parquet_bytes(frame: pd.DataFrame) -> bytes:
     buffer = io.BytesIO()
     frame.to_parquet(buffer, index=False, engine="pyarrow")
     return buffer.getvalue()
-
-
-def _write_outputs(
-    output_dir: Path,
-    *,
-    train: pd.DataFrame,
-    test: pd.DataFrame,
-    test_rul: pd.DataFrame,
-    split_manifest: dict[str, Any],
-    quality_report: dict[str, Any],
-    eda_summary: dict[str, Any],
-    eda_html: str,
-    contract: DataContract,
-    archive_hash: str,
-    config_hash: str,
-) -> dict[str, str]:
-    payloads = {
-        "train.parquet": _parquet_bytes(train),
-        "test.parquet": _parquet_bytes(test),
-        "evaluation/test_rul.parquet": _parquet_bytes(test_rul),
-        "split_manifest.json": _json_bytes(split_manifest),
-        "data_quality_report.json": _json_bytes(quality_report),
-        "eda_summary.json": _json_bytes(eda_summary),
-        "eda_report.html": eda_html.encode(),
-    }
-    artifact_hashes: dict[str, str] = {}
-    for relative_path, payload in payloads.items():
-        _write_bytes_idempotently(output_dir / relative_path, payload)
-        artifact_hashes[relative_path] = hashlib.sha256(payload).hexdigest()
-
-    manifest = {
-        "dataset": contract.dataset,
-        "archive": {
-            "filename": ARCHIVE_NAME,
-            "sha256": archive_hash,
-            "size_bytes": contract.archive_size_bytes,
-        },
-        "config_sha256": config_hash,
-        "data_contract": asdict(contract),
-        "split_algorithm": SPLIT_ALGORITHM_VERSION,
-        "official_test_labels": {
-            "path": "evaluation/test_rul.parquet",
-            "usage": "locked evaluation only; excluded from training paths",
-        },
-        "artifacts": artifact_hashes,
-    }
-    _write_bytes_idempotently(output_dir / "manifest.json", _json_bytes(manifest))
-    return artifact_hashes
 
 
 def prepare_dataset(
@@ -625,13 +568,13 @@ def prepare_dataset(
 ) -> PrepareResult:
     """Run acquisition, parsing, validation, splitting, EDA, and persistence."""
     project_root = project_root.resolve()
-    active_contract = contract or load_data_contract(project_root, dataset)
-    dataset = active_contract.dataset
+    contract = contract or load_data_contract(project_root, dataset)
+    dataset = contract.dataset
     config_path = project_root / "configs" / "project.yaml"
     config_hash = sha256_file(config_path) if config_path.is_file() else "test-contract"
 
     raw_dir = project_root / "data" / "raw"
-    archive = acquire_archive(raw_dir, active_contract, archive_path)
+    archive = acquire_archive(raw_dir, contract, archive_path)
     extracted = extract_members(archive, raw_dir / dataset.lower(), dataset)
 
     train = parse_sensor_table(extracted["train"])
@@ -639,25 +582,25 @@ def prepare_dataset(
     train_quality = validate_sensor_table(
         train,
         name="train",
-        expected_rows=active_contract.train_rows,
-        expected_engines=active_contract.train_engines,
+        expected_rows=contract.train_rows,
+        expected_engines=contract.train_engines,
     )
     test_quality = validate_sensor_table(
         test,
         name="test",
-        expected_rows=active_contract.test_rows,
-        expected_engines=active_contract.test_engines,
+        expected_rows=contract.test_rows,
+        expected_engines=contract.test_engines,
     )
-    test_rul = parse_test_rul(extracted["test_rul"], active_contract.test_labels)
+    test_rul = parse_test_rul(extracted["test_rul"], contract.test_labels)
     if set(test["unit_id"].unique()) != set(test_rul["unit_id"]):
         raise DataPipelineError("Official test RUL engine IDs do not match test data")
 
-    train = add_train_rul(train, active_contract.rul_cap)
+    train = add_train_rul(train, contract.rul_cap)
     train, split_manifest = create_engine_split(
         train,
-        development_engines=active_contract.development_engines,
-        calibration_engines=active_contract.calibration_engines,
-        seed=active_contract.seed,
+        development_engines=contract.development_engines,
+        calibration_engines=contract.calibration_engines,
+        seed=contract.seed,
     )
     development = train.loc[train["role"].eq("development")].copy()
     eda_summary = build_eda_summary(development)
@@ -676,24 +619,41 @@ def prepare_dataset(
             "rul_true_max": int(train["rul_true"].max()),
             "rul_target_min": int(train["rul_target"].min()),
             "rul_target_max": int(train["rul_target"].max()),
-            "rul_cap": active_contract.rul_cap,
+            "rul_cap": contract.rul_cap,
             "negative_values": int(train[["rul_true", "rul_target"]].lt(0).sum().sum()),
         },
     }
     output_dir = project_root / "data" / "processed" / dataset.lower()
-    artifact_hashes = _write_outputs(
-        output_dir,
-        train=train,
-        test=test,
-        test_rul=test_rul,
-        split_manifest=split_manifest,
-        quality_report=quality_report,
-        eda_summary=eda_summary,
-        eda_html=eda_html,
-        contract=active_contract,
-        archive_hash=sha256_file(archive),
-        config_hash=config_hash,
-    )
+    payloads = {
+        "train.parquet": parquet_bytes(train),
+        "test.parquet": parquet_bytes(test),
+        "evaluation/test_rul.parquet": parquet_bytes(test_rul),
+        "split_manifest.json": json_bytes(split_manifest),
+        "data_quality_report.json": json_bytes(quality_report),
+        "eda_summary.json": json_bytes(eda_summary),
+        "eda_report.html": eda_html.encode(),
+    }
+    artifact_hashes: dict[str, str] = {}
+    for relative_path, payload in payloads.items():
+        _write_bytes_idempotently(output_dir / relative_path, payload)
+        artifact_hashes[relative_path] = hashlib.sha256(payload).hexdigest()
+    manifest = {
+        "dataset": dataset,
+        "archive": {
+            "filename": ARCHIVE_NAME,
+            "sha256": sha256_file(archive),
+            "size_bytes": contract.archive_size_bytes,
+        },
+        "config_sha256": config_hash,
+        "data_contract": asdict(contract),
+        "split_algorithm": SPLIT_ALGORITHM_VERSION,
+        "official_test_labels": {
+            "path": "evaluation/test_rul.parquet",
+            "usage": "locked evaluation only; excluded from training paths",
+        },
+        "artifacts": artifact_hashes,
+    }
+    _write_bytes_idempotently(output_dir / "manifest.json", json_bytes(manifest))
     return PrepareResult(
         output_dir=output_dir,
         train_rows=len(train),

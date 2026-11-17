@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from aeromaintain.data.pipeline import (
+    DATASET_SHAPES,
     SCHEMA,
     DataContract,
     DataPipelineError,
@@ -127,6 +128,7 @@ def test_archive_hash_and_path_traversal_are_rejected(tmp_path: Path) -> None:
         source_url="https://example.invalid/archive.zip",
         archive_size_bytes=len(b"altered"),
         archive_sha256="0" * 64,
+        **DATASET_SHAPES["FD001"],
     )
     with pytest.raises(DataPipelineError, match="SHA-256 mismatch"):
         verify_archive(altered, contract)

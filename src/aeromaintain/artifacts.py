@@ -74,10 +74,6 @@ class RunArtifacts:
     sensor_history: pd.DataFrame
 
 
-# Older name, kept because callers and tests import it.
-AppArtifacts = RunArtifacts
-
-
 Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 ArtifactMap = dict[str, Sha256]
 
@@ -241,9 +237,7 @@ def verify_artifact_map(
     *,
     required: Iterable[str] = (),
 ) -> None:
-    """Check a non-empty, already schema-valid map that names every required file."""
-    if not artifacts:
-        raise ArtifactValidationError(f"{label} lists no artefacts")
+    """Check that a schema-valid map names every required file and each hash holds."""
     missing = sorted(set(required) - set(artifacts))
     if missing:
         raise ArtifactValidationError(
@@ -300,20 +294,13 @@ def _check_public_ranking(ranking: pd.DataFrame) -> None:
         raise ArtifactValidationError("Public bundle ranking has unknown risk bands")
 
 
-def load_run_manifest(run_dir: Path, run_id: str) -> RunManifest:
-    manifest = parse_contract(
-        RunManifest, read_json(run_dir / "manifest.json"), "Run manifest"
-    )
-    if manifest.run_id != run_id:
-        raise ArtifactValidationError("Run manifest identity mismatch")
-    return manifest
-
-
 def _load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
     root = project_root.resolve()
     run_dir = _safe_run_dir(root, run_id)
     raw_manifest = read_json(run_dir / "manifest.json")
-    manifest = load_run_manifest(run_dir, run_id)
+    manifest = parse_contract(RunManifest, raw_manifest, "Run manifest")
+    if manifest.run_id != run_id:
+        raise ArtifactValidationError("Run manifest identity mismatch")
     if manifest.pipeline is not None:
         verify_artifact_map(
             run_dir,
@@ -403,7 +390,8 @@ def load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
         ) from exc
 
 
-def _write_replacing(path: Path, payload: bytes) -> None:
+def write_replacing(path: Path, payload: bytes) -> None:
+    """Replace ``path`` through a temporary file in the same directory."""
     with tempfile.NamedTemporaryFile(
         mode="wb", prefix=f".{path.name}-", suffix=".tmp", dir=path.parent, delete=False
     ) as stream:
@@ -454,10 +442,10 @@ def export_public_bundle(project_root: Path, run_id: str, output_dir: Path) -> P
     hashes: dict[str, str] = {}
     for name, text in files.items():
         path = output_dir / name
-        _write_replacing(path, text.encode("utf-8"))
+        write_replacing(path, text.encode("utf-8"))
         hashes[name] = sha256_file(path)
     manifest = output_dir / PUBLIC_MANIFEST_FILE
-    _write_replacing(
+    write_replacing(
         manifest,
         (json.dumps({"artifacts": hashes}, indent=2, sort_keys=True) + "\n").encode(),
     )

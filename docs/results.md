@@ -315,17 +315,8 @@ on FD003. That beats v1's 60.6 but misses the target of 45.
 
 Ten seeds (42–51) refit the locked FD001 settings. They vary cross-fit folds, model
 randomness, draws, and the final fit. Selection is not rerun, so this spread excludes
-selection variance. FD003 is excluded because its labels open only once.
-
-| Metric | Mean | SD | Range |
-|---|---:|---:|---:|
-| RMSE | 16.034 | 0.135 | 15.796–16.205 |
-| MAE | 11.623 | 0.205 | 11.154–11.902 |
-| NASA score | 419.4 | 13.3 | 398.3–442.4 |
-| Interval coverage | 0.942 | 0.009 | 0.93–0.95 |
-| Mean interval width | 56.31 | 0.65 | 55.42–57.43 |
-| Risk-rule recall | 0.960 | 0.027 | 0.92–1.00 |
-| Risk-rule false alarms | 3.2 | 0.8 | 2–4 |
+selection variance. FD003 is excluded because its labels open only once. The results
+are the FD001 column of the v3 [seed sensitivity](#seed-sensitivity) table.
 
 The published seed 42 has the lowest RMSE, MAE, and NASA score of the ten, so its
 FD001 point values are slightly optimistic. The risk threshold was 20 for every seed.

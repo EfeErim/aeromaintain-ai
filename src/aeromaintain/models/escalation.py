@@ -17,7 +17,7 @@ from aeromaintain.evaluation.protocol import (
     summarize_draws,
     summarize_interval_draws,
 )
-from aeromaintain.features import FEATURE_SETS, build_causal_features
+from aeromaintain.features import build_causal_features
 from aeromaintain.features.causal import SENSOR_COLUMNS, SETTING_COLUMNS
 from aeromaintain.models.evaluation import validate_lock
 from aeromaintain.models.robustness import _config_from_lock
@@ -408,11 +408,3 @@ def run_cqr_study(
             and reduction >= CQR_MIN_WIDTH_REDUCTION
         ),
     }
-
-
-__all__ = [
-    "FEATURE_SETS",
-    "build_sequences",
-    "run_cqr_study",
-    "run_lstm_study",
-]

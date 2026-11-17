@@ -6,14 +6,11 @@
 [![Demo](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://aeromaintain-ai-demo.streamlit.app/)
 
 Remaining-useful-life (RUL) prediction for turbofan engines on NASA's C-MAPSS and
-N-CMAPSS benchmarks, with prediction intervals, maintenance alarms and a Streamlit
-review app.
-
-**In short:** an end-to-end RUL pipeline (data verification, leakage-safe features,
-Ridge/XGBoost, calibrated intervals, maintenance alarms, a review app) evaluated like
-a preregistered study: each benchmark test set opened once, after the model was
-locked. On unseen N-CMAPSS engines it cuts RMSE from 22.7 (baseline) to 13.1 with
-92.5% interval coverage. Every result, including the failures, is published.
+N-CMAPSS benchmarks: an end-to-end pipeline (data verification, leakage-safe features,
+Ridge/XGBoost, calibrated intervals, maintenance alarms, a Streamlit review app)
+evaluated like a preregistered study. On unseen N-CMAPSS engines it cuts RMSE from
+22.7 (baseline) to 13.1 with 92.5% interval coverage. Every result, including the
+failures, is published.
 
 Most C-MAPSS results are tuned against the official test set many times. I wanted
 numbers I could defend, so each test set here was opened once, after the model and its
@@ -79,10 +76,9 @@ Leakage controls that matter most:
 
 ## Design decisions
 
-- **Open each test set once.** The usual practice is to report the best of many runs
-  against the official test set. That makes every number optimistic by an unknown
-  amount, so each protocol here is committed before its test, and a holdout ledger
-  refuses a second model lock. The cost is that a bad result stays published (protocol
+- **Open each test set once.** Tuning against the test set makes every number
+  optimistic by an unknown amount, so each protocol here is committed before its test,
+  and a holdout ledger refuses a second model lock. The cost is that a bad result stays published (protocol
   v4 was a negative result, and v5 passed G3 with no margin).
 - **Score development on one random cut per engine.** Scoring every cycle row would
   weight long-lived engines more and reward easy late-life rows. The test has one
@@ -139,14 +135,12 @@ aeromaintain pipeline --synthetic --run-id demo --project-root ../aeromaintain-s
 aeromaintain app --run-id demo --project-root ../aeromaintain-synthetic
 ```
 
-Development checks, in the exact environment CI uses (every package pinned and
-hash-checked in `constraints/python311-lock.txt`):
+Development checks using the tested direct dependencies:
 
 ```bash
-pip install --require-hashes -r constraints/python311-lock.txt
-pip install --no-deps -e .
+python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
 ruff check . && ruff format --check .
-pytest --cov=src/aeromaintain --cov-fail-under=80
+pytest --cov=src/aeromaintain
 ```
 
 ## Project layout
@@ -159,23 +153,11 @@ demo/               aggregate-only bundle used by the hosted demo
 tests/              unit and protocol tests
 ```
 
-Protocol documents, configs and the code they ran (`models/v*.py`, `models/rul.py`,
-`evaluation/protocol.py`, `evaluation/v4.py`, `evaluation/ledger.py`,
-`data/ncmapss.py`) are versioned on purpose: their SHA-256 hashes are part of the
-published model locks, so they are never edited after a test is run.
-That is why `models/v4.py` and `models/v5.py` are separate files rather than one module
-that changed over time: each is the exact code its protocol ran.
-`tests/test_protocol_v5.py` fails if any file pinned by the v5 lock changes, and also
-checks those hashes against the files stored at the `v1.0.0` release tag. Known
-defects in frozen code are corrected in the results pages instead, as with the
-[v5 bootstrap erratum](docs/results_v5.md#erratum-bootstrap-ranges-2026-11-09).
-Code that loads, reports and displays runs is maintained separately; the split is
-explained in [decision 0001](docs/decisions/0001-frozen-experiment-code.md).
-
-If a run stops after its model lock, `aeromaintain finish --run-id ID` picks it up:
-it reuses a recorded evaluation instead of reading labels again, accepts reports
-left with identical bytes, refuses different ones, and on a finished run only
-verifies. [Architecture](docs/architecture.md) lists what each check guarantees.
+Published protocols, configurations and experiment code stay byte-identical to their
+model locks; tests also verify the v5 hashes against the `v1.0.0` release tag.
+Loading, reporting and the review app are maintained separately.
+`aeromaintain finish --run-id ID` resumes interrupted reports without reopening labels.
+See [architecture](docs/architecture.md) for the boundaries and guarantees.
 
 ## Limitations
 

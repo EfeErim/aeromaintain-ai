@@ -119,7 +119,8 @@ reaches 195. See [the diagnosis](results.md#diagnosis-made-after-opening).
 ## Locked official-test evaluation: one condition
 
 FD003 is a clean single-open test of the frozen v2 protocol. FD001 labels were seen
-before v2, so its column is not independent evidence. Ranges are 95% bootstrap intervals.
+before v2, so its column is not independent evidence. Ranges are 95% bootstrap
+intervals for metrics and two-sided Wilson 95% intervals for alert rates.
 
 | Metric | FD003 clean | FD001 seen |
 |---|---:|---:|
@@ -136,8 +137,8 @@ before v2, so its column is not independent evidence. Ranges are 95% bootstrap i
 | `prediction <= 30` | FD001 | 0.80 (0.61–0.91) | 1.00 (0.84–1.00) | 0.00 (0.00–0.05) |
 | `interval_low <= 20` (interface) | FD001 | 0.96 (0.80–0.99) | 0.86 (0.69–0.94) | 0.05 (0.02–0.13) |
 
-Alert ranges are two-sided Wilson 95% intervals. Across ten seeds of the FD001
-settings, RMSE averages 16.03 (SD 0.14); seed 42 is the lowest of the ten.
+Across ten seeds of the FD001 settings, RMSE averages 16.03 (SD 0.14); seed 42 is the
+lowest of the ten.
 
 ## Explanations and limitations
 

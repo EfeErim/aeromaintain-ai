@@ -33,7 +33,7 @@ from aeromaintain.models.rul import (
     fit_quantile_fixed,
     partition_features,
 )
-from aeromaintain.models.run_files import json_bytes, processed_dir
+from aeromaintain.models.run_files import processed_dir
 
 SEED_METRICS = (
     "mae",
@@ -48,7 +48,6 @@ SEED_METRICS = (
     "interval_low_rule_false_alarms",
     "risk_threshold",
 )
-SKIPPED_LOCK_FIELDS = {"run_id"}
 
 
 def _config_from_lock(lock: dict[str, Any]) -> ModelingConfig:
@@ -237,7 +236,7 @@ def _changed_lock_fields(
     return sorted(
         name
         for name in set(left) | set(right)
-        if name not in SKIPPED_LOCK_FIELDS and left.get(name) != right.get(name)
+        if name != "run_id" and left.get(name) != right.get(name)
     )
 
 
@@ -273,12 +272,3 @@ def compare_runs(
             first_lock, second_lock
         ),
     }
-
-
-def write_report(path: Path, report: dict[str, Any]) -> None:
-    """Write one new JSON report and refuse to replace a different one."""
-    payload = json_bytes(report)
-    if path.exists() and path.read_bytes() != payload:
-        raise ModelingError(f"Refusing to overwrite different report: {path}")
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(payload)

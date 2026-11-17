@@ -17,8 +17,16 @@ flowchart LR
 Some modules ran published experiments and are pinned by SHA-256 in
 `docs/ncmapss_locks/final_v5.json` (and, for older versions, in
 `docs/protocol_v4_evidence.json`). They are never edited, and
-`tests/test_protocol_v5.py` fails if one changes. The reasoning is in
-[decision 0001](decisions/0001-frozen-experiment-code.md).
+`tests/test_protocol_v5.py` fails if one changes. New training behavior needs a new
+protocol and evidence; defects in pinned code are corrected outside it, as with
+`evaluation/bootstrap.py` and the v5 bootstrap erratum.
+
+The `v1.0.0` tag is also checked against the v5 lock and is the provenance record.
+The working-tree check remains because seed and challenger studies reuse the frozen
+training path. If that path ever changes, the tag check must remain and those studies
+must run against the tag. Maintained copies of six small serialization and inference
+helpers are checked against their frozen counterparts in `tests/test_model_boundary.py`.
+Stored model classes keep their original module paths.
 
 | Frozen (lock-pinned) | Role |
 |---|---|
@@ -44,8 +52,7 @@ loading:
 - `models/robustness.py` and `models/escalation.py` refit locked specifications with
   the frozen training code, for seed sweeps and the LSTM and CQR challengers;
 - `delivery.py` runs preparation through the report and records completion;
-- `app/main.py` renders the Streamlit pages; `app/artifacts.py` only re-exports the
-  loaders from `artifacts.py` for older imports.
+- `app/main.py` renders the Streamlit pages using the loaders in `artifacts.py`.
 
 Dependencies point one way: `app` and `cli` use `delivery` and `artifacts`;
 `delivery` uses `artifacts` and the `models` package API; nothing outside `app`
@@ -99,7 +106,7 @@ release on another host), and never rewrite history after that.
 1. each JSON file against its schema: hashes are 64 lowercase hex characters,
    artefact maps are objects, statuses and lock schema versions (2 and 3) are known,
    and a `pipeline_complete` manifest has a pipeline record;
-2. that each artefact map is non-empty and lists every file the run needs: the model
+2. that each artefact map lists every file the run needs: the model
    lock lists `explanation.json` and every model, preprocessor, normalizer and
    quantile file its champion and calibration name; the pipeline record lists both
    reports and the evaluation manifest; the public bundle lists exactly `run.json`
@@ -148,9 +155,6 @@ it finds instead of trusting it.
 - `.joblib` files store `aeromaintain.models.rul.RidgeBundle`,
   `aeromaintain.features.causal.FoldPreprocessor` and `ConditionNormalizer` by
   module path; those classes do not move.
-- `aeromaintain.app` and `aeromaintain.app.artifacts` still export the loaders and
-  `AppArtifacts` (now an alias of `RunArtifacts`).
-- `models.evaluation._validate_lock` remains as an alias of `validate_lock`.
 - Reports regenerated from the stored C-MAPSS runs are byte-identical to the stored
   `report.json` and `report.html`, so `finish` accepts them.
 
@@ -159,7 +163,7 @@ it finds instead of trusting it.
 ```bash
 aeromaintain finish --run-id fd001-demo        # resumes, or verifies a finished run
 pytest tests/test_protocol_v5.py -k lock       # frozen files still match the v5 lock
-pytest --cov=src/aeromaintain --cov-fail-under=80
+pytest --cov=src/aeromaintain
 ```
 
 On Windows, if pytest cannot use the system temporary directory, pass a fresh

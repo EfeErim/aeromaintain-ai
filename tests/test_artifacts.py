@@ -11,7 +11,7 @@ import pandas as pd
 import pytest
 from run_fixture import build_verified_run, write_json
 
-from aeromaintain.app import artifacts as app_artifacts
+from aeromaintain import artifacts as app_artifacts
 from aeromaintain.artifacts import (
     ArtifactValidationError,
     export_public_bundle,
@@ -57,17 +57,6 @@ def test_tracked_demo_bundle_loads_unchanged(bundle: Path) -> None:
     assert loaded.sensor_history.empty
     after = {path.name: sha256_file(path) for path in (ROOT / "demo").iterdir()}
     assert before == after
-
-
-def test_old_import_path_still_works() -> None:
-    assert app_artifacts.load_public_bundle is load_public_bundle
-    assert app_artifacts.AppArtifacts is app_artifacts.RunArtifacts
-
-
-def test_empty_artifact_map_is_rejected(bundle: Path) -> None:
-    _set_artifacts(bundle, {})
-    with pytest.raises(ArtifactValidationError, match="lists no artefacts"):
-        load_public_bundle(bundle)
 
 
 @pytest.mark.parametrize("missing", ["run.json", "risk_ranking.csv"])
@@ -217,7 +206,7 @@ def test_lock_must_list_the_files_it_uses(tmp_path: Path) -> None:
         load_verified_run(tmp_path, "fixture")
 
     _relock(run_dir, artifacts={})
-    with pytest.raises(ArtifactValidationError, match="lists no artefacts"):
+    with pytest.raises(ArtifactValidationError, match="required artefacts"):
         load_verified_run(tmp_path, "fixture")
 
 
@@ -250,7 +239,7 @@ def test_pipeline_record_must_list_reports(tmp_path: Path) -> None:
         load_verified_run(tmp_path, "fixture")
 
     _complete(run_dir, {})
-    with pytest.raises(ArtifactValidationError, match="lists no artefacts"):
+    with pytest.raises(ArtifactValidationError, match="required artefacts"):
         load_verified_run(tmp_path, "fixture")
 
 

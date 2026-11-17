@@ -27,7 +27,7 @@ from aeromaintain.evaluation.protocol import (
     summarize_draws,
 )
 from aeromaintain.features import FEATURE_NAMES, FEATURE_SETS
-from aeromaintain.models import compare_runs, run_seed_sweep, write_report
+from aeromaintain.models import compare_runs, run_seed_sweep
 from aeromaintain.models.escalation import (
     build_sequences,
     run_cqr_study,
@@ -43,6 +43,7 @@ from aeromaintain.models.rul import (
     load_test_status,
     train_and_lock,
 )
+from aeromaintain.models.run_files import write_json
 
 
 def _draw_record(rmse: float, nasa: float, rmse_by_draw: list[float]) -> dict:
@@ -373,10 +374,10 @@ def test_seed_sweep_and_repeat_run_comparison(tmp_path: Path) -> None:
         compare_runs(tmp_path, first_run_id="one", second_run_id="missing")
 
     output = tmp_path / "report.json"
-    write_report(output, comparison)
-    write_report(output, comparison)
+    write_json(output, comparison)
+    write_json(output, comparison)
     with pytest.raises(ModelingError, match="Refusing to overwrite"):
-        write_report(output, {"changed": True})
+        write_json(output, {"changed": True})
 
 
 def test_seed_sweep_refuses_a_clean_holdout(tmp_path: Path) -> None:

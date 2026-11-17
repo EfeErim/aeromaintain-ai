@@ -1,8 +1,8 @@
 """The line between frozen experiment code and the modules that are maintained.
 
 ``models/rul.py`` is pinned by the v5 lock, so a few of its helpers are repeated in
-``models/run_files.py`` and ``models/inference.py`` for active code. These tests
-keep both copies equivalent, and keep stored model files loadable.
+``data/pipeline.py``, ``models/run_files.py`` and ``models/inference.py`` for active
+code. These tests keep both copies equivalent, and keep stored model files loadable.
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ import pytest
 from sklearn.linear_model import Ridge
 from xgboost import XGBRegressor
 
+from aeromaintain.data import pipeline
 from aeromaintain.features import ConditionNormalizer, FoldPreprocessor
 from aeromaintain.models import inference, rul, run_files
-from aeromaintain.models.evaluation import _validate_lock, validate_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 COLUMNS = ("a", "b", "c", "flat")
@@ -45,9 +45,9 @@ def _fitted(scale: bool) -> tuple[FoldPreprocessor, pd.DataFrame, np.ndarray]:
 
 def test_run_file_helpers_match_frozen_copies(tmp_path: Path) -> None:
     value = {"b": [1, 2.5], "a": {"z": None, "y": "text"}}
-    assert run_files.json_bytes(value) == rul._json_bytes(value)
+    assert pipeline.json_bytes(value) == rul._json_bytes(value)
     frame = pd.DataFrame({"unit_id": [1, 2], "x": [0.5, np.nan]})
-    assert run_files.parquet_bytes(frame) == rul._parquet_bytes(frame)
+    assert pipeline.parquet_bytes(frame) == rul._parquet_bytes(frame)
     assert run_files.processed_dir(tmp_path, "FD002") == rul._processed_dir(
         tmp_path, "FD002"
     )
@@ -100,10 +100,6 @@ def test_xgboost_ensemble_and_quantiles_match_frozen_copy() -> None:
         inference.predict_quantiles(quantile, preprocessor, features),
         rul.predict_quantiles(quantile, preprocessor, features),
     )
-
-
-def test_old_private_lock_validator_name_still_works() -> None:
-    assert _validate_lock is validate_lock
 
 
 @pytest.mark.parametrize(

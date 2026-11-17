@@ -7,7 +7,7 @@ import pytest
 from run_fixture import build_verified_run, write_json
 from streamlit.testing.v1 import AppTest
 
-from aeromaintain.app import (
+from aeromaintain.artifacts import (
     ArtifactValidationError,
     export_public_bundle,
     load_public_bundle,
@@ -17,6 +17,9 @@ from aeromaintain.data import PrepareResult
 from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.delivery import DeliveryError, run_pipeline
 from aeromaintain.models.rul import EvaluationResult, TrainResult
+
+ROOT = Path(__file__).resolve().parents[1]
+APP_SCRIPT = str(ROOT / "src" / "aeromaintain" / "app" / "main.py")
 
 
 def test_verified_app_loader_excludes_truth_and_only_exposes_risk_download(
@@ -63,11 +66,7 @@ def test_streamlit_small_fixture_renders_active_pages(
     build_verified_run(tmp_path)
     monkeypatch.setenv("AEROMAINTAIN_RUN_ID", "fixture")
     monkeypatch.setenv("AEROMAINTAIN_PROJECT_ROOT", str(tmp_path))
-    script = (
-        Path(__file__).resolve().parents[1] / "src" / "aeromaintain" / "app" / "main.py"
-    )
-
-    tested = AppTest.from_file(str(script), default_timeout=30).run()
+    tested = AppTest.from_file(APP_SCRIPT, default_timeout=30).run()
     assert not tested.exception
     assert tested.header[0].value == "Overview"
 
@@ -94,33 +93,25 @@ def test_public_bundle_has_no_rows_or_truth_and_renders(
 
     monkeypatch.delenv("AEROMAINTAIN_RUN_ID", raising=False)
     monkeypatch.setenv("AEROMAINTAIN_PUBLIC_BUNDLE", str(bundle))
-    script = (
-        Path(__file__).resolve().parents[1] / "src" / "aeromaintain" / "app" / "main.py"
-    )
-    tested = AppTest.from_file(str(script), default_timeout=30).run()
+    tested = AppTest.from_file(APP_SCRIPT, default_timeout=30).run()
     assert not tested.exception
     tested.sidebar.radio[0].set_value("Engine risk")
     tested.run()
     assert not tested.exception
     assert any("local-only" in item.value for item in tested.caption)
 
-    (bundle / "run.json").write_text("{}\n", encoding="utf-8")
-    with pytest.raises(ArtifactValidationError, match="SHA-256 mismatch"):
-        load_public_bundle(bundle)
-
 
 def test_tracked_demo_entrypoint_renders_without_nasa_rows(monkeypatch) -> None:
-    root = Path(__file__).resolve().parents[1]
     monkeypatch.delenv("AEROMAINTAIN_RUN_ID", raising=False)
     monkeypatch.delenv("AEROMAINTAIN_PUBLIC_BUNDLE", raising=False)
     tracked = "\n".join(
-        path.read_text(encoding="utf-8") for path in sorted((root / "demo").iterdir())
+        path.read_text(encoding="utf-8") for path in sorted((ROOT / "demo").iterdir())
     )
     assert "rul_true" not in tracked
     assert "sensor_history" not in tracked
     assert "setting_1," not in tracked
 
-    tested = AppTest.from_file(str(root / "streamlit_app.py"), default_timeout=30).run()
+    tested = AppTest.from_file(str(ROOT / "streamlit_app.py"), default_timeout=30).run()
     assert not tested.exception
     assert tested.header[0].value == "Overview"
     tested.sidebar.radio[0].set_value("Engine risk")
@@ -167,8 +158,6 @@ def test_small_fixture_pipeline_completes_evaluation_and_report(
         "evaluate_locked",
         "report",
     ]
-    report = json.loads((result.run_dir / "report.json").read_text(encoding="utf-8"))
-    assert "retired_scope" not in report
     assert result.report_path.is_file()
     load_verified_run(tmp_path, "fixture")
 

@@ -21,31 +21,16 @@ The size and hash above were rechecked from a direct NASA download on
 
 ## What the data represents
 
-FD001 contains simulated degradation trajectories from the C-MAPSS turbofan
-engine model. It does not contain measurements collected from a deployed
-aircraft fleet.
-
-NASA characterizes FD001 as:
-
-- one operating condition;
-- one high-pressure-compressor degradation mode;
-- 100 training engines;
-- 100 test engines;
-- 20,631 training rows;
-- 13,096 test rows; and
-- 100 official test RUL labels.
+The subsets hold simulated degradation trajectories from the C-MAPSS turbofan engine
+model, not measurements from a deployed aircraft fleet. FD001 and FD003 run under one
+operating condition, FD002 and FD004 under six. FD001 and FD002 have one degradation
+mode (high-pressure compressor); FD003 and FD004 add fan degradation.
 
 Each trajectory starts under normal operation with unknown initial wear and
 manufacturing variation. Training trajectories continue to simulated failure.
 Test trajectories stop earlier, and the separate label file records remaining
-cycles after the final observed test cycle.
-
-NASA characterizes FD003 as one operating condition and two degradation modes
-(high-pressure compressor and fan), with 100 training and 100 test engines. The pipeline
-requires 24,720 training rows, 16,596 test rows, and 100 official test RUL labels.
-
-FD002 and FD004 add six operating conditions, with one and two degradation modes
-respectively. Counts below come from the verified archive.
+cycles after the final observed test cycle. The counts below come from the verified
+archive; `DATASET_SHAPES` in `src/aeromaintain/data/pipeline.py` enforces them.
 
 | Subset | Train engines | Train rows | Test engines | Test rows | Largest test RUL |
 |---|---:|---:|---:|---:|---:|
@@ -101,8 +86,8 @@ test, and RUL members and rejects path traversal, symbolic links, duplicate sour
 members, and changed existing raw files.
 
 Raw inputs live under `data/raw/`; generated tables live under
-`data/processed/`; models, reports, and run outputs live under `artifacts/` or
-`runs/`. These paths are excluded from Git.
+`data/processed/`; models, reports, and run outputs live under `runs/`. These paths
+are excluded from Git.
 
 Processed outputs live under `data/processed/<subset>/`. The train and test
 tables, split manifest, data-quality report, development-only EDA summary and

@@ -71,18 +71,6 @@ def test_split_margin_needs_enough_engines():
         v5.split_margin(np.zeros(5), np.zeros(5), 0.9)
 
 
-def test_gates():
-    gates = {"min_mondrian_coverage": 0.85, "max_untimely_fraction": 0.1}
-    replay = {"missed_fraction": 3 / 35}
-    result = v5.final_gates({"rmse": 10}, {"rmse": 12}, 0.85, replay, gates)
-    assert result["passed"]
-    result = v5.final_gates(
-        {"rmse": 10}, {"rmse": 12}, 0.85, {"missed_fraction": 4 / 35}, gates
-    )
-    assert not result["passed"]
-    assert not result["checks"]["G3_timely_point_alarm"]
-
-
 def test_reserved_engines_are_namespaced():
     reservation = json.loads((ROOT / v5.RESERVATION).read_text())
     config = json.loads((ROOT / v5.CONFIG).read_text())

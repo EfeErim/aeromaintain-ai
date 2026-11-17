@@ -1,16 +1,8 @@
 """End-to-end RUL evaluation orchestration and run reporting.
 
-Run states, in order: ``model_locked`` (lock written, labels unopened), official
-evaluation written under ``official_test/``, reports written, ``pipeline_complete``.
 The run manifest is written last and is the only commit point: a run is complete
-only when its manifest says so and every file it lists verifies.
-
-Reports are deterministic, so ``finish`` can resume after an interruption: a report
-that already exists with the expected bytes is accepted, one with different bytes is
-refused, and a recorded evaluation is reused instead of reopening labels. Each file is
-replaced atomically, but the set of files is not a transaction and nothing here
-survives a power loss mid-write; the verification on the next ``finish`` is what
-catches a half-written run.
+only when its manifest says so and every file it lists verifies. Run states and how
+``finish`` resumes are described in ``docs/architecture.md`` (Run states and resuming).
 """
 
 from __future__ import annotations
@@ -18,7 +10,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import tempfile
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -34,9 +25,10 @@ from aeromaintain.artifacts import (
     STATUS_PIPELINE_COMPLETE,
     RunArtifacts,
     load_verified_run,
+    write_replacing,
 )
 from aeromaintain.data import PrepareResult, prepare_dataset
-from aeromaintain.data.pipeline import sha256_file
+from aeromaintain.data.pipeline import json_bytes, sha256_file
 from aeromaintain.models import (
     EvaluationResult,
     TrainResult,
@@ -73,26 +65,6 @@ EvaluationStep = Callable[..., EvaluationResult]
 LoadStep = Callable[[Path, str], RunArtifacts]
 
 
-def _json_bytes(value: Any) -> bytes:
-    return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
-
-
-def _atomic_replace(path: Path, payload: bytes) -> None:
-    with tempfile.NamedTemporaryFile(
-        mode="wb",
-        prefix=f".{path.name}-",
-        suffix=".tmp",
-        dir=path.parent,
-        delete=False,
-    ) as stream:
-        temporary = Path(stream.name)
-        stream.write(payload)
-    try:
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
 def _write_report_file(path: Path, payload: bytes) -> None:
     """Write a report, or accept an identical one left by an interrupted finish."""
     if path.exists():
@@ -102,7 +74,7 @@ def _write_report_file(path: Path, payload: bytes) -> None:
             f"Existing {path.name} differs from the report this run produces; "
             f"refusing to replace it: {path}"
         )
-    _atomic_replace(path, payload)
+    write_replacing(path, payload)
 
 
 def _lock_file(handle: IO[bytes]) -> None:
@@ -136,6 +108,8 @@ def run_lock(project_root: Path, run_id: str) -> Iterator[None]:
     The operating system releases the lock when the process exits, so a crash does
     not leave the run blocked. The empty lock file under ``runs/`` may remain.
     """
+    if not run_id or Path(run_id).name != run_id:
+        raise DeliveryError("run_id must be one safe path component")
     runs = project_root / "runs"
     runs.mkdir(parents=True, exist_ok=True)
     with (runs / f".{run_id}.lock").open("a+b") as handle:
@@ -234,7 +208,7 @@ def _report_html(report: dict[str, Any]) -> bytes:
 def report_bytes(artifacts: RunArtifacts) -> tuple[bytes, bytes]:
     """Return the JSON and HTML reports for a verified run, byte for byte."""
     report = _report_payload(artifacts)
-    return _json_bytes(report), _report_html(report)
+    return json_bytes(report), _report_html(report)
 
 
 def _read_manifest(run_dir: Path) -> dict[str, Any]:
@@ -301,7 +275,7 @@ def _finalize_run(
             EVALUATION_MANIFEST: sha256_file(run_dir / EVALUATION_MANIFEST),
         },
     }
-    _atomic_replace(run_dir / "manifest.json", _json_bytes(manifest))
+    write_replacing(run_dir / "manifest.json", json_bytes(manifest))
     return _result(run_dir, already_complete=False)
 
 
@@ -342,8 +316,6 @@ def finish_locked_run(
     Calling it again on a completed run verifies the run and changes nothing.
     """
     root = project_root.resolve()
-    if not run_id or Path(run_id).name != run_id:
-        raise DeliveryError("run_id must be one safe path component")
     with run_lock(root, run_id):
         try:
             return _finish(root, run_id, evaluation_step, load_step)
@@ -366,8 +338,6 @@ def run_pipeline(
 ) -> PipelineResult:
     """Run prepare through a locked evaluation report without overwriting a run."""
     root = project_root.resolve()
-    if not run_id or Path(run_id).name != run_id:
-        raise DeliveryError("run_id must be one safe path component")
     run_dir = root / "runs" / run_id
     with run_lock(root, run_id):
         if run_dir.exists():

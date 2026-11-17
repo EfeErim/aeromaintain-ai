@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from aeromaintain.data.pipeline import sha256_file
+from aeromaintain.data.pipeline import json_bytes, parquet_bytes, sha256_file
 from aeromaintain.evaluation import alert_rule_metrics, prediction_metrics
 from aeromaintain.evaluation.ledger import claim_holdout
 from aeromaintain.evaluation.protocol import bootstrap_official_metrics, interval_report
@@ -28,13 +28,7 @@ from aeromaintain.models.rul import (
     EvaluationResult,
     ModelingError,
 )
-from aeromaintain.models.run_files import (
-    json_bytes,
-    parquet_bytes,
-    processed_dir,
-    write_json,
-    write_new_bytes,
-)
+from aeromaintain.models.run_files import processed_dir, write_json, write_new_bytes
 
 HOLDOUT_LEDGER = "holdout_ledger.json"
 
@@ -103,10 +97,6 @@ def validate_lock(
     except (AttributeError, KeyError, TypeError) as exc:
         raise ModelingError(f"Model lock structure is invalid: {exc}") from exc
     return run_dir, lock
-
-
-# Older private name, still imported by robustness and escalation studies.
-_validate_lock = validate_lock
 
 
 def _claim_single_open(project_root: Path, run_id: str, lock: dict[str, Any]) -> None:

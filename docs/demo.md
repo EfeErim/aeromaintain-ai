@@ -39,16 +39,6 @@ $ aeromaintain --help
 +-----------------------------------------------------------------------------+
 ```
 
-## Tests
-
-`torch` is an optional extra, so its one test is skipped.
-
-```text
-$ pytest -q
-SKIPPED [1] tests\test_protocol_v2.py:441: could not import 'torch': No module named 'torch'
-96 passed, 1 skipped in 53.05s
-```
-
 ## End-to-end FD001 run
 
 This is the README quickstart. It prepares the data, selects and locks a model, opens

@@ -18,7 +18,6 @@ SHA-256 hashes, so they stay exactly where and as they were when each test ran.
 | Where the data comes from and what is published | [Data card](data_card.md) |
 | Why these methods | [Research notes](research.md) |
 | What a fresh clone prints | [Demo output](demo.md) |
-| Why frozen code sits next to maintained code | [Decision 0001](decisions/0001-frozen-experiment-code.md) |
 
 ## Kept as a record
 
@@ -28,6 +27,5 @@ SHA-256 hashes, so they stay exactly where and as they were when each test ran.
 | [Protocol v4](protocol_v4.md), [initial](protocol_v4_initial.md), [amendment 1](protocol_v4_amendment1.md) | v4 as finally run, as first written, and the amendment between them |
 | [Results v4](results_v4.md) | Negative result: removing the RUL cap; development evidence only |
 | [Retrospective](results_retrospective.md) | v3 rescored on the literature's capped scale after labels were open |
-| [Engineering self-review, Nov 2026](engineering_review_2026-11.md) | The author's own review of the artefact-verification work |
 | `*.json` next to these pages | Machine-readable evidence that the pages cite, with hashes |
 | `ncmapss_locks/` | Published locks and the holdout reservation |

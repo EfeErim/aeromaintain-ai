@@ -131,23 +131,9 @@ def prediction_metrics(
     if not len(truth):
         raise ValueError("Metric arrays must not be empty")
 
-    actual_critical = truth <= critical_threshold
-    predicted_critical = prediction <= critical_threshold
-    true_positive = int(np.sum(actual_critical & predicted_critical))
-    false_positive = int(np.sum(~actual_critical & predicted_critical))
-    false_negative = int(np.sum(actual_critical & ~predicted_critical))
-    precision = (
-        true_positive / (true_positive + false_positive)
-        if true_positive + false_positive
-        else 0.0
+    critical = alert_rule_metrics(
+        truth, prediction, critical_threshold=critical_threshold
     )
-    recall = (
-        true_positive / (true_positive + false_negative)
-        if true_positive + false_negative
-        else 0.0
-    )
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-
     band_metrics: dict[str, Any] = {}
     for label, lower, upper in RUL_BANDS:
         mask = truth >= lower
@@ -172,12 +158,17 @@ def prediction_metrics(
         "overprediction_rate": float(np.mean(prediction > truth)),
         "critical_rul": {
             "threshold": critical_threshold,
-            "true_positive": true_positive,
-            "false_positive": false_positive,
-            "false_negative": false_negative,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
+            **{
+                key: critical[key]
+                for key in (
+                    "true_positive",
+                    "false_positive",
+                    "false_negative",
+                    "precision",
+                    "recall",
+                    "f1",
+                )
+            },
         },
         "rul_bands": band_metrics,
     }

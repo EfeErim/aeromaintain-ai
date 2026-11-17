@@ -19,8 +19,8 @@ from aeromaintain.models import (
     evaluate_locked,
     run_seed_sweep,
     train_and_lock,
-    write_report,
 )
+from aeromaintain.models.run_files import write_json
 
 app = typer.Typer(
     add_completion=False,
@@ -166,7 +166,7 @@ def robustness(
             seeds=tuple(range(first_seed, first_seed + seeds)),
         )
         output = root / "runs" / base_run_id / "robustness" / "seed_sweep.json"
-        write_report(output, report)
+        write_json(output, report)
     except ModelingError as exc:
         typer.echo(f"Robustness failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -198,7 +198,7 @@ def escalation_study(
             raise ModelingError(f"Unknown challenger: {method}")
         report = studies[method](root, base_run_id=base_run_id)
         output = root / "runs" / base_run_id / "robustness" / f"{method}_study.json"
-        write_report(output, report)
+        write_json(output, report)
     except ModelingError as exc:
         typer.echo(f"Study failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -216,7 +216,7 @@ def compare_runs_command(
     try:
         report = compare_runs(root, first_run_id=first, second_run_id=second)
         output = root / "runs" / first / "robustness" / f"compare_{second}.json"
-        write_report(output, report)
+        write_json(output, report)
     except ModelingError as exc:
         typer.echo(f"Comparison failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -300,19 +300,16 @@ def _synthetic_project(
     return archive_path, project_root.resolve()
 
 
-V5Output = Annotated[
-    Path,
-    typer.Option("--output", help="Output directory for this v5 stage."),
-]
-
-
 @app.command("v5")
 def v5_command(
     stage: Annotated[
         str,
         typer.Argument(help="Stage of protocol v5: hybrid, prepare or evaluate."),
     ],
-    output: V5Output,
+    output: Annotated[
+        Path,
+        typer.Option("--output", help="Output directory for this v5 stage."),
+    ],
     project_root: ProjectRoot = None,
 ) -> None:
     """Run a protocol v5 stage (frozen code; evaluate opens the reserved labels)."""

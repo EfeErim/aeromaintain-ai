@@ -47,16 +47,8 @@ frozen before FD002 or FD004 labels opened. Normalization lowered development RM
 in far above development: RMSE 27.4 against 18.9 and 19.6, with interval coverage below
 its nominal 90%.
 
-| Metric | FD002, clean | FD004, clean |
-|---|---:|---:|
-| Run | `fd002-v3-clean` | `fd004-v3-clean` |
-| RMSE | **27.36** (23.77–30.82) | **27.40** (24.53–30.23) |
-| MAE | 18.46 (15.96–21.01) | 19.65 (17.30–21.99) |
-| Signed bias | -8.98 (-12.12 to -5.71) | -9.34 (-12.62 to -6.31) |
-| NASA score, total | 10,388 (5,193–16,823) | 5,126 (3,627–6,816) |
-| NASA score per engine | 40.1 | 20.7 |
-| Interval coverage, nominal 90% | 82.6% (78.0–87.3%) | 82.7% (77.8–87.1%) |
-| Mean interval width | 55.8 (52.9–58.7) | 58.5 (55.6–61.3) |
+The full tables, with bootstrap and Wilson ranges, are in
+[results](results.md#protocol-v3-runs).
 
 **Why the gap: a diagnosis made after opening.** Predictions top out near 127 cycles
 because training targets are capped at 125, while true RUL reaches 194–195 on these
@@ -73,14 +65,9 @@ These subgroup figures are explanatory and do not replace the headline results. 
 tests have now been opened, so a fix would need a new protocol and could not call
 either one clean again.
 
-Alert results hold up better, because critical engines sit far from the cap:
-
-| Rule | Dataset | Recall | Precision | Missed | False alarms |
-|---|---|---:|---:|---:|---:|
-| `prediction <= 30` | FD002 | 57/61, 93% (84–97%) | 93% (84–97%) | 4 | 4 |
-| `interval_low <= 25` | FD002 | 60/61, 98% (91–100%) | 73% (63–82%) | 1 | 22 |
-| `prediction <= 30` | FD004 | 45/53, 85% (73–92%) | 90% (79–96%) | 8 | 5 |
-| `interval_low <= 20` | FD004 | 51/53, 96% (87–99%) | 76% (65–85%) | 2 | 16 |
+Alert results hold up better, because critical engines sit far from the cap: the
+`interval_low` rule missed 1 of 61 critical engines on FD002 and 2 of 53 on FD004
+([alert rules](results.md#critical-engine-alert-rules)).
 
 ## One operating condition: protocol v2
 
@@ -88,31 +75,22 @@ Both runs use the same frozen [protocol v2](protocol_v2.md). Ranges are 95%
 engine-level bootstrap intervals. Secondary v3 results on these subsets, labeled
 `test previously seen`, are in [the results page](results.md).
 
-| Metric | FD003, clean single-open test | FD001, test previously seen |
-|---|---:|---:|
-| Run | `fd003-v2-clean` | `fd001-v2` |
-| RMSE | **15.07** (12.61–17.50) | 15.80 (12.87–18.78) |
-| MAE | 11.23 (9.34–13.28) | 11.15 (9.10–13.43) |
-| Motor-normalized NASA score | 399 (240–620) | 398 (233–625) |
-| Interval coverage, nominal 90% | 92% (86–97%) | 94% (89–98%) |
-| Mean interval width | 53.3 (49.3–57.3) | 55.4 (51.2–59.4) |
+FD003 (clean) reached RMSE **15.07** (12.61–17.50) with 92% interval coverage; FD001
+(test previously seen) reached 15.80 (12.87–18.78) and 94%. The full tables are in
+[results](results.md#protocol-v2-runs).
 
-**Read the FD001 column with care.** Its test labels were seen before v2 was
+**Read the FD001 result with care.** Its test labels were seen before v2 was
 designed, so it is not independent evidence. Seed 42 is also the best of ten seeds
 on FD001: across seeds, RMSE averages 16.03 (SD 0.14, range 15.80–16.21).
 
 ### Critical-engine alerts
 
 A truly critical engine has at most 30 remaining cycles. Each threshold was chosen
-on training engines to reach 95% recall with the fewest alarms. Ranges here are
-Wilson 95% intervals.
+on training engines to reach 95% recall with the fewest alarms.
 
-| Rule | Dataset | Recall | Precision | Missed | False alarms |
-|---|---|---:|---:|---:|---:|
-| `prediction <= 30` | FD003 | 16/20, 80% (58–92%) | 94% (73–99%) | 4 | 1 |
-| `interval_low <= 25` | FD003 | 20/20, 100% (84–100%) | 71% (53–85%) | 0 | 8 |
-| `prediction <= 30` | FD001 | 20/25, 80% (61–91%) | 100% (84–100%) | 5 | 0 |
-| `interval_low <= 20` | FD001 | 24/25, 96% (80–99%) | 86% (69–94%) | 1 | 4 |
+On FD003 the `interval_low <= 25` rule caught all 20 critical engines with 8 false
+alarms; the point rule missed 4 with 1 false alarm
+([alert rules](results.md#critical-engine-alert-rules-1)).
 
 The interface uses the interval rule: it misses fewer critical engines and raises
 more false alarms. The interval is not a safety guarantee.

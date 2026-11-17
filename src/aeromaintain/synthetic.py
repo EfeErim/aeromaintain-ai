@@ -116,7 +116,7 @@ def synthetic_archive_bytes(seed: int = 7) -> bytes:
     return buffer.getvalue()
 
 
-def build_synthetic_project(repo_root: Path, target: Path, *, seed: int = 7) -> Path:
+def build_synthetic_project(repo_root: Path, target: Path) -> Path:
     """Create a synthetic project root at ``target`` and return the archive path."""
     repo_root = repo_root.resolve()
     target = target.resolve()
@@ -136,7 +136,7 @@ def build_synthetic_project(repo_root: Path, target: Path, *, seed: int = 7) -> 
             "Run from the repository root (configs/ and constraints/ are needed)"
         )
 
-    archive = synthetic_archive_bytes(seed)
+    archive = synthetic_archive_bytes()
     (target / "configs").mkdir(parents=True, exist_ok=True)
     (target / "constraints").mkdir(exist_ok=True)
     (target / MARKER).write_text(
