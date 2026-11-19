@@ -2,32 +2,13 @@
 
 Checked: 2026-11-05
 
-## Scope
+## Why these subsets
 
-AeroMaintain AI evaluates RUL prediction on NASA's simulated C-MAPSS FD001 through FD004
-benchmarks through a reproducible, leakage-controlled model-selection and locked
-official-test workflow.
-
-## Why FD001
-
-FD001 is the smallest C-MAPSS subset that still supports engine-grouped
-validation, causal time-series features, model comparison, and uncertainty
-analysis. It has one operating condition and one simulated degradation mode.
-That narrow scope helps make leakage and reproducibility controls reviewable,
-but it does not represent real fleet telemetry.
-
-## Why FD003
-
-FD001 labels were seen before protocol v2 was designed, so FD001 cannot test it
-independently. FD003 adds a second fault mode and kept its labels closed until the
-protocol was frozen. It does not test multiple operating conditions.
-
-## Why FD002 and FD004
-
-These subsets test whether the approach holds under six operating conditions, and their
-labels stayed closed until protocol v3 was frozen and its locks published. They also
-have engines with far more remaining life than FD001 or FD003, up to 195 cycles against
-145, which exposed the cost of the RUL cap and the development window.
+FD001 is the smallest subset that still supports engine-grouped validation, causal
+features and interval analysis, but its labels were seen before protocol v2, so it cannot
+test v2. FD003 adds a second fault mode and kept its labels closed until v2 was frozen.
+FD002 and FD004 add six operating conditions and engines with up to 195 cycles left
+(against 145), which exposed the cost of the RUL cap and the development window.
 
 ## Method basis
 
@@ -55,11 +36,7 @@ have engines with far more remaining life than FD001 or FD003, up to 195 cycles 
 
 ## Comparison with published results
 
-Checked: 2026-11-07. Published C-MAPSS RMSE is usually scored against test truth capped
-at 125 or 130 cycles, and the official test set is often reused during model
-development. The project's headline uses uncapped truth and single-open tests, so a
-direct comparison needs rescoring on the same scale. That rescoring is retrospective and
-lives in [`results_retrospective.md`](results_retrospective.md).
+Checked: 2026-11-07. Used in [the retrospective comparison](results.md#retrospective-comparison-on-the-literature-scale).
 
 9. Babu et al., CNN regression for RUL (2016), and Zheng et al., LSTM for RUL (2017),
    as tabulated in [Deep learning models for predictive maintenance](https://arxiv.org/abs/2010.03207).
@@ -69,12 +46,3 @@ lives in [`results_retrospective.md`](results_retrospective.md).
     (2026), including its Table V comparison.
 12. Gupta, [audit of normalization and pipeline choices on C-MAPSS](https://engrxiv.org/preprint/view/8145).
 13. Javanmardi and Hüllermeier, [conformal prediction intervals for RUL](https://arxiv.org/abs/2212.14612).
-
-## Boundaries
-
-- A simulated result does not validate an operational fleet.
-- Official test labels cannot influence selection, calibration, or thresholds. FD001
-  labels were seen before v2, so only FD003 is a clean test of v2. FD001 and FD003
-  labels were seen before v3, so only FD002 and FD004 are clean tests of v3.
-- Explanations are associational model descriptions.
-- The nominal interval is not a safety guarantee.

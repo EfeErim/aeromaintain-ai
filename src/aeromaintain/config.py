@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 
 PROJECT_ROOT_ENV = "AEROMAINTAIN_PROJECT_ROOT"
+# Read by the review app: a local run by ID (set by ``aeromaintain app``), or the
+# row-free public bundle (set by ``streamlit_app.py`` for the hosted demo).
+RUN_ID_ENV = "AEROMAINTAIN_RUN_ID"
+PUBLIC_BUNDLE_ENV = "AEROMAINTAIN_PUBLIC_BUNDLE"
 
 
 def resolve_project_root(project_root: Path | None = None) -> Path:

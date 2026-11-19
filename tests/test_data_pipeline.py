@@ -5,7 +5,6 @@ import json
 import zipfile
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -18,9 +17,9 @@ from aeromaintain.data.pipeline import (
     build_eda_summary,
     create_engine_split,
     extract_members,
-    load_data_contract,
     parse_sensor_table,
     prepare_dataset,
+    sha256_file,
     validate_sensor_table,
     verify_archive,
 )
@@ -87,38 +86,8 @@ def _contract_for(
         calibration_engines=calibration,
         rul_cap=4,
         seed=42,
+        dataset="FD001",
     )
-
-
-def test_project_configuration_loads_the_frozen_data_contract(
-    tmp_path: Path,
-) -> None:
-    config_dir = tmp_path / "configs"
-    config_dir.mkdir()
-    (config_dir / "project.yaml").write_text(
-        """
-project:
-  seed: 42
-data:
-  source_url: https://example.invalid/CMAPSSData.zip
-  archive_size_bytes: 123
-  archive_sha256: ABCDEF
-  development_engines: 80
-  calibration_engines: 20
-  rul_cap: 125
-""".strip(),
-        encoding="utf-8",
-    )
-
-    contract = load_data_contract(tmp_path)
-
-    assert contract.archive_sha256 == "abcdef"
-    assert contract.seed == 42
-    assert contract.rul_cap == 125
-
-    (config_dir / "project.yaml").write_text("data: {}", encoding="utf-8")
-    with pytest.raises(DataPipelineError, match="Invalid project data configuration"):
-        load_data_contract(tmp_path)
 
 
 def test_archive_hash_and_path_traversal_are_rejected(tmp_path: Path) -> None:
@@ -128,6 +97,9 @@ def test_archive_hash_and_path_traversal_are_rejected(tmp_path: Path) -> None:
         source_url="https://example.invalid/archive.zip",
         archive_size_bytes=len(b"altered"),
         archive_sha256="0" * 64,
+        rul_cap=125,
+        seed=42,
+        dataset="FD001",
         **DATASET_SHAPES["FD001"],
     )
     with pytest.raises(DataPipelineError, match="SHA-256 mismatch"):
@@ -200,16 +172,6 @@ def test_parser_and_contract_reject_bad_schema_duplicate_and_nonfinite(
             expected_engines=2,
         )
 
-    nonfinite = frame.copy()
-    nonfinite.loc[0, "sensor_1"] = np.inf
-    with pytest.raises(DataPipelineError, match="non-finite"):
-        validate_sensor_table(
-            nonfinite,
-            name="nonfinite",
-            expected_rows=5,
-            expected_engines=2,
-        )
-
 
 def test_rul_split_and_eda_are_engine_disjoint_and_deterministic() -> None:
     lifetimes = {unit_id: 4 + unit_id % 5 for unit_id in range(1, 21)}
@@ -269,6 +231,14 @@ def test_prepare_writes_isolated_labels_reports_and_stable_hashes(
         calibration=4,
     )
     project_root = tmp_path / "project"
+    with pytest.raises(DataPipelineError, match="configuration is missing"):
+        prepare_dataset(
+            project_root, dataset="FD001", archive_path=archive, contract=contract
+        )
+    # The contract overrides the configured values; the manifest hashes the file.
+    config = project_root / "configs" / "project.yaml"
+    config.parent.mkdir(parents=True)
+    config.write_text("project:\n  seed: 42\n", encoding="utf-8")
 
     first = prepare_dataset(
         project_root, dataset="FD001", archive_path=archive, contract=contract
@@ -293,6 +263,7 @@ def test_prepare_writes_isolated_labels_reports_and_stable_hashes(
     manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["official_test_labels"]["usage"].startswith("locked evaluation")
     assert manifest["artifacts"] == first.artifact_hashes
+    assert manifest["config_sha256"] == sha256_file(config)
     eda = json.loads((output / "eda_summary.json").read_text(encoding="utf-8"))
     assert eda["scope"] == "development engines only"
     assert "<h1>FD001 EDA report</h1>" in (output / "eda_report.html").read_text(

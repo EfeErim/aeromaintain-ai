@@ -4,17 +4,21 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 from aeromaintain.artifacts import (
     ArtifactValidationError,
+    RunArtifacts,
     load_public_bundle,
     load_verified_run,
 )
-from aeromaintain.synthetic import MARKER as SYNTHETIC_MARKER
+from aeromaintain.config import PUBLIC_BUNDLE_ENV, RUN_ID_ENV, resolve_project_root
+from aeromaintain.files import SYNTHETIC_MARKER
 
 APP_CSS = """
 <style>
@@ -73,7 +77,7 @@ RISK_COLORS = {
 }
 
 
-def _plot_style(figure, *, height: int = 330):
+def _plot_style(figure: go.Figure, *, height: int = 330) -> go.Figure:
     figure.update_layout(
         template="plotly_white",
         colorway=PLOT_COLORS,
@@ -101,14 +105,16 @@ def _metric_row(items: tuple[tuple[str, str, str], ...]) -> None:
         column.metric(label, value, help=help_text)
 
 
-def _rate_with_interval(rule: dict, name: str) -> str:
+def _rate_with_interval(rule: dict[str, Any], name: str) -> str:
     interval = rule["wilson_95"][name]
     if interval is None:
         return "n/a"
     return f"{rule[name]:.1%} ({interval['low']:.1%} to {interval['high']:.1%})"
 
 
-def _alert_rule_table(point_rule: dict, risk_rule: dict) -> pd.DataFrame:
+def _alert_rule_table(
+    point_rule: dict[str, Any], risk_rule: dict[str, Any]
+) -> pd.DataFrame:
     rows = []
     for label, column, rule in (
         ("Point prediction", "prediction", point_rule),
@@ -127,11 +133,10 @@ def _alert_rule_table(point_rule: dict, risk_rule: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _overview(artifacts) -> None:
+def _overview(artifacts: RunArtifacts) -> None:
     _page_header("Overview")
     metrics = artifacts.metrics
     interval = metrics["nominal_empirical_interval"]
-    point_rule = metrics["alert_rules"]["point_prediction"]
     risk_rule = metrics["alert_rules"]["interval_low"]
     dataset = artifacts.model_lock["dataset"]
     _metric_row(
@@ -163,65 +168,17 @@ def _overview(artifacts) -> None:
         "the locked official-test evaluation."
     )
 
-    risk_counts = (
-        artifacts.risk_ranking["risk_band"]
-        .value_counts()
-        .reindex(["critical", "elevated", "routine"], fill_value=0)
-        .rename_axis("Risk band")
-        .reset_index(name="Engines")
-    )
-    risk_counts["Risk band"] = risk_counts["Risk band"].str.title()
-
     left, right = st.columns((1.1, 0.9), gap="large")
     with left:
         st.subheader("Fleet risk distribution")
-        risk_chart = px.bar(
-            risk_counts,
-            x="Engines",
-            y="Risk band",
-            orientation="h",
-            color="Risk band",
-            color_discrete_map=RISK_COLORS,
-            text="Engines",
-        )
-        risk_chart.update_layout(showlegend=False)
-        risk_chart.update_traces(
-            textposition="outside",
-            cliponaxis=False,
-            marker_line_width=0,
-        )
-        st.plotly_chart(_plot_style(risk_chart, height=270), width="stretch")
-
+        _risk_distribution(artifacts.risk_ranking)
     with right:
         st.subheader("Evaluation summary")
-        summary = pd.DataFrame(
-            [
-                ("Test engines", int(metrics["engines"])),
-                ("NASA score", f"{metrics['nasa_score_motor_normalized']:.2f}"),
-                (
-                    "RMSE 95% range",
-                    "{:.2f} to {:.2f}".format(
-                        *metrics["bootstrap"]["intervals_95"]["rmse"]
-                    ),
-                ),
-                ("Mean interval width", f"{interval['mean_width']:.1f}"),
-                (
-                    "Interval target",
-                    f"{interval['nominal_coverage']:.0%}",
-                ),
-                (
-                    "Interval observed",
-                    f"{interval['observed_official_test_coverage']:.0%}",
-                ),
-            ],
-            columns=["Measure", "Value"],
-        )
-        summary["Value"] = summary["Value"].astype(str)
-        st.dataframe(summary, hide_index=True, width="stretch")
+        _evaluation_summary(metrics)
 
     st.subheader("Critical-engine alert rules")
     st.dataframe(
-        _alert_rule_table(point_rule, risk_rule),
+        _alert_rule_table(metrics["alert_rules"]["point_prediction"], risk_rule),
         hide_index=True,
         width="stretch",
     )
@@ -230,30 +187,83 @@ def _overview(artifacts) -> None:
         f"{risk_rule['critical_threshold']:.0f} remaining cycles. Ranges are "
         "two-sided Wilson 95% intervals over one row per engine."
     )
-
     with st.expander("Run details"):
-        identity = pd.DataFrame(
-            [
-                ("Run", artifacts.run_id),
-                ("Dataset", dataset),
-                ("Protocol", artifacts.model_lock["protocol"]["label"]),
-                ("Champion model", artifacts.model_lock["champion"]["kind"]),
-                ("Seed", artifacts.model_lock["seed"]),
-                ("Interval", artifacts.model_lock["calibration"]["label"]),
-                (
-                    "Model lock SHA-256",
-                    artifacts.run_manifest["model_lock_sha256"],
+        _run_details(artifacts)
+
+
+def _risk_distribution(ranking: pd.DataFrame) -> None:
+    risk_counts = (
+        ranking["risk_band"]
+        .value_counts()
+        .reindex(["critical", "elevated", "routine"], fill_value=0)
+        .rename_axis("Risk band")
+        .reset_index(name="Engines")
+    )
+    risk_counts["Risk band"] = risk_counts["Risk band"].str.title()
+    risk_chart = px.bar(
+        risk_counts,
+        x="Engines",
+        y="Risk band",
+        orientation="h",
+        color="Risk band",
+        color_discrete_map=RISK_COLORS,
+        text="Engines",
+    )
+    risk_chart.update_layout(showlegend=False)
+    risk_chart.update_traces(
+        textposition="outside",
+        cliponaxis=False,
+        marker_line_width=0,
+    )
+    st.plotly_chart(_plot_style(risk_chart, height=270), width="stretch")
+
+
+def _evaluation_summary(metrics: dict[str, Any]) -> None:
+    interval = metrics["nominal_empirical_interval"]
+    summary = pd.DataFrame(
+        [
+            ("Test engines", int(metrics["engines"])),
+            ("NASA score", f"{metrics['nasa_score_motor_normalized']:.2f}"),
+            (
+                "RMSE 95% range",
+                "{:.2f} to {:.2f}".format(
+                    *metrics["bootstrap"]["intervals_95"]["rmse"]
                 ),
-            ],
-            columns=["Field", "Value"],
-        )
-        identity["Value"] = identity["Value"].astype(str)
-        st.dataframe(identity, hide_index=True, width="stretch")
+            ),
+            ("Mean interval width", f"{interval['mean_width']:.1f}"),
+            ("Interval target", f"{interval['nominal_coverage']:.0%}"),
+            (
+                "Interval observed",
+                f"{interval['observed_official_test_coverage']:.0%}",
+            ),
+        ],
+        columns=["Measure", "Value"],
+    )
+    summary["Value"] = summary["Value"].astype(str)
+    st.dataframe(summary, hide_index=True, width="stretch")
 
 
-def _engine_risk(artifacts) -> None:
+def _run_details(artifacts: RunArtifacts) -> None:
+    lock = artifacts.model_lock
+    identity = pd.DataFrame(
+        [
+            ("Run", artifacts.run_id),
+            ("Dataset", lock["dataset"]),
+            ("Protocol", lock["protocol"]["label"]),
+            ("Champion model", lock["champion"]["kind"]),
+            ("Seed", lock["seed"]),
+            ("Interval", lock["calibration"]["label"]),
+            ("Model lock SHA-256", artifacts.run_manifest["model_lock_sha256"]),
+        ],
+        columns=["Field", "Value"],
+    )
+    identity["Value"] = identity["Value"].astype(str)
+    st.dataframe(identity, hide_index=True, width="stretch")
+
+
+def _engine_risk(artifacts: RunArtifacts) -> None:
     _page_header("Engine risk")
-    ranking = artifacts.risk_ranking.copy()
+    ranking = artifacts.risk_ranking
     counts = ranking["risk_band"].value_counts()
     calibration = artifacts.model_lock["calibration"]
     risk_threshold = float(calibration["risk_threshold"])
@@ -283,6 +293,17 @@ def _engine_risk(artifacts) -> None:
         )
     )
 
+    list_column, detail_column = st.columns((0.53, 0.47), gap="large")
+    with list_column:
+        st.subheader("Priority list")
+        _priority_list(ranking)
+    with detail_column:
+        st.subheader("Engine review")
+        _engine_detail(ranking, artifacts.sensor_history)
+    _importance_review(pd.DataFrame(artifacts.explanation["global_importance"]))
+
+
+def _priority_list(ranking: pd.DataFrame) -> None:
     risk_view = ranking.rename(
         columns={
             "unit_id": "Engine",
@@ -291,80 +312,62 @@ def _engine_risk(artifacts) -> None:
             "risk_band": "Band",
         }
     )
-    list_column, detail_column = st.columns((0.53, 0.47), gap="large")
-    with list_column:
-        st.subheader("Priority list")
-        st.dataframe(
-            risk_view.loc[:, ["Engine", "Point RUL", "Interval low", "Band"]],
-            hide_index=True,
-            width="stretch",
-            height=355,
-            column_config={
-                "Engine": st.column_config.NumberColumn(format="%d"),
-                "Point RUL": st.column_config.NumberColumn(format="%.1f"),
-                "Interval low": st.column_config.NumberColumn(format="%.1f"),
-                "Band": st.column_config.TextColumn(),
-            },
-        )
-        st.download_button(
-            "Download risk_ranking.csv",
-            artifacts.risk_ranking.to_csv(index=False).encode("utf-8"),
-            file_name="risk_ranking.csv",
-            mime="text/csv",
-            width="stretch",
-        )
+    st.dataframe(
+        risk_view.loc[:, ["Engine", "Point RUL", "Interval low", "Band"]],
+        hide_index=True,
+        width="stretch",
+        height=355,
+        column_config={
+            "Engine": st.column_config.NumberColumn(format="%d"),
+            "Point RUL": st.column_config.NumberColumn(format="%.1f"),
+            "Interval low": st.column_config.NumberColumn(format="%.1f"),
+            "Band": st.column_config.TextColumn(),
+        },
+    )
+    st.download_button(
+        "Download risk_ranking.csv",
+        ranking.to_csv(index=False).encode("utf-8"),
+        file_name="risk_ranking.csv",
+        mime="text/csv",
+        width="stretch",
+    )
 
-    with detail_column:
-        st.subheader("Engine review")
-        engine_id = st.selectbox(
-            "Engine ID",
-            ranking["unit_id"].astype(int).tolist(),
-        )
-        selected = ranking.loc[ranking["unit_id"].eq(engine_id)].iloc[0]
-        st.metric("Point RUL", f"{selected['prediction']:.1f} cycles")
-        low, high = st.columns(2)
-        low.metric("Interval low", f"{selected['interval_low']:.1f}")
-        high.metric("Interval high", f"{selected['interval_high']:.1f}")
-        st.caption(f"Risk band: {str(selected['risk_band']).title()}")
-        if artifacts.sensor_history.empty:
-            st.caption(
-                "Sensor history is local-only: NASA's dataset page specifies no "
-                "license, so this demo does not redistribute its rows."
-            )
-            sensors = []
-        else:
-            sensors = st.multiselect(
-                "Sensor channels",
-                [
-                    column
-                    for column in artifacts.sensor_history.columns
-                    if column.startswith("sensor_")
-                ],
-                default=["sensor_2", "sensor_7", "sensor_12"],
-                max_selections=5,
-            )
-        if sensors:
-            history = artifacts.sensor_history.loc[
-                artifacts.sensor_history["unit_id"].eq(engine_id)
-            ]
-            chart_data = history.loc[:, ["cycle", *sensors]].melt(
-                id_vars="cycle",
-                var_name="Sensor",
-                value_name="Reading",
-            )
-            sensor_chart = px.line(
-                chart_data,
-                x="cycle",
-                y="Reading",
-                color="Sensor",
-            )
-            sensor_chart.update_layout(xaxis_title="Cycle", yaxis_title="Reading")
-            st.plotly_chart(
-                _plot_style(sensor_chart, height=260),
-                width="stretch",
-            )
 
-    importance = pd.DataFrame(artifacts.explanation["global_importance"]).head(12)
+def _engine_detail(ranking: pd.DataFrame, sensor_history: pd.DataFrame) -> None:
+    engine_id = st.selectbox("Engine ID", ranking["unit_id"].astype(int).tolist())
+    selected = ranking.loc[ranking["unit_id"].eq(engine_id)].iloc[0]
+    st.metric("Point RUL", f"{selected['prediction']:.1f} cycles")
+    low, high = st.columns(2)
+    low.metric("Interval low", f"{selected['interval_low']:.1f}")
+    high.metric("Interval high", f"{selected['interval_high']:.1f}")
+    st.caption(f"Risk band: {str(selected['risk_band']).title()}")
+    if sensor_history.empty:
+        st.caption(
+            "Sensor history is local-only: NASA's dataset page specifies no "
+            "license, so this demo does not redistribute its rows."
+        )
+        return
+    sensors = st.multiselect(
+        "Sensor channels",
+        [column for column in sensor_history.columns if column.startswith("sensor_")],
+        default=["sensor_2", "sensor_7", "sensor_12"],
+        max_selections=5,
+    )
+    if not sensors:
+        return
+    history = sensor_history.loc[sensor_history["unit_id"].eq(engine_id)]
+    chart_data = history.loc[:, ["cycle", *sensors]].melt(
+        id_vars="cycle",
+        var_name="Sensor",
+        value_name="Reading",
+    )
+    sensor_chart = px.line(chart_data, x="cycle", y="Reading", color="Sensor")
+    sensor_chart.update_layout(xaxis_title="Cycle", yaxis_title="Reading")
+    st.plotly_chart(_plot_style(sensor_chart, height=260), width="stretch")
+
+
+def _importance_review(importance: pd.DataFrame) -> None:
+    importance = importance.head(12)
     if "coefficient" in importance.columns:
         value_column = "coefficient"
         section_title = "Model coefficient review"
@@ -385,14 +388,8 @@ def _engine_risk(artifacts) -> None:
             orientation="h",
         )
         importance_chart.update_traces(marker_color="#315C4C")
-        importance_chart.update_layout(
-            xaxis_title=axis_title,
-            yaxis_title="",
-        )
-        st.plotly_chart(
-            _plot_style(importance_chart, height=420),
-            width="stretch",
-        )
+        importance_chart.update_layout(xaxis_title=axis_title, yaxis_title="")
+        st.plotly_chart(_plot_style(importance_chart, height=420), width="stretch")
 
 
 def main() -> None:
@@ -403,9 +400,9 @@ def main() -> None:
         initial_sidebar_state="expanded",
     )
     st.markdown(APP_CSS, unsafe_allow_html=True)
-    public_bundle = os.environ.get("AEROMAINTAIN_PUBLIC_BUNDLE", "")
-    run_id = os.environ.get("AEROMAINTAIN_RUN_ID", "")
-    project_root = Path(os.environ.get("AEROMAINTAIN_PROJECT_ROOT", ".")).resolve()
+    public_bundle = os.environ.get(PUBLIC_BUNDLE_ENV, "")
+    run_id = os.environ.get(RUN_ID_ENV, "")
+    project_root = resolve_project_root()
     if not run_id and not public_bundle:
         st.error("AEROMAINTAIN_RUN_ID is required. Launch with aeromaintain app.")
         st.stop()
@@ -435,10 +432,7 @@ def main() -> None:
     st.sidebar.write(artifacts.run_id)
     st.sidebar.caption(f"{artifacts.model_lock['dataset']} · simulated benchmark")
     st.sidebar.caption(artifacts.model_lock["protocol"]["label"])
-    st.sidebar.caption(
-        "Project complete. Final results across all protocols: "
-        f"[README]({PROJECT_URL}#results)"
-    )
+    st.sidebar.caption(f"Results across all protocols: [README]({PROJECT_URL}#results)")
 
     if page == "Overview":
         _overview(artifacts)

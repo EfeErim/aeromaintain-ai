@@ -25,10 +25,9 @@ from aeromaintain.artifacts import (
     STATUS_PIPELINE_COMPLETE,
     RunArtifacts,
     load_verified_run,
-    write_replacing,
 )
 from aeromaintain.data import PrepareResult, prepare_dataset
-from aeromaintain.data.pipeline import json_bytes, sha256_file
+from aeromaintain.files import json_bytes, sha256_file, write_once, write_replacing
 from aeromaintain.models import (
     EvaluationResult,
     TrainResult,
@@ -63,18 +62,6 @@ PrepareStep = Callable[..., PrepareResult]
 TrainStep = Callable[..., TrainResult]
 EvaluationStep = Callable[..., EvaluationResult]
 LoadStep = Callable[[Path, str], RunArtifacts]
-
-
-def _write_report_file(path: Path, payload: bytes) -> None:
-    """Write a report, or accept an identical one left by an interrupted finish."""
-    if path.exists():
-        if path.read_bytes() == payload:
-            return
-        raise DeliveryError(
-            f"Existing {path.name} differs from the report this run produces; "
-            f"refusing to replace it: {path}"
-        )
-    write_replacing(path, payload)
 
 
 def _lock_file(handle: IO[bytes]) -> None:
@@ -261,8 +248,9 @@ def _finalize_run(
         raise DeliveryError("Pipeline finalization requires a model_locked manifest")
     artifacts = load_step(project_root, run_id)
     report_json, report_html = report_bytes(artifacts)
-    _write_report_file(run_dir / REPORT_JSON, report_json)
-    _write_report_file(run_dir / REPORT_HTML, report_html)
+    # An identical report left by an interrupted finish is accepted.
+    write_once(run_dir / REPORT_JSON, report_json, DeliveryError)
+    write_once(run_dir / REPORT_HTML, report_html, DeliveryError)
 
     manifest["status"] = STATUS_PIPELINE_COMPLETE
     manifest["pipeline"] = {

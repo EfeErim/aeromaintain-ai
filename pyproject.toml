@@ -11,17 +11,6 @@ requires-python = ">=3.11,<3.12"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{ name = "Efe Erim" }]
-keywords = [
-  "predictive-maintenance",
-  "remaining-useful-life",
-  "nasa-cmapss",
-  "streamlit",
-]
-classifiers = [
-  "Development Status :: 7 - Inactive",
-  "Intended Audience :: Science/Research",
-  "Programming Language :: Python :: 3.11",
-]
 dependencies = [
   "joblib>=1.4.2",
   "numpy>=1.26.4",
@@ -56,25 +45,12 @@ aeromaintain = "aeromaintain.cli:app"
 [project.urls]
 Homepage = "https://aeromaintain-ai-demo.streamlit.app/"
 Repository = "https://github.com/EfeErim/aeromaintain-ai"
-Releases = "https://github.com/EfeErim/aeromaintain-ai/releases"
-Documentation = "https://github.com/EfeErim/aeromaintain-ai#readme"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
-addopts = "-ra --strict-markers"
 testpaths = ["tests"]
-
-[tool.coverage.run]
-branch = true
-source = ["aeromaintain"]
-
-[tool.coverage.report]
-exclude_also = [
-  "if __name__ == .__main__.:",
-]
-show_missing = true
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

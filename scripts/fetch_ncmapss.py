@@ -1,5 +1,7 @@
 """Fetch selected members of the NASA archive using HTTP ranges, not all 16 GB."""
 
+from __future__ import annotations
+
 import argparse
 import io
 import json

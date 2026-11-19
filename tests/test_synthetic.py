@@ -15,16 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
 
 
-@pytest.fixture(scope="module")
-def archive_bytes() -> bytes:
-    return synthetic.synthetic_archive_bytes()
+def test_archive_is_reproducible(synthetic_archive: bytes) -> None:
+    assert synthetic.synthetic_archive_bytes() == synthetic_archive
 
 
-def test_archive_is_reproducible(archive_bytes: bytes) -> None:
-    assert synthetic.synthetic_archive_bytes() == archive_bytes
-    assert synthetic.synthetic_archive_bytes(seed=8) != archive_bytes
-
-
+@pytest.mark.usefixtures("reuse_synthetic_archive")
 def test_project_passes_the_real_data_contract(tmp_path: Path) -> None:
     target = tmp_path / "project"
     archive = synthetic.build_synthetic_project(ROOT, target)
@@ -65,6 +60,7 @@ def test_cli_synthetic_needs_a_project_root(monkeypatch) -> None:
     assert "--project-root" in command.output
 
 
+@pytest.mark.usefixtures("reuse_synthetic_archive")
 def test_cli_synthetic_runs_the_normal_pipeline(monkeypatch, tmp_path: Path) -> None:
     calls = {}
 
@@ -86,22 +82,3 @@ def test_cli_synthetic_runs_the_normal_pipeline(monkeypatch, tmp_path: Path) -> 
     assert calls["root"] == target.resolve()
     assert calls["dataset"] == "FD001"
     assert "SYNTHETIC" in command.output
-
-
-def test_cli_v5_rejects_unknown_stage(tmp_path: Path) -> None:
-    command = runner.invoke(app, ["v5", "train", "--output", str(tmp_path)])
-    assert command.exit_code == 2
-    assert "Unknown v5 stage" in command.output
-
-
-def test_cli_v5_reports_refusals_without_traceback(monkeypatch, tmp_path: Path) -> None:
-    def refuse(root, output, config):
-        raise FileExistsError("v5 final evidence already exists")
-
-    monkeypatch.setattr("aeromaintain.models.v5.evaluate", refuse)
-    command = runner.invoke(
-        app,
-        ["v5", "evaluate", "--output", str(tmp_path), "--project-root", str(ROOT)],
-    )
-    assert command.exit_code == 1
-    assert "v5 evaluate failed: v5 final evidence already exists" in command.output

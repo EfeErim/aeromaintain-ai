@@ -13,7 +13,6 @@ from someone else can list a malicious ``.joblib`` file with a correct hash.
 from __future__ import annotations
 
 import json
-import tempfile
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,7 +27,12 @@ from pydantic import (
     model_validator,
 )
 
-from aeromaintain.data.pipeline import SENSOR_COLUMNS, sha256_file
+from aeromaintain.files import (
+    SENSOR_COLUMNS,
+    processed_dir,
+    sha256_file,
+    write_replacing,
+)
 
 SAFE_PREDICTION_COLUMNS = (
     "unit_id",
@@ -59,6 +63,16 @@ STATUS_PIPELINE_COMPLETE = "pipeline_complete"
 
 class ArtifactValidationError(RuntimeError):
     """Raised when a run or bundle cannot be trusted."""
+
+
+@dataclass(frozen=True)
+class VerifiedLock:
+    """A model lock whose whole hash chain was checked by ``verify_lock``."""
+
+    run_dir: Path
+    manifest: dict[str, Any]
+    lock: ModelLock
+    raw_lock: dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -294,7 +308,23 @@ def _check_public_ranking(ranking: pd.DataFrame) -> None:
         raise ArtifactValidationError("Public bundle ranking has unknown risk bands")
 
 
-def _load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
+LOCKED_DATA_FILES = (
+    ("manifest.json", "manifest_sha256"),
+    ("split_manifest.json", "split_manifest_sha256"),
+    ("train.parquet", "train_sha256"),
+    ("test.parquet", "test_sha256"),
+    ("evaluation/test_rul.parquet", "official_test_rul_sha256"),
+)
+
+
+def verify_lock(project_root: Path, run_id: str) -> VerifiedLock:
+    """Check a run's manifest, model lock, locked data, config and model files.
+
+    The chain: the run manifest pins the lock's SHA-256; the lock pins the prepared
+    data, the project config and every file the run directory holds for the model.
+    Each listed path must stay inside its directory. The official evaluation and the
+    review app both start here, so a run is trusted by one rule.
+    """
     root = project_root.resolve()
     run_dir = _safe_run_dir(root, run_id)
     raw_manifest = read_json(run_dir / "manifest.json")
@@ -326,17 +356,15 @@ def _load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
         lock.config.sha256,
         "Model config",
     )
+    processed = processed_dir(root, lock.dataset)
+    for name, field in LOCKED_DATA_FILES:
+        require_hash(processed / name, getattr(lock.data, field), "Locked data")
+    return VerifiedLock(run_dir, raw_manifest, lock, raw_lock)
 
-    processed_dir = root / "data" / "processed" / lock.dataset.lower()
-    for name, expected in (
-        ("manifest.json", lock.data.manifest_sha256),
-        ("split_manifest.json", lock.data.split_manifest_sha256),
-        ("train.parquet", lock.data.train_sha256),
-        ("test.parquet", lock.data.test_sha256),
-        ("evaluation/test_rul.parquet", lock.data.official_test_rul_sha256),
-    ):
-        require_hash(processed_dir / name, expected, "Locked data")
 
+def _load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
+    verified = verify_lock(project_root, run_id)
+    run_dir = verified.run_dir
     official_dir = run_dir / "official_test"
     evaluation = parse_contract(
         EvaluationManifest,
@@ -345,7 +373,11 @@ def _load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
     )
     if evaluation.run_id != run_id:
         raise ArtifactValidationError("Evaluation manifest identity mismatch")
-    require_hash(lock_path, evaluation.model_lock_sha256, "Evaluation model lock")
+    require_hash(
+        run_dir / "model_lock.json",
+        evaluation.model_lock_sha256,
+        "Evaluation model lock",
+    )
     for name, expected in (
         ("predictions.parquet", evaluation.predictions_sha256),
         ("metrics.json", evaluation.metrics_sha256),
@@ -365,12 +397,13 @@ def _load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
         .reset_index(drop=True)
     )
 
-    test = pd.read_parquet(processed_dir / "test.parquet")
+    processed = processed_dir(project_root.resolve(), verified.lock.dataset)
+    test = pd.read_parquet(processed / "test.parquet")
     sensor_history = test.loc[:, ["unit_id", "cycle", *SENSOR_COLUMNS]].copy()
     return RunArtifacts(
         run_id=run_id,
-        run_manifest=raw_manifest,
-        model_lock=raw_lock,
+        run_manifest=verified.manifest,
+        model_lock=verified.raw_lock,
         metrics=read_json(official_dir / "metrics.json"),
         explanation=read_json(run_dir / "explanation.json"),
         risk_ranking=risk_ranking,
@@ -388,19 +421,6 @@ def load_verified_run(project_root: Path, run_id: str) -> RunArtifacts:
         raise ArtifactValidationError(
             f"Verified run artefact structure is invalid: {exc}"
         ) from exc
-
-
-def write_replacing(path: Path, payload: bytes) -> None:
-    """Replace ``path`` through a temporary file in the same directory."""
-    with tempfile.NamedTemporaryFile(
-        mode="wb", prefix=f".{path.name}-", suffix=".tmp", dir=path.parent, delete=False
-    ) as stream:
-        temporary = Path(stream.name)
-        stream.write(payload)
-    try:
-        temporary.replace(path)
-    finally:
-        temporary.unlink(missing_ok=True)
 
 
 def export_public_bundle(project_root: Path, run_id: str, output_dir: Path) -> Path:

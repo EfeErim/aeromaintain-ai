@@ -1,14 +1,9 @@
-# Reference run results
+# C-MAPSS results (protocols v1–v3)
 
-Model and data-derived files are Git-ignored. Sanitized aggregate evidence is stored
-in [`reference_evidence.json`](reference_evidence.json).
-
-Protocol v4 changed no reference model. Its development comparison and N-CMAPSS
-simulation benchmark are reported separately in [`results_v4.md`](results_v4.md).
-
-A retrospective rescoring of the stored v3 test predictions against truth capped at 125
-and 130, for comparison with published results, is in
-[`results_retrospective.md`](results_retrospective.md).
+Run files are Git-ignored; aggregate evidence is in
+[`reference_evidence.json`](reference_evidence.json). Protocol v4 changed no model
+([results](results_v4.md)), and the capped rescoring made after the labels opened is
+[the last section](#retrospective-comparison-on-the-literature-scale).
 
 ## Protocol v3 runs
 
@@ -132,12 +127,7 @@ Each later stage had to lower median RMSE at least 1% without a worse median NAS
 | Five-seed ensemble | 18.80, 503 | 18.85, 1,430 | **17.86, 473, passed** | 19.43, 1,616 |
 
 Each cell gives median RMSE, then median NASA score. Unmarked candidates failed the rule.
-
-| Target | Result | Status |
-|---|---|---|
-| FD002 and FD004 RMSE at least 10% below raw features | 10.6% and 10.1% | Met |
-| FD001 and FD003 RMSE at most about 16.6 | 18.57 and 17.86 | Missed |
-| FD001 and FD003 mean interval width below 45 | 55.7 and 53.2 | Missed |
+Targets are in the [protocol history](protocol_history.md#targets).
 
 ### Window sensitivity
 
@@ -180,189 +170,150 @@ FD002 and FD004 get no sweep, so their point values have no seed spread beside t
 | Risk-rule recall | 0.960, 0.027, 0.92–1.00 | 1.000, 0.000, 1.00–1.00 |
 | Risk-rule false alarms | 3.2, 0.8, 2–4 | 6.8, 0.4, 6–7 |
 
+Produced by `aeromaintain robustness --base-run-id fd001-v3` and
+`aeromaintain robustness --base-run-id fd003-v3` (default: ten seeds from 42), which
+write `runs/<run>/robustness/seed_sweep.json`. The command refuses a run whose test is
+still clean.
+
 The risk threshold stayed 20 on FD001 and 25 on FD003 for every seed. Seed 42 has the lowest
 RMSE of ten on FD001 and the second highest on FD003, at 15.453. The
 five-seed FD003 ensemble spreads less than FD001's single model.
 
 ## Protocol v2 runs
 
-Both runs were produced on 2026-11-04 under the frozen [protocol v2](protocol_v2.md).
-
-| Run | Dataset | Label | What it can support |
-|---|---|---|---|
-| `fd003-v2-clean` | FD003 | clean single-open test | Independent check of the frozen protocol |
-| `fd001-v2` | FD001 | test previously seen | Comparison with v1 only |
-
-The FD003 ledger records one opening, by model lock
-`bcd2acda16f5a60497725543879d033eca0d83932a7f62525581e44172bfba33`.
+Produced on 2026-11-04 under the frozen [protocol v2](protocol_v2.md). `fd003-v2-clean`
+is the clean single-open test; its ledger records one opening, by model lock
+`bcd2acda16f5a60497725543879d033eca0d83932a7f62525581e44172bfba33`. `fd001-v2` (test
+previously seen) is identical to the `fd001-v3` column above.
 
 ### Official test
 
-Ranges are 95% engine-level bootstrap intervals over 2,000 resamples.
+Ranges are 95% engine-level bootstrap intervals over 2,000 resamples (Wilson for alert
+rates). FD003 has 20 truly critical engines.
 
-| Metric | FD003 clean | FD001 seen |
-|---|---:|---:|
-| Engines | 100 | 100 |
-| RMSE | 15.066 (12.607–17.503) | 15.796 (12.867–18.781) |
-| MAE | 11.227 (9.339–13.276) | 11.154 (9.100–13.431) |
-| Motor-normalized NASA score | 398.56 (239.62–619.97) | 398.31 (232.98–624.67) |
-| Signed bias | 0.384 (-2.547–3.284) | -1.593 (-4.608–1.280) |
-| Interval coverage, nominal 90% | 0.92 (0.86–0.97) | 0.94 (0.89–0.98) |
-| Mean interval width | 53.285 (49.279–57.278) | 55.422 (51.190–59.443) |
+| Metric | FD003 clean |
+|---|---:|
+| Engines | 100 |
+| RMSE | 15.066 (12.607–17.503) |
+| MAE | 11.227 (9.339–13.276) |
+| Motor-normalized NASA score | 398.56 (239.62–619.97) |
+| Signed bias | 0.384 (-2.547–3.284) |
+| Interval coverage, nominal 90% | 0.92 (0.86–0.97) |
+| Mean interval width | 53.285 (49.279–57.278) |
+| `prediction <= 30`: recall, missed, false alarms | 80.0% (58.4–91.9%), 4, 1 |
+| `interval_low <= 25`: recall, missed, false alarms | 100% (83.9–100%), 0, 8 |
 
-### Critical-engine alert rules
+### Development
 
-A truly critical engine has `rul_true <= 30`: 20 engines on FD003 and 25 on FD001.
-Ranges are two-sided Wilson 95% intervals.
+Medians over 200 seeded draws on 80 development engines with `rul_true <= 150`. On
+FD003, Ridge (alpha 100, no age) reached RMSE 21.58 and NASA 702; XGBoost (compact
+features, cap 130) reached **17.62** and 515, 18.4% lower RMSE, winning 99% of paired
+draws. The FD001 rows match v3. Neither reached the RMSE target of about 16.6. With
+window 130, 175 or none, FD003 RMSE for Ridge / XGBoost was 18.33 / 15.59, 27.36 / 22.25
+and 72.34 / 69.27; with no window Ridge wins on NASA score, and by rule that
+disagreement is published without changing the decision.
 
-| Dataset | Rule | Recall | Precision | False-alarm rate | Missed | False alarms |
-|---|---|---:|---:|---:|---:|---:|
-| FD003 | `prediction <= 30` | 80.0% (58.4–91.9%) | 94.1% (73.0–99.0%) | 1.25% (0.2–6.7%) | 4 | 1 |
-| FD003 | `interval_low <= 25` | 100% (83.9–100%) | 71.4% (52.9–84.7%) | 10.0% (5.2–18.5%) | 0 | 8 |
-| FD001 | `prediction <= 30` | 80.0% (60.9–91.1%) | 100% (83.9–100%) | 0.0% (0.0–4.9%) | 5 | 0 |
-| FD001 | `interval_low <= 20` | 96.0% (80.5–99.3%) | 85.7% (68.5–94.3%) | 5.3% (2.1–12.9%) | 1 | 4 |
-
-### Interval by RUL band
-
-Each cell gives test coverage and mean width. Small bands make single-band coverage
-noisy; FD001's `31-60` predicted band holds 17 engines.
-
-| Band | FD003 | FD001 |
-|---|---:|---:|
-| Predicted `<=30` | 0.88, 16.3 | 1.00, 19.5 |
-| Predicted `31-60` | 0.95, 34.9 | 0.76, 40.1 |
-| Predicted `61-100` | 1.00, 69.3 | 0.97, 74.8 |
-| Predicted `>100` | 0.86, 68.0 | 0.97, 67.5 |
-| True `0-30` | 0.90, 20.0 | 0.96, 23.6 |
-| True `31-60` | 1.00, 43.8 | 1.00, 52.5 |
-| True `61-125` | 0.89, 67.9 | 0.92, 68.9 |
-| True `>125` | 0.93, 68.2 | 0.91, 70.1 |
-
-## Development selection
-
-Metrics are medians over 200 seeded draws of one row per engine, on 80 development
-engines with `rul_true <= 150`.
-
-| Model | Dataset | RMSE | MAE | NASA | Point-rule recall |
-|---|---|---:|---:|---:|---:|
-| Ridge, alpha 1 | FD001 | 21.01 | 16.75 | 626 | 0.70 |
-| **XGBoost, all features, cap 125** | FD001 | **18.57** | 14.40 | 501 | 0.85 |
-| Ridge, alpha 100, no age | FD003 | 21.58 | 17.11 | 702 | 0.70 |
-| **XGBoost, compact features, cap 130** | FD003 | **17.62** | 12.60 | 515 | 0.89 |
-
-XGBoost lowered RMSE 11.6% on FD001 and 18.4% on FD003, and won 99% of paired draws
-on each. Neither run reached the RMSE target of about 16.6.
-
-### Window sensitivity
-
-The window of 150 was an analysis choice. Each cell gives median RMSE for Ridge and
-XGBoost, then the rule's champion.
-
-| Window | FD001 | FD003 |
-|---|---|---|
-| 130 | 18.35 / 16.35, XGBoost | 18.33 / 15.59, XGBoost |
-| **150 (used)** | 21.01 / 18.57, XGBoost | 21.58 / 17.62, XGBoost |
-| 175 | 26.32 / 24.15, XGBoost | 27.36 / 22.25, XGBoost |
-| None | 44.86 / 43.78, **Ridge** | 72.34 / 69.27, **Ridge** |
-
-With no window, XGBoost still has the lower RMSE but a worse NASA score, so Ridge
-wins. By rule, this disagreement is published and does not change the decision.
+The risk threshold is the smallest `interval_low <= T` with at least 95%
+leave-engines-out recall: 20 on FD001 (1 missed, 5 false alarms) and 25 on FD003 (0
+missed, 7 false alarms). Leave-engines-out interval coverage is 0.91 on both, with mean
+width 55.7 and 52.0, against a target of 45.
 
 ### Challengers on FD001
 
 [Amendment 1](protocol_v2.md#amendment-1) wrote these rules after the first FD001
-result and before any challenger result. Neither challenger earned a place, so FD003
-did not use them.
+result and before any challenger result. Neither earned a place.
 
 | Challenger | Result | Rule outcome |
 |---|---|---|
 | LSTM, 64 units, one layer | Median RMSE 18.39 (0.95% lower), NASA 546 against 501 | XGBoost stays |
 | CQR | Coverage 0.91, mean width 98.6, 77% wider than Mondrian | Mondrian stays |
 
-The CQR trial reused a tree count tuned for squared error, so its quantile models may
-underfit. It shows only that this bounded trial lost.
+The CQR trial reused a tree count tuned for squared error, so it shows only that this
+bounded trial lost.
 
-## Risk threshold
+Both came from `aeromaintain escalation-study --base-run-id fd001-v2-selection --method
+lstm` (and `--method cqr`), which score on training engines only and write
+`runs/fd001-v2-selection/robustness/{lstm,cqr}_study.json`. The LSTM study needs
+the `lstm` extra (`pip install -e ".[lstm]"`). `torch` is not in the pinned
+constraints and the study file does not record its version, so the LSTM figures are
+not pinned to an environment; CI skips the LSTM test.
 
-Leave-engines-out medians on all 100 training engines. The selected threshold is
-the smallest with at least 95% recall. Missing a critical engine costs far more than
-a false alarm in this framing, but no real cost data exists, so both counts are shown
-rather than combined.
+### Reproducibility
 
-| `interval_low <= T` | FD001 recall | FD001 missed / false alarms | FD003 recall | FD003 missed / false alarms |
-|---:|---:|---:|---:|---:|
-| 10 | 0.65 | 7 / 0 | 0.58 | 8.5 / 0 |
-| 15 | 0.83 | 4 / 2 | 0.77 | 5 / 1 |
-| **20 (FD001)** | **0.96** | **1 / 5** | 0.94 | 1 / 4 |
-| **25 (FD003)** | 1.00 | 0 / 7 | **1.00** | **0 / 7** |
-| 30 | 1.00 | 0 / 12 | 1.00 | 0 / 10 |
-| 40 | 1.00 | 0 / 23 | 1.00 | 0 / 22 |
-
-## Interval calibration
-
-The Mondrian interval uses all 100 training engines in place of v1's 20. Leave-
-engines-out coverage is 0.91 on both datasets, with mean width 55.7 on FD001 and 52.0
-on FD003. That beats v1's 60.6 but misses the target of 45.
-
-| Predicted band | FD001 coverage, width | FD003 coverage, width |
-|---|---:|---:|
-| `<=30` | 0.92, 18.8 | 0.92, 15.7 |
-| `31-60` | 0.91, 40.6 | 0.90, 35.0 |
-| `61-100` | 0.91, 75.0 | 0.89, 69.3 |
-| `>100` | 0.92, 67.5 | 0.93, 68.6 |
-
-## Seed sensitivity
-
-Ten seeds (42–51) refit the locked FD001 settings. They vary cross-fit folds, model
-randomness, draws, and the final fit. Selection is not rerun, so this spread excludes
-selection variance. FD003 is excluded because its labels open only once. The results
-are the FD001 column of the v3 [seed sensitivity](#seed-sensitivity) table.
-
-The published seed 42 has the lowest RMSE, MAE, and NASA score of the ten, so its
-FD001 point values are slightly optimistic. The risk threshold was 20 for every seed.
-
-## Reproducibility
-
-`fd001-v2` and `fd001-v2-repeat` ran with identical inputs on one machine.
-
-- **Byte-identical:** model, preprocessor, feature manifest, comparison, decision,
-  explanation, calibration analysis, out-of-fold and cross-fit predictions, official
-  predictions, official metrics, and error analysis.
-- **Different:** `manifest.json`, `model_lock.json`, `evaluation_manifest.json`, and
-  both reports. Each carries the run ID or a hash of a file that does; the lock has no
-  other changed field.
-
-This does not establish byte-identical output across machines or library versions.
-
-**v1 lock hash, resolved.** The clean-clone `fd001-repro` lock hash differed from the
-v1 reference because that lock adds the `environment` field from commit `1a13887`.
-Removing that field and restoring the reference `run_id` reproduces the reference
-hash `32e5e7a4…f829` exactly, so every hash the lock records matched.
+`fd001-v2` and `fd001-v2-repeat` ran with identical inputs on one machine. Models,
+predictions, metrics and analyses were byte-identical; only files that carry the run ID
+or a hash of such a file differed
+(`aeromaintain compare-runs --first fd001-v2 --second fd001-v2-repeat`, written to
+`runs/fd001-v2/robustness/compare_fd001-v2-repeat.json`). This does not establish identical output across
+machines or library versions.
 
 ## Protocol v1 reference
 
-The immutable run `m4-fd001-seed42-20260729` remains published as v1, reproducible
-from commit `1b14801`. Ridge was its champion under v1's all-rows selection.
+The run `m4-fd001-seed42-20260729` remains published as v1, reproducible from commit
+`1b14801`; Ridge was its champion under all-rows selection. On FD001 it reached RMSE
+19.622062, MAE 15.369728 and coverage 0.89 at mean width 60.623140. The interval rule
+`interval_low <= 30` caught all 25 critical engines with 9 false alarms; the point rule
+missed 13.
 
-| Metric | Result |
-|---|---:|
-| Engines | 100 |
-| MAE | 15.369728 |
-| RMSE | 19.622062 |
-| Motor-normalized NASA score | 625.326953 |
-| Signed bias | -1.777402 |
-| Overprediction rate | 0.480000 |
-| Nominal / observed coverage | 0.90 / 0.89 |
-| Mean interval width | 60.623140 |
+## Retrospective comparison on the literature scale
 
-| Rule (25 critical engines) | Recall | Precision | False-alarm rate | Missed | False alarms |
-|---|---:|---:|---:|---:|---:|
-| Point, `prediction <= 30` | 48.0% (30.0–66.5%) | 100% (75.8–100%) | 0.0% (0.0–4.9%) | 13 | 0 |
-| Risk, `interval_low <= 30` | 100% (86.7–100%) | 73.5% (56.9–85.4%) | 12.0% (6.4–21.3%) | 0 | 9 |
+**Status: retrospective. Every C-MAPSS test label was opened before this analysis.**
+Nothing here is a new clean result, and nothing here changes a model, a threshold or a
+headline figure.
 
-## Screenshots
+Produced on 2026-11-07 by
+[`scripts/retrospective_capped_metrics.py`](../scripts/retrospective_capped_metrics.py).
+Evidence, with prediction file hashes, is in
+[`retrospective_capped_evidence.json`](retrospective_capped_evidence.json).
 
-- [Overview](screenshots/overview.png)
-- [Engine risk](screenshots/engine-health.png)
+The clean v3 tests report RMSE 27.4 on FD002 and FD004 against NASA's uncapped truth.
+Most papers score against truth capped at 125 or 130, so the stored v3 test predictions
+(one per engine, unchanged) are rescored here against `min(truth, cap)`. Ranges are 95%
+engine-level bootstrap intervals (2,000 resamples, seed 42); the script first checks that
+the uncapped RMSE matches each run's published `metrics.json`.
 
-Both show `fd004-v3-clean`, loaded through the verified artefact loader.
+### Rescored test results
+
+| Dataset | Test status | Truth | RMSE (95% CI) | NASA score (95% CI) | Engines above cap |
+|---|---|---|---:|---:|---:|
+| FD002 | clean under v3 | uncapped | 27.36 (23.77–30.82) | 10,388 (5,193–16,823) | – |
+| FD002 | clean under v3 | capped at 125 | **14.74** (13.28–16.15) | 893 (673–1,146) | 57 of 259 |
+| FD002 | clean under v3 | capped at 130 | 15.73 (14.28–17.14) | 978 (755–1,230) | 55 of 259 |
+| FD004 | clean under v3 | uncapped | 27.40 (24.53–30.23) | 5,126 (3,627–6,816) | – |
+| FD004 | clean under v3 | capped at 125 | **15.33** (13.69–17.05) | 1,011 (702–1,391) | 67 of 248 |
+| FD004 | clean under v3 | capped at 130 | 16.27 (14.58–18.00) | 1,107 (793–1,485) | 60 of 248 |
+| FD001 | previously seen | capped at 125 | 14.39 (11.45–17.39) | 346 (191–568) | 11 of 100 |
+| FD003 | previously seen | capped at 125 | 13.69 (11.32–15.91) | 332 (204–490) | 15 of 100 |
+
+"Engines above cap" counts engines whose official truth exceeds the cap. In the capped
+rows their error is measured against the cap, not against their real remaining life.
+
+### Published results under the same last-cycle protocol
+
+RMSE on the official test set, one prediction per engine, as reported by the authors.
+
+| Method | Year | Cap | FD002 | FD004 | Source of the figures |
+|---|---:|---:|---:|---:|---|
+| CNN (Babu et al.) | 2016 | 130 | 30.29 | 29.16 | [Survey, Table 7](https://arxiv.org/abs/2010.03207) and [Bi-cLSTM, Table V](https://arxiv.org/abs/2603.00745) |
+| LSTM (Zheng et al.) | 2017 | 130 | 24.49 | 28.17 | Same two sources |
+| Deep CNN (Li, Ding and Sun) | 2018 | 125 | 22.36 | 23.31 | [Reliability Engineering & System Safety 172](https://econpapers.repec.org/RePEc:eee:reensy:v:172:y:2018:i:c:p:1-11), via the survey |
+| TATFA-Transformer (Zhang et al.) | 2024 | not stated in the citing table | 15.07 | 18.81 | Reliability Engineering & System Safety 241, via Bi-cLSTM, Table V |
+| Bi-cLSTM (Chowdhury et al.) | 2026 | 125 | 13.96 | 14.25 | [arXiv 2603.00745](https://arxiv.org/abs/2603.00745), Table V |
+| **This project, v3 XGBoost** | 2026 | 125 | **14.74** | **15.33** | This section, retrospective |
+
+Sources disagree on the last digit for some older rows: Babu FD004 appears as both 29.15
+and 29.16. A 2024 DFormer row was left out, because the citation attached to it in the
+citing table does not match its name.
+
+### How to read the comparison
+
+On the literature's own scale the v3 model is competitive, but the comparison still
+favours the papers: our models were locked before their labels opened, while most papers
+tune against the same test set; preprocessing differs, and per-condition normalization
+alone moves FD002/FD004 RMSE by several points
+([Gupta, engrXiv](https://engrxiv.org/preprint/view/8145)); and gaps such as 14.74
+against 13.96 fall inside our bootstrap range.
+
+Capping the truth also hides the main failure: the 57 FD002 and 67 FD004 engines above
+125 cycles are the ones the model underpredicts most. The uncapped 27.4 stays the
+headline; the capped figure is only for comparing with papers that cap their truth.

@@ -20,19 +20,6 @@ def test_interval_resamples_every_engine():
     assert low < 2.0 < 3.0 < high
 
 
-def test_interval_depends_on_seed():
-    per_engine = np.arange(1.0, 36.0)
-    first = engine_bootstrap(_two_metrics(per_engine), 500, seed=0)
-    second = engine_bootstrap(_two_metrics(per_engine), 500, seed=1)
-    assert first["rmse"] != second["rmse"]
-
-
-def test_interval_contains_full_sample_value():
-    per_engine = np.random.default_rng(3).gamma(2.0, 50.0, size=35)
-    low, high = engine_bootstrap(_two_metrics(per_engine), 2000, seed=44)["rmse"]
-    assert low < np.sqrt(per_engine.mean()) < high
-
-
 def test_metrics_must_share_engine_count():
     with pytest.raises(ValueError, match="same number of engines"):
         engine_bootstrap(

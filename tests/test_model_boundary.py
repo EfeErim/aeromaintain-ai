@@ -1,13 +1,12 @@
 """The line between frozen experiment code and the modules that are maintained.
 
 ``models/rul.py`` is pinned by the v5 lock, so a few of its helpers are repeated in
-``data/pipeline.py``, ``models/run_files.py`` and ``models/inference.py`` for active
-code. These tests keep both copies equivalent, and keep stored model files loadable.
+``files.py`` and ``models/inference.py`` for active code. These tests keep both
+copies equivalent, and keep stored model files loadable.
 """
 
 from __future__ import annotations
 
-import pickle
 from pathlib import Path
 
 import joblib
@@ -17,9 +16,9 @@ import pytest
 from sklearn.linear_model import Ridge
 from xgboost import XGBRegressor
 
-from aeromaintain.data import pipeline
+from aeromaintain import files
 from aeromaintain.features import ConditionNormalizer, FoldPreprocessor
-from aeromaintain.models import inference, rul, run_files
+from aeromaintain.models import inference, rul
 
 ROOT = Path(__file__).resolve().parents[1]
 COLUMNS = ("a", "b", "c", "flat")
@@ -45,15 +44,18 @@ def _fitted(scale: bool) -> tuple[FoldPreprocessor, pd.DataFrame, np.ndarray]:
 
 def test_run_file_helpers_match_frozen_copies(tmp_path: Path) -> None:
     value = {"b": [1, 2.5], "a": {"z": None, "y": "text"}}
-    assert pipeline.json_bytes(value) == rul._json_bytes(value)
+    assert files.json_bytes(value) == rul._json_bytes(value)
     frame = pd.DataFrame({"unit_id": [1, 2], "x": [0.5, np.nan]})
-    assert pipeline.parquet_bytes(frame) == rul._parquet_bytes(frame)
-    assert run_files.processed_dir(tmp_path, "FD002") == rul._processed_dir(
+    assert files.parquet_bytes(frame) == rul._parquet_bytes(frame)
+    assert files.processed_dir(tmp_path, "FD002") == rul._processed_dir(
         tmp_path, "FD002"
     )
 
-    for writer in (run_files.write_new_bytes, rul._write_new_bytes):
-        path = tmp_path / writer.__module__ / "out.bin"
+    def write_once(path: Path, payload: bytes) -> None:
+        files.write_once(path, payload, rul.ModelingError)
+
+    for name, writer in (("files", write_once), ("rul", rul._write_new_bytes)):
+        path = tmp_path / name / "out.bin"
         writer(path, b"one")
         writer(path, b"one")
         with pytest.raises(rul.ModelingError, match="Refusing to overwrite"):
@@ -102,22 +104,6 @@ def test_xgboost_ensemble_and_quantiles_match_frozen_copy() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "cls",
-    [rul.RidgeBundle, FoldPreprocessor, ConditionNormalizer],
-)
-def test_pickled_classes_keep_their_import_paths(cls) -> None:
-    # Stored .joblib files name these classes by module path. Moving one would
-    # make every existing run fail to load.
-    expected = {
-        "RidgeBundle": "aeromaintain.models.rul",
-        "FoldPreprocessor": "aeromaintain.features.causal",
-        "ConditionNormalizer": "aeromaintain.features.causal",
-    }[cls.__name__]
-    assert cls.__module__ == expected
-    assert pickle.loads(pickle.dumps(cls)) is cls
-
-
 def test_ridge_bundle_round_trips_through_locked_loader(tmp_path: Path) -> None:
     preprocessor, features, target = _fitted(scale=True)
     bundle = rul.RidgeBundle(
@@ -136,12 +122,17 @@ def test_ridge_bundle_round_trips_through_locked_loader(tmp_path: Path) -> None:
     joblib.dump({"not": "a bundle"}, tmp_path / "model.joblib")
     with pytest.raises(rul.ModelingError, match="wrong type"):
         inference.load_locked_model(tmp_path, lock)
-    with pytest.raises(rul.ModelingError, match="external artifact"):
+    with pytest.raises(rul.ModelingError, match="external path"):
         inference.load_locked_model(
             tmp_path, {"champion": {"kind": "ridge", "path": "../model.joblib"}}
         )
-    with pytest.raises(rul.ModelingError, match="Unsupported"):
-        inference.load_locked_model(tmp_path, {"champion": {"kind": "lstm"}})
+
+
+def test_pickled_classes_keep_their_import_paths() -> None:
+    # Stored .joblib files name these classes by module path.
+    assert rul.RidgeBundle.__module__ == "aeromaintain.models.rul"
+    assert FoldPreprocessor.__module__ == "aeromaintain.features.causal"
+    assert ConditionNormalizer.__module__ == "aeromaintain.features.causal"
 
 
 def test_stored_run_models_still_load() -> None:

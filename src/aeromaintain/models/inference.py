@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 from xgboost import XGBRegressor
 
+from aeromaintain.artifacts import ArtifactValidationError, resolve_within
 from aeromaintain.evaluation.protocol import apply_mondrian_cqr, apply_mondrian_interval
 from aeromaintain.features import (
     ConditionNormalizer,
@@ -30,11 +31,10 @@ from aeromaintain.models.rul import ModelingError, RidgeBundle
 
 
 def resolve_locked_artifact(run_dir: Path, relative_path: str) -> Path:
-    path = (run_dir / relative_path).resolve()
     try:
-        path.relative_to(run_dir.resolve())
-    except ValueError as exc:
-        raise ModelingError("Model lock references an external artifact") from exc
+        path = resolve_within(run_dir, relative_path, "Model lock")
+    except ArtifactValidationError as exc:
+        raise ModelingError(str(exc)) from exc
     if not path.is_file():
         raise ModelingError(f"Locked artifact is missing: {relative_path}")
     return path

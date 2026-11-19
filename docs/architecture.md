@@ -1,32 +1,13 @@
 # Architecture
 
-## Evaluation flow
-
-```mermaid
-flowchart LR
-    A["Checksum-checked NASA archive"] --> B["Prepare and validate"]
-    B --> C["Development-only selection on test-like rows"]
-    C --> D["Cross-fit interval, risk threshold, and model lock"]
-    D --> E["Locked official evaluation"]
-    E --> F["Hashed report and two-page review app"]
-    E --> G["Row-free demo bundle"]
-```
-
 ## Frozen and maintained code
 
-Some modules ran published experiments and are pinned by SHA-256 in
-`docs/ncmapss_locks/final_v5.json` (and, for older versions, in
-`docs/protocol_v4_evidence.json`). They are never edited, and
-`tests/test_protocol_v5.py` fails if one changes. New training behavior needs a new
-protocol and evidence; defects in pinned code are corrected outside it, as with
-`evaluation/bootstrap.py` and the v5 bootstrap erratum.
-
-The `v1.0.0` tag is also checked against the v5 lock and is the provenance record.
-The working-tree check remains because seed and challenger studies reuse the frozen
-training path. If that path ever changes, the tag check must remain and those studies
-must run against the tag. Maintained copies of six small serialization and inference
-helpers are checked against their frozen counterparts in `tests/test_model_boundary.py`.
-Stored model classes keep their original module paths.
+Modules that ran published experiments are pinned by SHA-256 in
+`docs/ncmapss_locks/final_v5.json` and never edited; `tests/test_protocol_v5.py` fails
+if one changes, and also checks the lock against the `v1.0.0` tag. Defects in pinned code
+are corrected outside it, as with `evaluation/bootstrap.py` and the v5 bootstrap erratum.
+A few small serialization and inference helpers are copied into maintained modules, and
+`tests/test_model_boundary.py` keeps the copies equivalent.
 
 | Frozen (lock-pinned) | Role |
 |---|---|
@@ -36,41 +17,27 @@ Stored model classes keep their original module paths.
 | `evaluation/ledger.py` | Single-open holdout ledger |
 | `data/ncmapss.py` | N-CMAPSS HDF5 reader |
 
-Maintained modules can change freely, as long as runs that already exist keep
-loading:
+Everything else is maintained and can change as long as existing runs keep loading.
+`.joblib` files store `models.rul.RidgeBundle`, `features.causal.FoldPreprocessor` and
+`ConditionNormalizer` by module path, so those classes do not move, and the frozen
+modules import `sha256_file` from `data.pipeline`, which keeps re-exporting it from
+`files.py`.
 
-- `data/pipeline.py` verifies and prepares FD001 through FD004;
-- `features/causal.py` builds past-and-current-only rolling features, optionally on
-  sensors normalized within each operating condition;
-- `artifacts.py` holds the JSON contracts for run manifests, model locks, evaluation
-  manifests and the public bundle, and loads runs after checking them; it has no UI
-  dependency;
-- `models/evaluation.py` validates a C-MAPSS lock, opens the official labels once and
-  writes the evaluation;
-- `models/inference.py` loads a locked model and predicts with it;
-- `models/run_files.py` writes the write-once files inside a run;
-- `models/robustness.py` and `models/escalation.py` refit locked specifications with
-  the frozen training code, for seed sweeps and the LSTM and CQR challengers;
-- `delivery.py` runs preparation through the report and records completion;
-- `app/main.py` renders the Streamlit pages using the loaders in `artifacts.py`.
+Three things outside the lock are fixed in practice:
 
-Dependencies point one way: `app` and `cli` use `delivery` and `artifacts`;
-`delivery` uses `artifacts` and the `models` package API; nothing outside `app`
-imports `app`.
-
-## Trust boundaries
-
-Selection uses development engines only. Calibration and the final fit use all
-training engines after selection, with locked settings. Official test labels are
-opened only after `model_lock.json` and every referenced file pass hash validation.
-For a clean holdout, `runs/holdout_ledger.json` also refuses any second model lock.
-The public review table deliberately excludes `rul_true`, and the demo bundle holds no
-NASA rows.
+- `configs/project.yaml`: its SHA-256 is recorded in the v2 model locks and in every
+  prepared C-MAPSS data manifest, which the v2 and v3 locks hash. Editing it, even to
+  drop the keys no code reads, stops those runs from verifying.
+  `tests/test_protocol_v3.py` pins its hash.
+- The bytes written by `prepare`, `evaluate` and the reports: locks and manifests hold
+  their hashes, so a format change breaks existing runs.
+- `files.py` holds hashing and write-once helpers with no modeling imports, so the
+  review app and the hosted demo do not load scikit-learn or SciPy.
 
 ## What "opened once" does and does not prove
 
 The tooling refuses an accidental second opening. It cannot prove that a test set was
-opened only once; that rests on the author's word, backed by the public record below.
+opened only once; that rests on the author's word, backed by the public record.
 
 What the code enforces:
 
@@ -81,48 +48,33 @@ What the code enforces:
 What it does not enforce:
 
 - **The lock was public before opening.** The code checks local `HEAD`, not that the
-  commit was pushed. The order of events is attested by the author and by GitHub's
-  push record, not by the tool.
+  commit was pushed.
 - **The ledger survives.** `runs/` is not committed, so deleting the ledger file
-  re-arms a holdout, and nothing stops a notebook from reading the label files
-  directly.
+  re-arms a holdout, and nothing stops a notebook from reading the label files directly.
 - **Commit hashes are stable.** History was rewritten twice after the v5 test (see
   [results v5](results_v5.md)), so commit hashes recorded in locks no longer exist.
-  Locks rely on file hashes, which did not change. The `v1.0.0` tag holds the exact
-  files the v5 lock names, and `tests/test_protocol_v5.py` checks the lock against
-  that tag as well as against the working tree. One file,
-  `protocol_v5_development.json`, is stored at the tag with LF line endings while the
-  lock hashed its CRLF bytes; the test checks that only line endings differ (fixed in
-  commit `ab390b5`).
+  Locks rely on file hashes, which did not change, and the `v1.0.0` tag holds the exact
+  files the v5 lock names. One file, `protocol_v5_development.json`, is stored at the tag
+  with LF line endings while the lock hashed its CRLF bytes; the test checks that only
+  line endings differ.
 
-For any future holdout, anchor the lock outside this repository before opening: push
-a signed tag and record its hash with a third party (for example OpenTimestamps or a
-release on another host), and never rewrite history after that.
+For any future holdout, anchor the lock outside this repository before opening (a signed
+tag recorded with a third party) and never rewrite history after that.
 
-## What artefact verification guarantees
+## Run verification
 
-`artifacts.load_verified_run` and `load_public_bundle` check, before returning:
+`artifacts.verify_lock` is the one check of a run's hash chain: the run manifest pins
+the model lock, and the lock pins the prepared data, `configs/project.yaml` and every
+model file. Official evaluation, seed sweeps, challenger studies and the review app all
+start from it. `load_verified_run` adds the evaluation results, and `load_public_bundle`
+checks the demo bundle. Each JSON file is checked against its schema, the artefact maps
+must list every file the run needs, every listed path must stay inside its directory
+with its listed SHA-256, and the public bundle may hold only the review columns and no
+`rul_true` or `sensor_history` key.
 
-1. each JSON file against its schema: hashes are 64 lowercase hex characters,
-   artefact maps are objects, statuses and lock schema versions (2 and 3) are known,
-   and a `pipeline_complete` manifest has a pipeline record;
-2. that each artefact map lists every file the run needs: the model
-   lock lists `explanation.json` and every model, preprocessor, normalizer and
-   quantile file its champion and calibration name; the pipeline record lists both
-   reports and the evaluation manifest; the public bundle lists exactly `run.json`
-   and `risk_ranking.csv`;
-3. that every listed path stays inside its run or bundle directory and still has
-   its listed SHA-256;
-4. that the public ranking has exactly the review columns with numeric values and
-   known risk bands, and that no key named `rul_true` or `sensor_history` appears
-   anywhere in `run.json`.
-
-Run files written by earlier versions carry extra fields, so run-level schemas accept
-unknown fields. The public bundle has a single writer, so its files reject them.
-
-Verification shows that files are unchanged since they were listed. It does not
-make a `.joblib` file safe to load: a run directory from someone else can list a
-malicious pickle with a correct hash. Load only runs this project produced.
+This shows that files are unchanged since they were listed. It does not make a `.joblib`
+file safe to load: a run directory from someone else can list a malicious pickle with a
+correct hash. Load only runs this project produced.
 
 ## Run states and resuming
 
@@ -134,40 +86,11 @@ malicious pickle with a correct hash. Load only runs this project produced.
 
 `aeromaintain finish --run-id ID` moves a run forward from wherever it stopped:
 
-- it evaluates only when `official_test/` is empty, so a recorded evaluation is
-  reused and labels are not read twice;
-- if result files exist without an evaluation manifest, it stops: the labels may
-  already have been read, and that needs a person to look;
-- reports are deterministic; one left by an interrupted call is accepted if its
-  bytes match, and a different one is refused, never overwritten;
-- the manifest is replaced last and atomically, so a run never reads as complete
-  before its reports exist;
-- on a complete run it verifies everything and changes nothing;
-- an OS file lock under `runs/` refuses a second concurrent `finish` or
-  `pipeline` for the same run; the OS releases it if the process dies.
+- it evaluates only when `official_test/` is empty, so labels are not read twice;
+- if result files exist without an evaluation manifest, it stops for a person to look;
+- a report left by an interrupted call is accepted only if its bytes match;
+- the manifest is replaced last and atomically, so a run never reads as complete early;
+- an OS file lock under `runs/` refuses a second concurrent `finish` or `pipeline`.
 
-Each file is replaced atomically, but the set of files is not a transaction and none
-of this protects against power loss during a write. The next `finish` verifies what
-it finds instead of trusting it.
-
-## Compatibility
-
-- `.joblib` files store `aeromaintain.models.rul.RidgeBundle`,
-  `aeromaintain.features.causal.FoldPreprocessor` and `ConditionNormalizer` by
-  module path; those classes do not move.
-- Reports regenerated from the stored C-MAPSS runs are byte-identical to the stored
-  `report.json` and `report.html`, so `finish` accepts them.
-
-## Checking a run or a change
-
-```bash
-aeromaintain finish --run-id fd001-demo        # resumes, or verifies a finished run
-pytest tests/test_protocol_v5.py -k lock       # frozen files still match the v5 lock
-pytest --cov=src/aeromaintain
-```
-
-On Windows, if pytest cannot use the system temporary directory, pass a fresh
-`--basetemp` inside the repository (for example `.local/pytest`).
-
-`runtime.py` records the Python, platform, installed distributions, and
-tested-constraints hash for new runs.
+Each file is replaced atomically, but the set of files is not a transaction; the next
+`finish` verifies what it finds instead of trusting it.

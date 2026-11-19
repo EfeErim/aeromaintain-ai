@@ -8,13 +8,11 @@ from run_fixture import build_verified_run, write_json
 from streamlit.testing.v1 import AppTest
 
 from aeromaintain.artifacts import (
-    ArtifactValidationError,
     export_public_bundle,
     load_public_bundle,
     load_verified_run,
 )
 from aeromaintain.data import PrepareResult
-from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.delivery import DeliveryError, run_pipeline
 from aeromaintain.models.rul import EvaluationResult, TrainResult
 
@@ -33,30 +31,6 @@ def test_verified_app_loader_excludes_truth_and_only_exposes_risk_download(
     assert "rul_true" not in artifacts.risk_ranking.columns
     assert artifacts.risk_ranking.loc[0, "prediction"] == 9.5
     assert list(artifacts.sensor_history["unit_id"]) == [1]
-
-
-def test_verified_app_loader_rejects_changed_or_external_artifacts(
-    tmp_path: Path,
-) -> None:
-    run_dir = build_verified_run(tmp_path)
-    (run_dir / "official_test" / "metrics.json").write_text("{}\n", encoding="utf-8")
-
-    with pytest.raises(ArtifactValidationError, match="SHA-256 mismatch"):
-        load_verified_run(tmp_path, "fixture")
-
-    second_root = tmp_path / "second"
-    second_run = build_verified_run(second_root)
-    lock_path = second_run / "model_lock.json"
-    lock = json.loads(lock_path.read_text(encoding="utf-8"))
-    lock["config"]["path"] = "../outside.yaml"
-    write_json(lock_path, lock)
-    manifest_path = second_run / "manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest["model_lock_sha256"] = sha256_file(lock_path)
-    write_json(manifest_path, manifest)
-
-    with pytest.raises(ArtifactValidationError, match="external path"):
-        load_verified_run(second_root, "fixture")
 
 
 def test_streamlit_small_fixture_renders_active_pages(

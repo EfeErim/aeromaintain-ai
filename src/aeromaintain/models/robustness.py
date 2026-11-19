@@ -10,13 +10,13 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from aeromaintain.data.pipeline import sha256_file
 from aeromaintain.evaluation import alert_rule_metrics, prediction_metrics
 from aeromaintain.evaluation.protocol import (
     apply_mondrian_cqr,
     apply_mondrian_interval,
 )
 from aeromaintain.features import build_causal_features, build_condition_features
+from aeromaintain.files import processed_dir, sha256_file
 from aeromaintain.models.evaluation import validate_lock
 from aeromaintain.models.inference import predict_model, predict_quantiles
 
@@ -33,7 +33,6 @@ from aeromaintain.models.rul import (
     fit_quantile_fixed,
     partition_features,
 )
-from aeromaintain.models.run_files import processed_dir
 
 SEED_METRICS = (
     "mae",
@@ -50,7 +49,8 @@ SEED_METRICS = (
 )
 
 
-def _config_from_lock(lock: dict[str, Any]) -> ModelingConfig:
+def config_from_lock(lock: dict[str, Any]) -> ModelingConfig:
+    """Rebuild the modeling settings a lock recorded; unknown keys are ignored."""
     known = {field.name for field in fields(ModelingConfig)}
     values = {
         name: tuple(value) if isinstance(value, list) else value
@@ -164,7 +164,7 @@ def run_seed_sweep(
             "Seed sweeps score test labels, so they run only on a subset whose "
             "labels were already seen"
         )
-    config = _config_from_lock(lock)
+    config = config_from_lock(lock)
     decision = lock["champion_rule_evidence"]
     spec = decision[decision["champion"]]["spec"]
 

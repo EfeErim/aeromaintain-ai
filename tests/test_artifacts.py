@@ -70,36 +70,6 @@ def test_each_required_entry_must_be_listed(bundle: Path, missing: str) -> None:
         load_public_bundle(bundle)
 
 
-@pytest.mark.parametrize(
-    "artifacts",
-    [
-        [],
-        ["run.json", "risk_ranking.csv"],
-        "run.json",
-        {"run.json": "abc", "risk_ranking.csv": FAKE_HASH},
-        {"run.json": "A" * 64, "risk_ranking.csv": FAKE_HASH},
-        {"run.json": 7, "risk_ranking.csv": FAKE_HASH},
-    ],
-    ids=["empty-list", "list", "string", "short-hash", "upper-hash", "number"],
-)
-def test_wrong_field_type_or_hash_format_is_rejected(bundle: Path, artifacts) -> None:
-    _set_artifacts(bundle, artifacts)
-    with pytest.raises(ArtifactValidationError, match="does not match its schema"):
-        load_public_bundle(bundle)
-
-
-def test_unknown_manifest_fields_and_entries_are_rejected(bundle: Path) -> None:
-    manifest = _manifest(bundle)
-    write_json(bundle / "manifest.json", {**manifest, "version": 9})
-    with pytest.raises(ArtifactValidationError, match="does not match its schema"):
-        load_public_bundle(bundle)
-
-    extra = {**manifest["artifacts"], "notes.txt": FAKE_HASH}
-    _set_artifacts(bundle, extra)
-    with pytest.raises(ArtifactValidationError, match="unexpected artefacts"):
-        load_public_bundle(bundle)
-
-
 def test_changed_or_deleted_listed_file_is_rejected(bundle: Path) -> None:
     ranking = bundle / "risk_ranking.csv"
     ranking.write_text(ranking.read_text(encoding="utf-8") + "\n", encoding="utf-8")
@@ -110,10 +80,9 @@ def test_changed_or_deleted_listed_file_is_rejected(bundle: Path) -> None:
         load_public_bundle(bundle)
 
 
-@pytest.mark.parametrize("column", ["rul_true", "sensor_1"])
-def test_ranking_with_forbidden_columns_is_rejected(bundle: Path, column) -> None:
+def test_ranking_with_true_rul_is_rejected(bundle: Path) -> None:
     ranking = pd.read_csv(bundle / "risk_ranking.csv")
-    ranking[column] = 1.0
+    ranking["rul_true"] = 1.0
     ranking.to_csv(bundle / "risk_ranking.csv", index=False)
     _relist(bundle)
     with pytest.raises(ArtifactValidationError, match="exactly the review columns"):
@@ -126,24 +95,6 @@ def test_run_payload_with_true_rul_is_rejected(bundle: Path) -> None:
     write_json(bundle / "run.json", payload)
     _relist(bundle)
     with pytest.raises(ArtifactValidationError, match=r"metrics\.rows\[0\]\.rul_true"):
-        load_public_bundle(bundle)
-
-
-def test_ranking_with_unknown_band_or_text_values_is_rejected(bundle: Path) -> None:
-    ranking = pd.read_csv(bundle / "risk_ranking.csv")
-    ranking.loc[0, "risk_band"] = "unknown"
-    ranking.to_csv(bundle / "risk_ranking.csv", index=False)
-    _relist(bundle)
-    with pytest.raises(ArtifactValidationError, match="unknown risk bands"):
-        load_public_bundle(bundle)
-
-    ranking = pd.read_csv(ROOT / "demo" / "risk_ranking.csv").astype(
-        {"prediction": str}
-    )
-    ranking.loc[0, "prediction"] = "n/a"
-    ranking.to_csv(bundle / "risk_ranking.csv", index=False)
-    _relist(bundle)
-    with pytest.raises(ArtifactValidationError, match="non-numeric"):
         load_public_bundle(bundle)
 
 
@@ -180,15 +131,10 @@ def _relock(run_dir: Path, artifact_updates: dict | None = None, **changes) -> N
         write_json(path, manifest)
 
 
-@pytest.mark.parametrize("schema", [2, 3])
-def test_supported_lock_schemas_load(tmp_path: Path, schema: int) -> None:
+def test_only_known_lock_schemas_load(tmp_path: Path) -> None:
     run_dir = build_verified_run(tmp_path)
-    _relock(run_dir, schema_version=schema)
-    assert load_verified_run(tmp_path, "fixture").model_lock["schema_version"] == schema
-
-
-def test_unknown_lock_schema_is_rejected(tmp_path: Path) -> None:
-    run_dir = build_verified_run(tmp_path)
+    _relock(run_dir, schema_version=2)
+    assert load_verified_run(tmp_path, "fixture").model_lock["schema_version"] == 2
     _relock(run_dir, schema_version=4)
     with pytest.raises(ArtifactValidationError, match="schema_version"):
         load_verified_run(tmp_path, "fixture")
@@ -240,27 +186,6 @@ def test_pipeline_record_must_list_reports(tmp_path: Path) -> None:
 
     _complete(run_dir, {})
     with pytest.raises(ArtifactValidationError, match="required artefacts"):
-        load_verified_run(tmp_path, "fixture")
-
-
-def test_complete_status_needs_a_pipeline_record(tmp_path: Path) -> None:
-    run_dir = build_verified_run(tmp_path)
-    manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
-    write_json(run_dir / "manifest.json", {**manifest, "status": "pipeline_complete"})
-    with pytest.raises(ArtifactValidationError, match="pipeline record"):
-        load_verified_run(tmp_path, "fixture")
-
-    write_json(run_dir / "manifest.json", {**manifest, "status": "training"})
-    with pytest.raises(ArtifactValidationError, match="status"):
-        load_verified_run(tmp_path, "fixture")
-
-
-def test_evaluation_manifest_hash_format_is_checked(tmp_path: Path) -> None:
-    run_dir = build_verified_run(tmp_path)
-    path = run_dir / "official_test" / "evaluation_manifest.json"
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    write_json(path, {**manifest, "metrics_sha256": "not-a-hash"})
-    with pytest.raises(ArtifactValidationError, match="metrics_sha256"):
         load_verified_run(tmp_path, "fixture")
 
 

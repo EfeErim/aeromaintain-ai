@@ -4,6 +4,8 @@ This replaces ``models.v5.engine_bootstrap``, which stays frozen under the v5 lo
 resamples only two engines (see ``docs/results_v5.md``, erratum).
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable, Mapping
 
 import numpy as np

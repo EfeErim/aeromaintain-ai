@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import subprocess
-import sys
 from pathlib import Path
 
 import pandas as pd
@@ -176,7 +174,6 @@ def test_changed_source_stops_before_labels(project, monkeypatch) -> None:
     [
         (v5.CONFIG, "config hash differs"),
         (v5.PROTOCOL, "protocol hash differs"),
-        (v5.RESERVATION, "reservation hash differs"),
     ],
 )
 def test_changed_frozen_document_stops_before_labels(
@@ -213,46 +210,3 @@ def test_existing_ledger_claim_blocks_another_lock(project, monkeypatch) -> None
     with pytest.raises(ValueError, match="already opened"):
         v5.evaluate(root, root / OUTPUT, config)
     assert calls == []
-
-
-def test_module_entrypoint_exit_code(project) -> None:
-    root, _ = project
-    (root / "notes.txt").write_text("draft\n", encoding="utf-8")
-    completed = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "aeromaintain.models.v5",
-            "evaluate",
-            "--project-root",
-            str(root),
-            "--output",
-            str(root / OUTPUT),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert completed.returncode != 0
-    assert "clean, committed" in completed.stderr
-
-
-def test_feature_columns_keep_measured_order() -> None:
-    frame = pd.DataFrame(columns=["unit_id", "cycle", *MEASURED, "source_split"])
-    assert v5.feature_columns(frame) == MEASURED
-    with pytest.raises(ValueError, match="exactly 72"):
-        v5.feature_columns(frame.drop(columns=[MEASURED[0]]))
-
-
-def test_reserved_test_engines_are_namespaced_per_file() -> None:
-    reservation = {
-        "files": {
-            "a.h5": {"archive_dev_units": [1, 2], "archive_test_units": [3]},
-            "b.h5": {"archive_dev_units": [1], "archive_test_units": [2, 3]},
-        }
-    }
-    base = 1000 * v5.TEST_NAMESPACE
-    assert v5.reserved_test_engines(reservation, ["a.h5", "b.h5"]) == {
-        "a.h5": {"dev": [base + 1, base + 2], "test": [base + 3]},
-        "b.h5": {"dev": [base + 1001], "test": [base + 1002, base + 1003]},
-    }

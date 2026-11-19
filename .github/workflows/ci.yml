@@ -2,8 +2,7 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
 
 permissions:
@@ -30,23 +29,11 @@ jobs:
             pyproject.toml
             constraints/python311-tested.txt
 
-      - name: Install from tested constraints
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
-
-      - name: Ruff lint
-        run: ruff check .
-
-      - name: Ruff format
-        run: ruff format --check .
-
-      - name: Tests and coverage
-        run: pytest --cov=src/aeromaintain --cov-report=term-missing
-
+      - run: python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
+      - run: ruff check . && ruff format --check .
+      - run: pytest --cov=src/aeromaintain --cov-report=term-missing
       - name: Synthetic end-to-end run
-        run: |
-          aeromaintain pipeline --synthetic --run-id ci-synthetic --project-root "$RUNNER_TEMP/synthetic"
+        run: aeromaintain pipeline --synthetic --run-id ci-synthetic --project-root "$RUNNER_TEMP/synthetic"
 
   hosted-demo:
     # The hosted demo installs only requirements.txt; render it from exactly that.
@@ -61,11 +48,8 @@ jobs:
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
 
-      - name: Install the demo requirements only
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
-
-      - name: Render the demo
-        run: python scripts/check_demo.py
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/check_demo.py

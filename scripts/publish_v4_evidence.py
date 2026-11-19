@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from aeromaintain.data.pipeline import sha256_file
+from aeromaintain.files import sha256_file
 from aeromaintain.models.v4 import write_json
 
 
@@ -94,7 +94,8 @@ def check_claims(evidence):
             raise ValueError("Results text assumes Mondrian was observed to be better")
 
 
-def publish(root=Path(".")):
+def build_evidence(root):
+    """Collect the v4 evidence, its reproduction check and current hashes."""
     evidence = read(root / "runs/v4/evidence.json")
     check_claims(evidence)
     evidence["reproduction"] = compare_reproduction(
@@ -103,7 +104,6 @@ def publish(root=Path(".")):
     evidence["reference_nasa_concentration"] = {
         dataset: nasa_concentration(root, dataset) for dataset in evidence["selection"]
     }
-    concentration = evidence["reference_nasa_concentration"]
     reproduction = evidence["reproduction"]
     if (
         reproduction["max_absolute_difference"] != 0
@@ -148,7 +148,11 @@ def publish(root=Path(".")):
             )
         ]
     }
-    write_json(root / "docs/protocol_v4_evidence.json", evidence)
+    return evidence
+
+
+def _cmapss_section(evidence):
+    concentration = evidence["reference_nasa_concentration"]
     lines = [
         "# Protocol v4 results",
         "",
@@ -218,7 +222,11 @@ def publish(root=Path(".")):
             f"{ci['critical_miss_rate'][0]:+.1%} to {ci['critical_miss_rate'][1]:+.1%}"
         )
         lines.append(f"| {dataset} | " + " | ".join(values) + " |")
-    lines += [
+    return lines
+
+
+def _interval_section(evidence):
+    lines = [
         "",
         "## Intervals and persistent alarms",
         "",
@@ -281,7 +289,11 @@ def publish(root=Path(".")):
                     f"| {dataset} | {method} | {label} | {group['engines']} | "
                     f"{group['coverage']:.1%} | {group['mean_width']:.1f} |"
                 )
-    lines += [
+    return lines
+
+
+def _ncmapss_section(evidence):
+    lines = [
         "",
         "The JSON reports lower/upper misses, coverage, width and interval score "
         "for every true-RUL band and operating condition. It flags fewer than 20 "
@@ -345,6 +357,13 @@ def publish(root=Path(".")):
         "discovery-and-systems-health/pcoe/pcoe-data-set-repository/) · "
         "[Data paper](https://doi.org/10.3390/data6010005).",
         "",
+    ]
+    return lines
+
+
+def _provenance_section(evidence):
+    reproduction = evidence["reproduction"]
+    return [
         "## Reproduction and provenance",
         "",
         "Use Python 3.11 and the repository environment. Raw data, models and "
@@ -394,7 +413,21 @@ def publish(root=Path(".")):
         "The historical amendment-1 assertion about DS08 was corrected by amendment 2.",
         "",
     ]
-    (root / "docs/results_v4.md").write_text("\n".join(lines), encoding="utf-8")
+
+
+def publish(root=Path(".")):
+    evidence = build_evidence(root)
+    write_json(root / "docs/protocol_v4_evidence.json", evidence)
+    lines = [
+        *_cmapss_section(evidence),
+        *_interval_section(evidence),
+        *_ncmapss_section(evidence),
+        *_provenance_section(evidence),
+    ]
+    # LF endings on every platform, as the file is committed.
+    (root / "docs/results_v4.md").write_text(
+        "\n".join(lines), encoding="utf-8", newline="\n"
+    )
 
 
 if __name__ == "__main__":

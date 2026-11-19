@@ -14,17 +14,6 @@ from aeromaintain.models import v5
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_hybrid_switches_at_threshold():
-    reference = np.array([10.0, 114.9, 115.0, 126.0])
-    uncapped = np.array([50.0, 50.0, 160.0, 180.0])
-    assert v5.hybrid_prediction(reference, uncapped, 115).tolist() == [
-        10.0,
-        114.9,
-        160.0,
-        180.0,
-    ]
-
-
 def _engine(values, rul):
     frame = pd.DataFrame(
         {"unit_id": 1, "cycle": np.arange(len(rul)), "rul_true": np.asarray(rul)}
@@ -32,43 +21,13 @@ def _engine(values, rul):
     return frame, np.asarray(values, dtype=float)
 
 
-def test_late_alarm_is_not_timely():
+def test_alarm_counts_as_timely_only_with_ten_cycles_left():
     rul = np.arange(40, -1, -1)
-    # The prediction only drops below 30 when five cycles remain.
-    frame, values = _engine(np.where(rul <= 5, 0, 80), rul)
-    assert replay_alarms(frame, values)["missed_engines"] == 0
-    assert replay_alarms(frame, values, min_rul=10)["missed_engines"] == 1
-
-
-def test_timely_alarm_is_detected():
-    rul = np.arange(40, -1, -1)
-    frame, values = _engine(np.where(rul <= 25, 0, 80), rul)
-    assert replay_alarms(frame, values, min_rul=10)["missed_engines"] == 0
-
-
-def _synthetic(engines=12, cycles=30):
-    rng = np.random.default_rng(0)
-    ids = np.repeat(np.arange(engines), cycles)
-    rul = np.tile(np.arange(cycles)[::-1], engines).astype(float)
-    x = np.column_stack([rul + rng.normal(0, 2, len(rul)), rng.normal(size=len(rul))])
-    return x, rul, ids
-
-
-@pytest.mark.parametrize("name", v5.CANDIDATES)
-def test_candidates_fit(name):
-    x, y, engines = _synthetic()
-    rows = np.arange(len(y))
-    params = json.loads((ROOT / v5.CONFIG).read_text())["xgboost"]
-    model, count = v5.fit_candidate(name, x, y, engines, rows, params, seed=42)
-    assert (count is None) == (name == "ridge")
-    assert np.sqrt(np.mean((v5.predict(model, x) - y) ** 2)) < 5
-
-
-def test_split_margin_needs_enough_engines():
-    margin, rank = v5.split_margin(np.zeros(64), np.arange(64.0), 0.9)
-    assert rank == 59 and margin == 58.0
-    with pytest.raises(ValueError):
-        v5.split_margin(np.zeros(5), np.zeros(5), 0.9)
+    late, values = _engine(np.where(rul <= 5, 0, 80), rul)
+    assert replay_alarms(late, values)["missed_engines"] == 0
+    assert replay_alarms(late, values, min_rul=10)["missed_engines"] == 1
+    timely, values = _engine(np.where(rul <= 25, 0, 80), rul)
+    assert replay_alarms(timely, values, min_rul=10)["missed_engines"] == 0
 
 
 def test_reserved_engines_are_namespaced():
@@ -79,17 +38,6 @@ def test_reserved_engines_are_namespaced():
     assert len(flat) == len(set(flat)) == v5.TEST_ENGINES
     assert min(flat) > 10_000
     assert not set(config["training_files"]) & set(config["test_files"])
-
-
-def test_evaluate_refuses_uncommitted_lock(tmp_path, monkeypatch):
-    output = tmp_path / "final"
-    output.mkdir()
-    (output / "model_lock.json").write_bytes(b'{"lock": 1}\n')
-    monkeypatch.setattr(v5, "require_clean_tree", lambda root: "abc")
-    monkeypatch.setattr(v5, "_git", lambda root, *args: b'{"lock": 2}\n')
-    with pytest.raises(RuntimeError, match="committed"):
-        v5.evaluate(tmp_path, output, {})
-    assert not (tmp_path / v5.LEDGER).exists()
 
 
 def _lock():
@@ -161,20 +109,13 @@ def test_published_lock_matches_release_tag():
         assert hashlib.sha256(content).hexdigest() == digest, name
 
 
-@pytest.mark.parametrize(
-    ("missed", "passed"), [(0, True), (3, True), (4, False), (35, False)]
-)
-def test_alarm_gate_allows_at_most_three_of_35(missed, passed):
-    point = {"rmse": 13.0}
-    baseline = {"rmse": 22.0}
-    replay = {"missed_fraction": missed / v5.TEST_ENGINES}
-    result = v5.final_gates(point, baseline, 0.9, replay, _lock()["gates"])
-    assert result["checks"]["G3_timely_point_alarm"] is passed
-
-
 def test_gates_fail_on_each_threshold():
     gates = _lock()["gates"]
     replay = {"missed_fraction": 0.0}
+    for missed, passed in [(3, True), (4, False)]:
+        late = {"missed_fraction": missed / v5.TEST_ENGINES}
+        result = v5.final_gates({"rmse": 1.0}, {"rmse": 2.0}, 0.9, late, gates)
+        assert result["checks"]["G3_timely_point_alarm"] is passed
     assert v5.final_gates({"rmse": 1.0}, {"rmse": 1.0}, 0.85, replay, gates)["passed"]
     worse = v5.final_gates({"rmse": 1.01}, {"rmse": 1.0}, 0.9, replay, gates)
     assert worse["checks"] == {

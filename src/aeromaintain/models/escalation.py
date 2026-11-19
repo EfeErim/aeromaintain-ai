@@ -19,8 +19,9 @@ from aeromaintain.evaluation.protocol import (
 )
 from aeromaintain.features import build_causal_features
 from aeromaintain.features.causal import SENSOR_COLUMNS, SETTING_COLUMNS
+from aeromaintain.files import processed_dir
 from aeromaintain.models.evaluation import validate_lock
-from aeromaintain.models.robustness import _config_from_lock
+from aeromaintain.models.robustness import config_from_lock
 from aeromaintain.models.rul import (
     ModelingConfig,
     ModelingError,
@@ -30,7 +31,6 @@ from aeromaintain.models.rul import (
     group_fold_plan,
     inner_engine_split,
 )
-from aeromaintain.models.run_files import processed_dir
 
 SEQUENCE_LENGTH = 30
 SEQUENCE_COLUMNS = (*SETTING_COLUMNS, *SENSOR_COLUMNS)
@@ -45,6 +45,7 @@ LSTM_BATCH_SIZE = 256
 LSTM_LEARNING_RATE = 1e-3
 CQR_MIN_COVERAGE = 0.89
 CQR_MIN_WIDTH_REDUCTION = 0.05
+LSTM_MIN_IMPROVEMENT = 0.05
 
 
 def build_sequences(
@@ -182,7 +183,7 @@ def _load_base(
     frame = pd.read_parquet(
         processed_dir(root, lock["dataset"]) / "train.parquet"
     ).reset_index(drop=True)
-    return run_dir, lock, _config_from_lock(lock), frame
+    return run_dir, lock, config_from_lock(lock), frame
 
 
 def run_lstm_study(
@@ -276,7 +277,9 @@ def run_lstm_study(
             "LSTM replaces XGBoost only with at least 5% lower median RMSE and a "
             "median NASA score that is not worse"
         ),
-        "lstm_replaces_xgboost": bool(improvement >= 0.05 and nasa_not_worse),
+        "lstm_replaces_xgboost": bool(
+            improvement >= LSTM_MIN_IMPROVEMENT and nasa_not_worse
+        ),
     }
 
 

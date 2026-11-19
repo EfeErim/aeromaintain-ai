@@ -1,9 +1,13 @@
-# AeroMaintain AI RUL Model Card
+# Model and data card
 
-## Model summary
+An educational benchmark prototype for RUL prediction on simulated NASA engines. It must
+not be used for dispatch, safety, certification, airworthiness or real maintenance
+approval. Test results are in [results](results.md) (C-MAPSS) and
+[results v5](results_v5.md) (N-CMAPSS).
 
-AeroMaintain AI predicts remaining useful life (RUL) for simulated NASA C-MAPSS
-engines. Protocols v2 and v3 lock one XGBoost specification per dataset, trained with
+## Models
+
+C-MAPSS protocols v2 and v3 lock one XGBoost specification per subset, trained with
 engine-equal sample weights, plus a Mondrian empirical interval and a risk threshold.
 
 | Run | Dataset | Test status | Features | Cap | Trees | Risk threshold |
@@ -11,171 +15,93 @@ engine-equal sample weights, plus a Mondrian empirical interval and a risk thres
 | `fd002-v3-clean` | FD002 | clean | `compact`, condition-normalized | 125 | 166 | `interval_low <= 25` |
 | `fd004-v3-clean` | FD004 | clean | `compact`, condition-normalized | 125 | 321 | `interval_low <= 20` |
 | `fd003-v2-clean` | FD003 | clean | 64 (`compact`) | 130 | 347 | `interval_low <= 25` |
-| `fd001-v2` | FD001 | previously seen | 403 (`all`) | 125 | 123 | `interval_low <= 20` |
+| `fd001-v2`, `fd001-v3` | FD001 | previously seen | 403 (`all`) | 125 | 123 | `interval_low <= 20` |
 | `fd003-v3` | FD003 | previously seen | 403 (`all`) | 125 | 184, five seeds | `interval_low <= 25` |
-| `fd001-v3` | FD001 | previously seen | 403 (`all`) | 125 | 123 | `interval_low <= 20` |
 
-### Final N-CMAPSS model (protocol v5)
+Features use only current and earlier rows: operating settings, current sensors, engine
+age, and 5/10/20-cycle sensor statistics; `compact` keeps current sensors, engine age and
+20-cycle means and slopes. On FD002 and FD004, six operating-condition clusters are fitted
+inside each training partition and sensors are standardized within each condition. The
+hosted demo shows `fd004-v3-clean`.
 
-A separate model was locked for the project's final clean test. It is not the demo
-model, which stays on the v3 C-MAPSS bundle.
+The final N-CMAPSS model (protocol v5) is separate:
 
 | Item | Value |
 |---|---|
 | Data | N-CMAPSS DS02–DS07, 64 simulated engines, all cycles |
-| Features | 72 measured cycle summaries: mean, std, min and max of 14 `X_s` sensors and 4 `W` operating channels |
+| Features | 72 cycle summaries: mean, std, min and max of 14 `X_s` sensors and 4 `W` operating channels |
 | Excluded inputs | Cycle index, unit ID, flight class, `X_v`, `T`, health parameters |
 | Target | Uncapped RUL, engine-equal weights |
-| Selection | XGBoost (v3 settings, 869 trees) over Ridge, by out-of-fold RMSE 12.87 against 15.01 |
-| Interval | Mondrian on out-of-fold residuals; split conformal as secondary |
-| Lock | [`final_v5.json`](ncmapss_locks/final_v5.json), SHA-256 `e058e97837741323782d6ea46c7532df8a5ca3134d3ea3445fc04918cdb71844` |
-| Final test | 35 engines from DS01, DS08a and DS08c: RMSE 13.06 against a 22.70 baseline, Mondrian coverage 92.5%, 3 of 35 engines without a timely alarm |
+| Selection | XGBoost (869 trees) over Ridge, by out-of-fold RMSE 12.87 against 15.01 |
+| Lock | [`final_v5.json`](ncmapss_locks/final_v5.json) |
 
-All three predeclared gates passed; the alarm gate passed at its limit. See
-[`results_v5.md`](results_v5.md).
+## Data
 
-This is an educational benchmark prototype, not an airworthiness,
-maintenance-approval, production-readiness, or real-fleet system.
+**C-MAPSS** (NASA Prognostics Center of Excellence;
+[dataset page](https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data),
+[generation reference](https://ntrs.nasa.gov/citations/20090029214)): simulated
+run-to-failure trajectories, not fleet measurements. FD001 and FD003 run under one
+operating condition, FD002 and FD004 under six; FD003 and FD004 add fan degradation to
+compressor degradation. The archive's size and SHA-256 are in `configs/project.yaml` and
+are checked before extraction. Shapes come from the archive and are enforced by
+`DATASET_SHAPES` in `data/pipeline.py`:
 
-## Intended use
+| Subset | Train engines | Train rows | Test engines | Test rows | Largest test RUL |
+|---|---:|---:|---:|---:|---:|
+| FD001 | 100 | 20,631 | 100 | 13,096 | 145 |
+| FD002 | 260 | 53,759 | 259 | 33,991 | 194 |
+| FD003 | 100 | 24,720 | 100 | 16,596 | 145 |
+| FD004 | 249 | 61,249 | 248 | 41,214 | 195 |
 
-- compare a target mean, Ridge, and a bounded XGBoost search under one test-like
-  protocol;
-- produce a nominal empirical prediction interval and risk band;
-- explain model behavior with SHAP or Ridge coefficients; and
-- review one locked official-test evaluation.
+NASA's page lists FD004 as 248 train and 249 test trajectories, the reverse of the
+archive; the pipeline follows the archive.
 
-It must not be used for dispatch, safety, certification, or real maintenance
-approval.
+**N-CMAPSS** (Arias Chao et al., Data 6(1), 2021): run-to-failure trajectories driven by
+real recorded flight conditions, sampled at 1 Hz, still simulation. Only measured sensors
+`X_s` and operating conditions `W` are inputs; `Y` is the target. Engine IDs are
+namespaced by file, and per-file SHA-256 hashes are in the published locks.
 
-## Data and split
+| Files | Engines | Role |
+|---|---:|---|
+| DS02-006 | 9 | v4 descriptive pilot; v5 training |
+| DS03-012, DS04, DS05, DS06, DS07 | 55 | v4 benchmark; v5 training |
+| DS01-005, DS08a-009, DS08c-008 | 35 | v5 final clean test, opened once |
+| DS08d-010 | – | Excluded; the archive member is truncated |
 
-C-MAPSS is simulated run-to-failure turbofan data. A seed-42 split assigns 80% of
-training engines to development and 20% to calibration, by lifetime quartile: 80/20 on
-FD001 and FD003, 208/52 on FD002, and 199/50 on FD004. Selection uses five engine-grouped
-folds of the development engines only. The final model and the cross-fit interval then
-use all training engines. See [`data_card.md`](data_card.md).
+The 35 final test engines were reserved in
+[`final_holdout_reservation.json`](ncmapss_locks/final_holdout_reservation.json) before
+protocol v5 existed; until the lock was committed only their unit IDs were read.
 
-## Features and selection
+## Splits and targets
 
-Features use only the current and earlier rows: operating settings, current sensors,
-engine age, and 5/10/20-cycle sensor statistics. The `compact` set keeps current
-sensors, engine age, and 20-cycle means and slopes. Fold-local preprocessing and an
-inner engine split for early stopping prevent leakage into scored engines.
+All splits and folds are by whole engine. A seed-42 split by lifetime quartile assigns
+80% of training engines to development and 20% to calibration: 80/20 on FD001 and FD003,
+208/52 on FD002, 199/50 on FD004. Selection uses five engine-grouped folds of the
+development engines; the final model and the cross-fit interval use all training engines.
+Official test labels are stored apart from the test features and read only after
+`model_lock.json` validates.
 
-[Protocol v2](protocol_v2.md) has the complete rule. XGBoost replaced Ridge on both
-datasets, by lowering median development RMSE at least 5% without worsening NASA score.
+Training targets are `min(engine_max_cycle - cycle, 125)`. The cap is a modeling
+assumption, not a physical truth; official metrics use NASA's uncapped labels, so the cap
+costs accuracy on engines with far more life left.
 
-| Development model | Dataset | MAE | RMSE | NASA | Point-rule recall |
-|---|---|---:|---:|---:|---:|
-| Ridge | FD001 | 16.75 | 21.01 | 626 | 0.70 |
-| **XGBoost** | FD001 | 14.40 | **18.57** | 501 | 0.85 |
-| Ridge | FD003 | 17.11 | 21.58 | 702 | 0.70 |
-| **XGBoost** | FD003 | 12.60 | **17.62** | 515 | 0.89 |
+## Limitations
 
-Both miss the development RMSE target of about 16.6.
+- Results do not establish performance on real engines or under real distribution shift.
+- The cap limits predictions to about 127 cycles; above 150 true cycles on FD002 and
+  FD004, RMSE is 54–61 and coverage 25–31% (computed after opening).
+- Test interval coverage on FD002 and FD004 fell short of the nominal 90%; coverage has
+  no finite-sample guarantee and the interval is not a safety guarantee.
+- The 150-cycle development window was chosen after FD001 labels were seen; with no
+  window the champion rule picks Ridge on all four subsets.
+- SHAP values and Ridge coefficients describe the model, not physical causes.
+- Per-file failure modes for DS01 and DS08 were not verified from a primary source, so
+  the v5 test's shift is defined only by file identity.
 
-On FD002 and FD004, [protocol v3](protocol_v3.md) also fits six operating-condition
-clusters inside each training partition and standardizes sensors within each condition.
+## Redistribution
 
-| Development model | Dataset | MAE | RMSE | NASA | Point-rule recall |
-|---|---|---:|---:|---:|---:|
-| Ridge | FD002 | 16.72 | 21.41 | 1,924 | 0.73 |
-| XGBoost, raw features | FD002 | n/a | 21.19 | 2,110 | n/a |
-| **XGBoost, normalized** | FD002 | 14.28 | **18.93** | 1,470 | 0.84 |
-| Ridge | FD004 | 17.93 | 22.62 | 2,386 | 0.68 |
-| XGBoost, raw features | FD004 | n/a | 21.82 | 2,345 | n/a |
-| **XGBoost, normalized** | FD004 | 14.60 | **19.61** | 1,764 | 0.84 |
-
-[Protocol v4](protocol_v4.md) compared these capped models with uncapped alternatives on
-new development partitions. Uncapped models reduced long-RUL error but missed more
-critical cycles than its frozen limit allowed, so the capped specification and the
-weights below are unchanged. See the [v4 results](results_v4.md).
-
-## Locked official-test evaluation: six conditions
-
-FD002 and FD004 are clean single-open tests of protocol v3. Ranges are 95% bootstrap
-intervals for metrics and two-sided Wilson 95% intervals for alert rates.
-
-| Metric | FD002 clean | FD004 clean |
-|---|---:|---:|
-| RMSE | 27.36 (23.77–30.82) | 27.40 (24.53–30.23) |
-| MAE | 18.46 (15.96–21.01) | 19.65 (17.30–21.99) |
-| Signed bias | -8.98 (-12.12 to -5.71) | -9.34 (-12.62 to -6.31) |
-| Motor-normalized NASA score | 10,388 (5,193–16,823) | 5,126 (3,627–6,816) |
-| Interval coverage, nominal 90% | 0.83 (0.78–0.87) | 0.83 (0.78–0.87) |
-| Mean interval width | 55.8 (52.9–58.7) | 58.5 (55.6–61.3) |
-
-| Alert rule | Dataset | Recall | Precision | False-alarm rate |
-|---|---|---:|---:|---:|
-| `prediction <= 30` | FD002 | 0.93 (0.84–0.97) | 0.93 (0.84–0.97) | 0.02 (0.01–0.05) |
-| `interval_low <= 25` (interface) | FD002 | 0.98 (0.91–1.00) | 0.73 (0.63–0.82) | 0.11 (0.07–0.16) |
-| `prediction <= 30` | FD004 | 0.85 (0.73–0.92) | 0.90 (0.79–0.96) | 0.03 (0.01–0.06) |
-| `interval_low <= 20` (interface) | FD004 | 0.96 (0.87–0.99) | 0.76 (0.65–0.85) | 0.08 (0.05–0.13) |
-
-Predictions stop near 127 cycles because targets are capped at 125, while true RUL
-reaches 195. See [the diagnosis](results.md#diagnosis-made-after-opening).
-
-## Locked official-test evaluation: one condition
-
-FD003 is a clean single-open test of the frozen v2 protocol. FD001 labels were seen
-before v2, so its column is not independent evidence. Ranges are 95% bootstrap
-intervals for metrics and two-sided Wilson 95% intervals for alert rates.
-
-| Metric | FD003 clean | FD001 seen |
-|---|---:|---:|
-| RMSE | 15.07 (12.61–17.50) | 15.80 (12.87–18.78) |
-| MAE | 11.23 (9.34–13.28) | 11.15 (9.10–13.43) |
-| Motor-normalized NASA score | 399 (240–620) | 398 (233–625) |
-| Interval coverage, nominal 90% | 0.92 (0.86–0.97) | 0.94 (0.89–0.98) |
-| Mean interval width | 53.3 (49.3–57.3) | 55.4 (51.2–59.4) |
-
-| Alert rule | Dataset | Recall | Precision | False-alarm rate |
-|---|---|---:|---:|---:|
-| `prediction <= 30` | FD003 | 0.80 (0.58–0.92) | 0.94 (0.73–0.99) | 0.01 (0.00–0.07) |
-| `interval_low <= 25` (interface) | FD003 | 1.00 (0.84–1.00) | 0.71 (0.53–0.85) | 0.10 (0.05–0.19) |
-| `prediction <= 30` | FD001 | 0.80 (0.61–0.91) | 1.00 (0.84–1.00) | 0.00 (0.00–0.05) |
-| `interval_low <= 20` (interface) | FD001 | 0.96 (0.80–0.99) | 0.86 (0.69–0.94) | 0.05 (0.02–0.13) |
-
-Across ten seeds of the FD001 settings, RMSE averages 16.03 (SD 0.14); seed 42 is the
-lowest of the ten.
-
-## Explanations and limitations
-
-SHAP values describe model behavior, not physical causality or component diagnosis.
-
-- Results do not establish performance under real distribution shift.
-- The RUL cap limits predictions to about 127 cycles. Above 150 true cycles on FD002
-  and FD004, RMSE is 54–61 and interval coverage 25–31%. These figures were computed
-  after opening and are diagnostic only.
-- Test interval coverage on FD002 and FD004 fell short of its nominal 90%.
-- Critical-engine rates rest on 20–61 engines.
-- On FD001 and FD003, the development RMSE target and interval width target of 45 were
-  both missed.
-- The eligibility window of 150 was chosen after FD001 labels were seen. Without any
-  window, the champion rule picks Ridge on all four datasets.
-- FD002 and FD004 used 4 XGBoost candidates in place of 12 and no CQR trial, under
-  [Amendment 1](protocol_v3.md#amendment-1).
-- Interval coverage comes from cross-fit scores with no formal finite-sample guarantee,
-  and the interval is not a safety guarantee.
-- Band-specific test coverage can be low: 0.76 on FD001's predicted `31-60` band.
-- A predicted-band boundary can make `interval_low` jump, so ranking by it is not
-  strictly monotonic in point RUL.
-
-## Reproducibility and integrity
-
-| Run | Model-lock SHA-256 |
-|---|---|
-| `fd002-v3-clean` | `fa50040abf9731cf3fd4a3b47aeb82222792dfc7304dc137b10166615ba4cb37` |
-| `fd004-v3-clean` | `f296bab85503ef145919402059fc63fc735764f2019b9e24893396bcabca41f7` |
-| `fd001-v3` | `256ea39507936cf250f1acbcde578ad78a8ed68401bdcf345d438f90441cb135` |
-| `fd003-v3` | `60d768b494406f72fc683b00e27494f7f46e950e5ecd5cbb6c987c8d5aea7798` |
-| `fd003-v2-clean` | `bcd2acda16f5a60497725543879d033eca0d83932a7f62525581e44172bfba33` |
-| `fd001-v2` | `9c5af0ded502c396df454f2fbc468d839b5bdd680da8f0abc9a416859c05e5da` |
-| `m4-fd001-seed42-20260729` (v1, Ridge) | `32e5e7a421ad8ccb81fff4e8b8c17957f49fa855954b27e4e4b16219634af829` |
-
-Each v2 and v3 lock records data, split, config, protocol document, feature order, model,
-calibration, and artefact hashes. The evaluator refuses a missing or changed lock, and
-a ledger refuses a second lock on a clean holdout. The app checks the lock, evaluation,
-and report chain before rendering. See [`results.md`](results.md) for v1 and for what
-repeats byte for byte.
+NASA's dataset page displayed `License not specified` when rechecked on 2026-11-04, so no
+source rows from either dataset are committed, attached to releases or used as test
+fixtures. The `demo/` bundle holds aggregate metrics, explanations and per-engine model
+outputs, plus each test engine's observed cycle count; no sensor rows, settings or true
+RUL. The MIT license covers project code and documentation only.

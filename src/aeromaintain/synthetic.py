@@ -23,8 +23,8 @@ import numpy as np
 import yaml
 
 from aeromaintain.data.pipeline import ARCHIVE_NAME, DATASET_SHAPES
+from aeromaintain.files import SYNTHETIC_MARKER as MARKER
 
-MARKER = "SYNTHETIC_DATA.txt"
 DATASET = "FD001"
 # Lighter search settings so the demo finishes in a few minutes on a laptop CPU.
 FAST_MODELING = {
@@ -39,6 +39,9 @@ FAST_MODELING = {
 
 # Operating settings: two small jitters and a constant third setting, as in FD001.
 SETTING_OFFSET = np.array([0.0, 0.0, 100.0])
+SETTING_NOISE = np.array([0.002, 0.0003, 0.0])
+SENSOR_NOISE = 0.5
+ROW_FORMAT = "%d %d " + " ".join(["%.4f"] * 24)
 
 
 class SyntheticProjectError(RuntimeError):
@@ -62,20 +65,18 @@ def _engine_rows(
 ) -> list[str]:
     """Rows for one engine: three settings and 21 sensors drifting with damage."""
     base = 500.0 + 40.0 * np.arange(21) + rng.normal(0, 2.0, 21)
-    noise = np.full(21, 0.5)
-    rows = []
-    for cycle in range(1, observed + 1):
-        damage = (cycle / life) ** 2.5
-        settings = SETTING_OFFSET + rng.normal(0.0, [0.002, 0.0003, 0.0])
-        sensors = base + wear * damage * 10.0 + rng.normal(0.0, noise)
-        values = [unit, cycle, *settings, *sensors]
-        rows.append(
-            " ".join(
-                str(int(value)) if index < 2 else f"{value:.4f}"
-                for index, value in enumerate(values)
-            )
+    # One draw per cycle of three setting and 21 sensor values, in that order.
+    noise = rng.standard_normal((observed, 24))
+    cycles = np.arange(1, observed + 1)
+    damage = (cycles / life) ** 2.5
+    settings = SETTING_OFFSET + SETTING_NOISE * noise[:, :3]
+    sensors = base + wear * damage[:, None] * 10.0 + SENSOR_NOISE * noise[:, 3:]
+    return [
+        ROW_FORMAT % (unit, cycle, *setting, *sensor)
+        for cycle, setting, sensor in zip(
+            cycles.tolist(), settings.tolist(), sensors.tolist(), strict=True
         )
-    return rows
+    ]
 
 
 def synthetic_archive_bytes(seed: int = 7) -> bytes:

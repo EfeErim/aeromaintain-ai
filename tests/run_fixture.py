@@ -2,22 +2,19 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from aeromaintain.data.pipeline import SENSOR_COLUMNS, sha256_file
 from aeromaintain.evaluation import alert_rule_metrics
+from aeromaintain.files import SENSOR_COLUMNS, json_bytes, sha256_file
 
 
 def write_json(path: Path, payload) -> None:
+    """Write or overwrite: the tests also use it to tamper with run files."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    path.write_bytes(json_bytes(payload))
 
 
 def build_verified_run(root: Path, run_id: str = "fixture") -> Path:

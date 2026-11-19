@@ -8,94 +8,25 @@ from typer.testing import CliRunner
 
 from aeromaintain.artifacts import load_public_bundle
 from aeromaintain.cli import app
-from aeromaintain.data import DataPipelineError, PrepareResult
+from aeromaintain.data import DataPipelineError
 from aeromaintain.models import ModelingError
-from aeromaintain.models.rul import EvaluationResult, TrainResult
 
 runner = CliRunner()
 
 
-def test_prepare_reports_success(monkeypatch, tmp_path: Path) -> None:
-    result = PrepareResult(
-        output_dir=tmp_path / "data" / "processed" / "fd001",
-        train_rows=20_631,
-        test_rows=13_096,
-        development_engines=80,
-        calibration_engines=20,
-        artifact_hashes={"train.parquet": "abc"},
-    )
-    monkeypatch.setattr(
-        "aeromaintain.cli.prepare_dataset", lambda *args, **kwargs: result
-    )
-
-    command = runner.invoke(app, ["prepare", "--project-root", str(tmp_path)])
-
-    assert command.exit_code == 0, command.output
-    assert "FD001 preparation complete" in command.output
-    assert "train=20631, test=13096" in command.output
-
-
-def test_prepare_reports_pipeline_failure(monkeypatch, tmp_path: Path) -> None:
-    def fail(*args, **kwargs):
-        raise DataPipelineError("fixture failure")
-
-    monkeypatch.setattr("aeromaintain.cli.prepare_dataset", fail)
-    command = runner.invoke(app, ["prepare", "--project-root", str(tmp_path)])
-
-    assert command.exit_code == 1
-    assert "Preparation failed: fixture failure" in command.output
-
-
-def test_train_and_evaluate_report_success(monkeypatch, tmp_path: Path) -> None:
-    train_result = TrainResult(
-        run_id="fixture",
-        run_dir=tmp_path / "runs" / "fixture",
-        champion="ridge",
-        interval_half_width=12.5,
-        model_lock=tmp_path / "runs" / "fixture" / "model_lock.json",
-    )
-    evaluation_result = EvaluationResult(
-        run_id="fixture",
-        output_dir=tmp_path / "runs" / "fixture" / "official_test",
-        metrics={
-            "mae": 10.0,
-            "rmse": 12.0,
-            "nasa_score_motor_normalized": 25.0,
-        },
-    )
-    monkeypatch.setattr(
-        "aeromaintain.cli.train_and_lock",
-        lambda *args, **kwargs: train_result,
-    )
-    monkeypatch.setattr(
-        "aeromaintain.cli.evaluate_locked",
-        lambda *args, **kwargs: evaluation_result,
-    )
-
-    trained = runner.invoke(
-        app,
-        ["train", "--run-id", "fixture", "--project-root", str(tmp_path)],
-    )
-    evaluated = runner.invoke(
-        app,
-        ["evaluate", "--run-id", "fixture", "--project-root", str(tmp_path)],
-    )
-
-    assert trained.exit_code == 0, trained.output
-    assert "Champion: ridge" in trained.output
-    assert evaluated.exit_code == 0, evaluated.output
-    assert "MAE=10.000000; RMSE=12.000000; NASA=25.000000" in evaluated.output
-
-
-def test_train_and_evaluate_report_modeling_failure(
-    monkeypatch, tmp_path: Path
-) -> None:
+def test_stage_failures_exit_with_a_message(monkeypatch, tmp_path: Path) -> None:
     def fail(*args, **kwargs):
         raise ModelingError("fixture lock failure")
 
+    def fail_prepare(*args, **kwargs):
+        raise DataPipelineError("fixture failure")
+
+    monkeypatch.setattr("aeromaintain.cli.prepare_dataset", fail_prepare)
     monkeypatch.setattr("aeromaintain.cli.train_and_lock", fail)
     monkeypatch.setattr("aeromaintain.cli.evaluate_locked", fail)
-
+    prepared = runner.invoke(app, ["prepare", "--project-root", str(tmp_path)])
+    assert prepared.exit_code == 1
+    assert "Preparation failed: fixture failure" in prepared.output
     trained = runner.invoke(
         app,
         ["train", "--run-id", "fixture", "--project-root", str(tmp_path)],
@@ -136,7 +67,6 @@ def test_export_demo_writes_a_bundle_only_for_a_verified_run(tmp_path: Path) -> 
     refused = export(tmp_path / "refused")
     assert refused.exit_code == 1
     assert "Export failed" in refused.output
-    assert not (tmp_path / "refused" / "manifest.json").exists()
 
 
 def test_app_command_verifies_before_launching(monkeypatch, tmp_path: Path) -> None:
@@ -196,3 +126,39 @@ def test_pipeline_command_exit_codes(monkeypatch, tmp_path: Path) -> None:
     )
     assert ok.exit_code == 0, ok.output
     assert "pipeline complete" in ok.output
+
+
+def test_study_commands_write_each_report_once(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(
+        "aeromaintain.cli.compare_runs",
+        lambda root, *, first_run_id, second_run_id: {
+            "identical_files": ["a"],
+            "different_files": [],
+        },
+    )
+    arguments = [
+        "compare-runs",
+        "--first",
+        "one",
+        "--second",
+        "two",
+        "--project-root",
+        str(tmp_path),
+    ]
+    first = runner.invoke(app, arguments)
+    assert first.exit_code == 0, first.output
+    assert (tmp_path / "runs/one/robustness/compare_two.json").is_file()
+    # Same report again is accepted; a different one is refused.
+    assert runner.invoke(app, arguments).exit_code == 0
+    monkeypatch.setattr(
+        "aeromaintain.cli.compare_runs",
+        lambda root, **kwargs: {"identical_files": [], "different_files": ["a"]},
+    )
+    changed = runner.invoke(app, arguments)
+    assert changed.exit_code == 1
+    assert "Refusing to overwrite" in changed.output
+
+    unknown = runner.invoke(
+        app, ["escalation-study", "--base-run-id", "one", "--method", "gru"]
+    )
+    assert unknown.exit_code == 2

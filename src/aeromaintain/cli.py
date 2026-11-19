@@ -5,14 +5,16 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
-from aeromaintain.config import resolve_project_root
+from aeromaintain.config import PROJECT_ROOT_ENV, RUN_ID_ENV, resolve_project_root
 from aeromaintain.data import DataPipelineError, prepare_dataset
 from aeromaintain.delivery import DeliveryError, finish_locked_run, run_pipeline
+from aeromaintain.files import json_bytes, write_once
 from aeromaintain.models import (
     ModelingError,
     compare_runs,
@@ -20,11 +22,10 @@ from aeromaintain.models import (
     run_seed_sweep,
     train_and_lock,
 )
-from aeromaintain.models.run_files import write_json
 
 app = typer.Typer(
     add_completion=False,
-    help="AeroMaintain AI educational RUL evaluation prototype.",
+    help="Prepare, train, lock and evaluate C-MAPSS RUL models; review a run.",
     no_args_is_help=True,
 )
 
@@ -54,6 +55,16 @@ Dataset = Annotated[
     str,
     typer.Option("--dataset", help="C-MAPSS subset: FD001 through FD004."),
 ]
+
+
+class Challenger(StrEnum):
+    lstm = "lstm"
+    cqr = "cqr"
+
+
+def _write_report(path: Path, report: dict) -> None:
+    """Study reports are write-once, like every other run file."""
+    write_once(path, json_bytes(report), ModelingError)
 
 
 @app.callback()
@@ -166,7 +177,7 @@ def robustness(
             seeds=tuple(range(first_seed, first_seed + seeds)),
         )
         output = root / "runs" / base_run_id / "robustness" / "seed_sweep.json"
-        write_json(output, report)
+        _write_report(output, report)
     except ModelingError as exc:
         typer.echo(f"Robustness failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -183,22 +194,22 @@ def escalation_study(
         typer.Option("--base-run-id", help="Verified run to challenge."),
     ],
     method: Annotated[
-        str,
-        typer.Option("--method", help="Challenger: lstm or cqr."),
+        Challenger,
+        typer.Option("--method", help="Challenger model or interval."),
     ],
     project_root: ProjectRoot = None,
 ) -> None:
     """Score a protocol amendment challenger without opening test labels."""
     from aeromaintain.models.escalation import run_cqr_study, run_lstm_study
 
-    studies = {"lstm": run_lstm_study, "cqr": run_cqr_study}
+    studies = {Challenger.lstm: run_lstm_study, Challenger.cqr: run_cqr_study}
     root = resolve_project_root(project_root)
     try:
-        if method not in studies:
-            raise ModelingError(f"Unknown challenger: {method}")
         report = studies[method](root, base_run_id=base_run_id)
-        output = root / "runs" / base_run_id / "robustness" / f"{method}_study.json"
-        write_json(output, report)
+        output = (
+            root / "runs" / base_run_id / "robustness" / f"{method.value}_study.json"
+        )
+        _write_report(output, report)
     except ModelingError as exc:
         typer.echo(f"Study failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -216,7 +227,7 @@ def compare_runs_command(
     try:
         report = compare_runs(root, first_run_id=first, second_run_id=second)
         output = root / "runs" / first / "robustness" / f"compare_{second}.json"
-        write_json(output, report)
+        _write_report(output, report)
     except ModelingError as exc:
         typer.echo(f"Comparison failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
@@ -300,42 +311,6 @@ def _synthetic_project(
     return archive_path, project_root.resolve()
 
 
-@app.command("v5")
-def v5_command(
-    stage: Annotated[
-        str,
-        typer.Argument(help="Stage of protocol v5: hybrid, prepare or evaluate."),
-    ],
-    output: Annotated[
-        Path,
-        typer.Option("--output", help="Output directory for this v5 stage."),
-    ],
-    project_root: ProjectRoot = None,
-) -> None:
-    """Run a protocol v5 stage (frozen code; evaluate opens the reserved labels)."""
-    import json
-
-    from aeromaintain.models import v5
-
-    stages = {"hybrid": v5.run_hybrid, "prepare": v5.prepare, "evaluate": v5.evaluate}
-    if stage not in stages:
-        typer.echo(f"Unknown v5 stage {stage!r}; use {', '.join(stages)}", err=True)
-        raise typer.Exit(code=2)
-    root = resolve_project_root(project_root)
-    try:
-        config = json.loads((root / v5.CONFIG).read_text(encoding="utf-8"))
-        stages[stage](root, output.resolve(), config)
-    except (OSError, ValueError, RuntimeError, KeyError) as exc:
-        # v5 signals refusals with these built-in errors (FileExistsError is an
-        # OSError); its code is frozen, so they are translated here.
-        typer.echo(f"v5 {stage} failed: {exc}", err=True)
-        raise typer.Exit(code=1) from exc
-    except subprocess.CalledProcessError as exc:
-        typer.echo(f"v5 {stage} failed: git {exc.args[1]!r} did not succeed", err=True)
-        raise typer.Exit(code=1) from exc
-    typer.echo(f"v5 {stage} complete: {output.resolve()}")
-
-
 @app.command()
 def finish(
     run_id: Annotated[
@@ -402,8 +377,8 @@ def app_command(
 
     script = Path(__file__).parent / "app" / "main.py"
     environment = os.environ.copy()
-    environment["AEROMAINTAIN_RUN_ID"] = run_id
-    environment["AEROMAINTAIN_PROJECT_ROOT"] = str(root)
+    environment[RUN_ID_ENV] = run_id
+    environment[PROJECT_ROOT_ENV] = str(root)
     completed = subprocess.run(
         [
             sys.executable,

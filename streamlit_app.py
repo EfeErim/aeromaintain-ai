@@ -8,8 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
-os.environ.setdefault("AEROMAINTAIN_PUBLIC_BUNDLE", str(ROOT / "demo"))
 
 from aeromaintain.app.main import main  # noqa: E402
+from aeromaintain.config import PUBLIC_BUNDLE_ENV  # noqa: E402
+
+os.environ.setdefault(PUBLIC_BUNDLE_ENV, str(ROOT / "demo"))
 
 main()

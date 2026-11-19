@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import io
 import json
 import shutil
 import stat
@@ -19,6 +18,16 @@ import pandas as pd
 import plotly.express as px
 import yaml
 from sklearn.model_selection import train_test_split
+
+# The frozen experiment modules import sha256_file from here; keep these names.
+from aeromaintain.files import (
+    SENSOR_COLUMNS,
+    json_bytes,
+    parquet_bytes,
+    processed_dir,
+    sha256_file,
+    write_once,
+)
 
 ARCHIVE_NAME = "CMAPSSData.zip"
 DATASET_SHAPES = {
@@ -66,7 +75,6 @@ SCHEMA = (
     *(f"setting_{index}" for index in range(1, 4)),
     *(f"sensor_{index}" for index in range(1, 22)),
 )
-SENSOR_COLUMNS = tuple(f"sensor_{index}" for index in range(1, 22))
 SPLIT_ALGORITHM_VERSION = "lifetime-quartile-stratified-v1"
 
 
@@ -88,9 +96,9 @@ class DataContract:
     test_labels: int
     development_engines: int
     calibration_engines: int
-    rul_cap: int = 125
-    seed: int = 42
-    dataset: str = "FD001"
+    rul_cap: int
+    seed: int
+    dataset: str
 
 
 @dataclass(frozen=True)
@@ -103,15 +111,6 @@ class PrepareResult:
     development_engines: int
     calibration_engines: int
     artifact_hashes: dict[str, str]
-
-
-def sha256_file(path: Path) -> str:
-    """Return a file's lowercase SHA-256 digest."""
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def expected_members(dataset: str = "FD001") -> dict[str, str]:
@@ -242,17 +241,6 @@ def _validated_member_path(name: str) -> PurePosixPath:
     return member_path
 
 
-def _write_bytes_idempotently(path: Path, payload: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        if path.read_bytes() != payload:
-            raise DataPipelineError(
-                f"Refusing to overwrite existing file with different content: {path}"
-            )
-        return
-    path.write_bytes(payload)
-
-
 def extract_members(
     archive_path: Path,
     destination: Path,
@@ -291,7 +279,7 @@ def extract_members(
             extracted: dict[str, Path] = {}
             for role, info in selected.items():
                 target = destination / members[role]
-                _write_bytes_idempotently(target, archive.read(info))
+                write_once(target, archive.read(info), DataPipelineError)
                 extracted[role] = target
             return extracted
     except (OSError, zipfile.BadZipFile) as exc:
@@ -549,16 +537,6 @@ def build_eda_html(
     )
 
 
-def json_bytes(value: Any) -> bytes:
-    return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode()
-
-
-def parquet_bytes(frame: pd.DataFrame) -> bytes:
-    buffer = io.BytesIO()
-    frame.to_parquet(buffer, index=False, engine="pyarrow")
-    return buffer.getvalue()
-
-
 def prepare_dataset(
     project_root: Path,
     *,
@@ -566,12 +544,18 @@ def prepare_dataset(
     archive_path: Path | None = None,
     contract: DataContract | None = None,
 ) -> PrepareResult:
-    """Run acquisition, parsing, validation, splitting, EDA, and persistence."""
+    """Run acquisition, parsing, validation, splitting, EDA, and persistence.
+
+    ``contract`` replaces the values read from ``configs/project.yaml``; the file must
+    still exist, because the manifest records its hash.
+    """
     project_root = project_root.resolve()
     contract = contract or load_data_contract(project_root, dataset)
     dataset = contract.dataset
     config_path = project_root / "configs" / "project.yaml"
-    config_hash = sha256_file(config_path) if config_path.is_file() else "test-contract"
+    if not config_path.is_file():
+        raise DataPipelineError(f"Project configuration is missing: {config_path}")
+    config_hash = sha256_file(config_path)
 
     raw_dir = project_root / "data" / "raw"
     archive = acquire_archive(raw_dir, contract, archive_path)
@@ -623,7 +607,7 @@ def prepare_dataset(
             "negative_values": int(train[["rul_true", "rul_target"]].lt(0).sum().sum()),
         },
     }
-    output_dir = project_root / "data" / "processed" / dataset.lower()
+    output_dir = processed_dir(project_root, dataset)
     payloads = {
         "train.parquet": parquet_bytes(train),
         "test.parquet": parquet_bytes(test),
@@ -635,7 +619,7 @@ def prepare_dataset(
     }
     artifact_hashes: dict[str, str] = {}
     for relative_path, payload in payloads.items():
-        _write_bytes_idempotently(output_dir / relative_path, payload)
+        write_once(output_dir / relative_path, payload, DataPipelineError)
         artifact_hashes[relative_path] = hashlib.sha256(payload).hexdigest()
     manifest = {
         "dataset": dataset,
@@ -653,7 +637,7 @@ def prepare_dataset(
         },
         "artifacts": artifact_hashes,
     }
-    _write_bytes_idempotently(output_dir / "manifest.json", json_bytes(manifest))
+    write_once(output_dir / "manifest.json", json_bytes(manifest), DataPipelineError)
     return PrepareResult(
         output_dir=output_dir,
         train_rows=len(train),
