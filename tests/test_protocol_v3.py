@@ -14,6 +14,7 @@ from aeromaintain.features import (
     ConditionNormalizer,
     build_condition_features,
 )
+from aeromaintain.features.causal import FeatureContractError
 from aeromaintain.files import sha256_file
 from aeromaintain.models import compare_runs, evaluate_locked, rul, run_seed_sweep
 from aeromaintain.models.rul import (
@@ -54,6 +55,50 @@ def test_condition_normalizer_removes_condition_shift_and_is_causal() -> None:
     modified = build_condition_features(changed, normalizer)
     past = frame["unit_id"].eq(1) & frame["cycle"].lt(10)
     pd.testing.assert_frame_equal(features.loc[past], modified.loc[past])
+
+
+def test_cycles_since_condition_change_restarts_per_engine_and_condition() -> None:
+    frame = _condition_frame([1, 2], cycles=4)
+    settings = np.asarray(SETTINGS)[[0, 0, 1, 1, 0, 0, 0, 2]]
+    frame[["setting_1", "setting_2", "setting_3"]] = settings
+    normalizer = ConditionNormalizer(conditions=3, seed=1).fit(frame)
+
+    features = build_condition_features(frame, normalizer)
+
+    assert features[CONDITION_FEATURE].tolist() == [0, 1, 0, 1, 0, 1, 2, 0]
+
+
+def test_normalizer_fails_closed_on_inseparable_settings() -> None:
+    frame = _condition_frame([1, 2, 3])
+    generator = np.random.default_rng(0)
+    frame["setting_1"] = generator.uniform(0, 1, size=len(frame))
+    frame["setting_2"] = generator.uniform(0, 1, size=len(frame))
+
+    with pytest.raises(FeatureContractError, match="do not separate"):
+        ConditionNormalizer(conditions=3, seed=1).fit(frame)
+    with pytest.raises(FeatureContractError, match="fitted"):
+        ConditionNormalizer(conditions=3, seed=1).labels(frame)
+
+
+def test_condition_scales_come_from_training_engines_only() -> None:
+    frame = _condition_frame([1, 2, 3, 4, 5, 6])
+    config = replace(small_config(), operating_conditions=3)
+    spec = {"family": "ridge", "condition": True}
+    train_rows = np.flatnonzero(frame["unit_id"].le(4))
+    held_out = frame["unit_id"].gt(4)
+
+    features, normalizer = rul.partition_features(
+        spec, frame, frame, train_rows, config
+    )
+    changed = frame.copy()
+    changed.loc[held_out, "sensor_1"] += 10_000.0
+    new_features, new_normalizer = rul.partition_features(
+        spec, changed, changed, train_rows, config
+    )
+
+    np.testing.assert_array_equal(normalizer.sensor_mean, new_normalizer.sensor_mean)
+    np.testing.assert_array_equal(normalizer.sensor_scale, new_normalizer.sensor_scale)
+    pd.testing.assert_frame_equal(features.loc[~held_out], new_features.loc[~held_out])
 
 
 def _write_condition_fixture(root: Path) -> None:

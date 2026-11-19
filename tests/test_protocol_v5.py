@@ -44,6 +44,28 @@ def _lock():
     return json.loads((ROOT / v5.PUBLISHED_LOCK).read_text(encoding="utf-8"))
 
 
+def test_hybrid_switches_at_threshold():
+    reference = np.array([10.0, 114.9, 115.0, 126.0])
+    uncapped = np.array([50.0, 50.0, 160.0, 180.0])
+    assert v5.hybrid_prediction(reference, uncapped, 115).tolist() == [
+        10.0,
+        114.9,
+        160.0,
+        180.0,
+    ]
+
+
+@pytest.mark.parametrize(
+    ("missed", "passed"), [(0, True), (3, True), (4, False), (35, False)]
+)
+def test_alarm_gate_allows_at_most_three_of_35(missed, passed):
+    point = {"rmse": 13.0}
+    baseline = {"rmse": 22.0}
+    replay = {"missed_fraction": missed / v5.TEST_ENGINES}
+    result = v5.final_gates(point, baseline, 0.9, replay, _lock()["gates"])
+    assert result["checks"]["G3_timely_point_alarm"] is passed
+
+
 def test_published_lock_still_matches_frozen_files():
     lock = _lock()
     assert v5.source_hashes(ROOT) == lock["source_sha256"]

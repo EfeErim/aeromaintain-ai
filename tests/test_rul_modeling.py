@@ -57,6 +57,24 @@ def test_causal_features_do_not_change_past_and_keep_order() -> None:
         preprocessor.transform(original.loc[:, reversed(original.columns)])
 
 
+def test_rolling_statistics_match_a_known_linear_trend() -> None:
+    # In the fixture, sensor_k rises by 0.05 * k per cycle on every engine.
+    source = sensor_frame([1, 2], cycles=12, targets=False)
+    features = build_causal_features(source)
+    row = source.index[source["unit_id"].eq(2) & source["cycle"].eq(10)][0]
+    value = source.set_index(["unit_id", "cycle"])["sensor_3"]
+
+    assert features.loc[row, "sensor_1_w5_slope"] == pytest.approx(0.05)
+    assert features.loc[row, "sensor_3_w10_slope"] == pytest.approx(0.15)
+    assert features.loc[row, "sensor_3_w5_mean"] == pytest.approx(value[(2, 8)])
+    assert features.loc[row, "sensor_3_w5_min"] == pytest.approx(value[(2, 6)])
+    assert features.loc[row, "sensor_3_w5_max"] == pytest.approx(value[(2, 10)])
+    assert features.loc[row, "sensor_3_w5_std"] == pytest.approx(0.15 * np.sqrt(2))
+    assert features.loc[row, "sensor_3_w5_delta_mean"] == pytest.approx(0.3)
+    first = source.index[source["unit_id"].eq(2) & source["cycle"].eq(1)][0]
+    assert features.loc[first, "sensor_1_w5_slope"] == 0.0
+
+
 def test_metrics_weights_and_finite_sample_interval_contract() -> None:
     truth = np.array([10.0, 20.0, 40.0, 70.0, 130.0])
     prediction = np.array([12.0, 18.0, 35.0, 80.0, 125.0])
