@@ -1,0 +1,107 @@
+{
+  "base_run_id": "fd001-v2-selection",
+  "cqr": {
+    "by_predicted_rul": {
+      "31-60": {
+        "median_coverage": 1.0,
+        "median_mean_width": 119.19117607389177,
+        "median_rows": 17.0
+      },
+      "61-100": {
+        "median_coverage": 0.96875,
+        "median_mean_width": 99.91492876881048,
+        "median_rows": 32.0
+      },
+      "<=30": {
+        "median_coverage": 1.0,
+        "median_mean_width": 135.38736916867254,
+        "median_rows": 19.0
+      },
+      ">100": {
+        "median_coverage": 0.7575757575757576,
+        "median_mean_width": 63.700843642739684,
+        "median_rows": 32.0
+      }
+    },
+    "by_true_rul": {
+      "0-30": {
+        "median_coverage": 1.0,
+        "median_mean_width": 134.4348349810908,
+        "median_rows": 21.5
+      },
+      "31-60": {
+        "median_coverage": 1.0,
+        "median_mean_width": 114.33387286493925,
+        "median_rows": 20.0
+      },
+      "61-125": {
+        "median_coverage": 1.0,
+        "median_mean_width": 87.36075342443837,
+        "median_rows": 43.0
+      },
+      ">125": {
+        "median_coverage": 0.5,
+        "median_mean_width": 62.071261813497955,
+        "median_rows": 16.0
+      }
+    },
+    "median_coverage": 0.91,
+    "median_mean_width": 98.6205645942688,
+    "median_rows": 100.0
+  },
+  "cqr_replaces_mondrian": false,
+  "dataset": "FD001",
+  "mondrian": {
+    "by_predicted_rul": {
+      "31-60": {
+        "median_coverage": 0.9148550724637681,
+        "median_mean_width": 40.59376333024767,
+        "median_rows": 17.0
+      },
+      "61-100": {
+        "median_coverage": 0.9080338266384778,
+        "median_mean_width": 75.00962514143724,
+        "median_rows": 32.0
+      },
+      "<=30": {
+        "median_coverage": 0.9166666666666666,
+        "median_mean_width": 18.833845542711124,
+        "median_rows": 19.0
+      },
+      ">100": {
+        "median_coverage": 0.9245014245014245,
+        "median_mean_width": 67.53663290352084,
+        "median_rows": 32.0
+      }
+    },
+    "by_true_rul": {
+      "0-30": {
+        "median_coverage": 0.9486842105263158,
+        "median_mean_width": 21.346685923836493,
+        "median_rows": 21.5
+      },
+      "31-60": {
+        "median_coverage": 0.9023809523809524,
+        "median_mean_width": 51.21053968369961,
+        "median_rows": 20.0
+      },
+      "61-125": {
+        "median_coverage": 0.9175170068027211,
+        "median_mean_width": 70.00781862666604,
+        "median_rows": 43.0
+      },
+      ">125": {
+        "median_coverage": 0.8823529411764706,
+        "median_mean_width": 68.50698135659422,
+        "median_rows": 16.0
+      }
+    },
+    "median_coverage": 0.91,
+    "median_mean_width": 55.67903527826071,
+    "median_rows": 100.0
+  },
+  "rule": "CQR replaces Mondrian only with coverage >= 89% and mean width at least 5% lower",
+  "schema_version": 1,
+  "scope": "all training engines; leave-engines-out; test labels not opened",
+  "width_reduction_fraction": -0.7712333574280543
+}

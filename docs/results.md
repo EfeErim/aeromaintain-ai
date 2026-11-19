@@ -8,8 +8,11 @@ Run files are Git-ignored; aggregate evidence is in
 ## Protocol v3 runs
 
 Produced on 2026-11-05 under the frozen [protocol v3](protocol_v3.md). The locks and
-development evidence were published in commit `94fd0ec` before any FD002 or FD004 label
-opened. Development evidence is in
+development evidence were published in commit `56bca9b` before any FD002 or FD004 label
+opened. That commit was `94fd0ec` before the history rewrite noted in
+[results v5](results_v5.md); the two trees are identical, and
+`reference_evidence.json` and `protocol_v5.md` still name the old hashes (`94fd0ec`,
+and `6dcbec0` for what is now `8c32449`). Development evidence is in
 [`protocol_v3_development.json`](protocol_v3_development.json).
 
 | Run | Dataset | Label | What it can support |
@@ -233,7 +236,10 @@ bounded trial lost.
 
 Both came from `aeromaintain escalation-study --base-run-id fd001-v2-selection --method
 lstm` (and `--method cqr`), which score on training engines only and write
-`runs/fd001-v2-selection/robustness/{lstm,cqr}_study.json`. The LSTM study needs
+`runs/fd001-v2-selection/robustness/{lstm,cqr}_study.json`. Byte-identical copies are
+[`fd001_lstm_study.json`](fd001_lstm_study.json) (`rmse_improvement_fraction`,
+`nasa_not_worse`) and [`fd001_cqr_study.json`](fd001_cqr_study.json)
+(`width_reduction_fraction` -0.771). The LSTM study needs
 the `lstm` extra (`pip install -e ".[lstm]"`). `torch` is not in the pinned
 constraints and the study file does not record its version, so the LSTM figures are
 not pinned to an environment; CI skips the LSTM test.
