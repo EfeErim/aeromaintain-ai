@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aeromaintain-ai"
-version = "1.0.0"
+version = "1.1.0.dev0"
 description = "Remaining-useful-life prediction for turbofan engines on NASA C-MAPSS and N-CMAPSS, with prediction intervals and maintenance alarms"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"

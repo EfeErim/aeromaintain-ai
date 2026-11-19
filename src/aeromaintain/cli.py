@@ -304,7 +304,7 @@ def _synthetic_project(
     repo_root = resolve_project_root(None)
     try:
         archive_path = build_synthetic_project(repo_root, project_root)
-    except SyntheticProjectError as exc:
+    except (SyntheticProjectError, OSError) as exc:
         typer.echo(f"Pipeline failed: {exc}", err=True)
         raise typer.Exit(code=1) from exc
     typer.echo(f"Synthetic project: {project_root}")

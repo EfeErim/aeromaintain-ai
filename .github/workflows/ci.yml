@@ -31,7 +31,7 @@ jobs:
 
       - run: python -m pip install -c constraints/python311-tested.txt -e ".[dev,ncmapss]"
       - run: ruff check . && ruff format --check .
-      - run: pytest --cov=src/aeromaintain --cov-report=term-missing
+      - run: pytest --cov=src/aeromaintain --cov-report=term-missing --cov-fail-under=80
       - name: Synthetic end-to-end run
         run: aeromaintain pipeline --synthetic --run-id ci-synthetic --project-root "$RUNNER_TEMP/synthetic"
 

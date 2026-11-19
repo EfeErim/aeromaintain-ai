@@ -60,6 +60,20 @@ def test_cli_synthetic_needs_a_project_root(monkeypatch) -> None:
     assert "--project-root" in command.output
 
 
+def test_cli_synthetic_reports_an_unusable_project_root(monkeypatch, tmp_path) -> None:
+    monkeypatch.chdir(ROOT)
+    blocker = tmp_path / "a-file"
+    blocker.write_text("not a directory", encoding="utf-8")
+    target = blocker / "synthetic"
+    command = runner.invoke(
+        app,
+        ["pipeline", "--synthetic", "--run-id", "s", "--project-root", str(target)],
+    )
+    assert command.exit_code == 1
+    assert "Pipeline failed" in command.output
+    assert command.exception is None or isinstance(command.exception, SystemExit)
+
+
 @pytest.mark.usefixtures("reuse_synthetic_archive")
 def test_cli_synthetic_runs_the_normal_pipeline(monkeypatch, tmp_path: Path) -> None:
     calls = {}
