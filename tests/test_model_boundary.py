@@ -79,8 +79,11 @@ def test_ridge_prediction_matches_frozen_copy() -> None:
 def test_xgboost_ensemble_and_quantiles_match_frozen_copy() -> None:
     preprocessor, features, target = _fitted(scale=False)
     x = preprocessor.transform(features)
+    # One thread: on a tiny frame, every extra OpenMP thread is pure overhead.
     members = [
-        XGBRegressor(n_estimators=8, max_depth=2, random_state=seed).fit(x, target - 60)
+        XGBRegressor(n_estimators=8, max_depth=2, random_state=seed, n_jobs=1).fit(
+            x, target - 60
+        )
         for seed in (1, 2)
     ]
     for model in (members[0], members):
@@ -97,6 +100,7 @@ def test_xgboost_ensemble_and_quantiles_match_frozen_copy() -> None:
         n_estimators=8,
         objective="reg:quantileerror",
         quantile_alpha=np.array([0.05, 0.95]),
+        n_jobs=1,
     ).fit(x, target)
     np.testing.assert_array_equal(
         inference.predict_quantiles(quantile, preprocessor, features),

@@ -157,6 +157,49 @@ FD004 before any model on those subsets was fitted.
 | FD003 | 0.91 | 53.2 | 25 | 1.00 | 0 / 8 |
 | FD004 | 0.91 | 58.6 | 20 | 0.97 | 1.5 / 15 |
 
+### One-sided and per-condition coverage
+
+Development engines only, computed after the v3 tests closed: no test label is read and
+no lock or result above changes. [`scripts/development_coverage.py`](../scripts/development_coverage.py)
+rebuilds each run's leave-engines-out Mondrian interval from its stored cross-fit
+predictions, checks that median coverage and width equal the stored
+`calibration_analysis.json` exactly, and writes
+[`development_coverage.json`](development_coverage.json). Figures are medians over the
+same 200 draws of one row per engine (FD001 and FD003 100 engines, FD002 260, FD004 249;
+about 21 and 53 truly critical engines per draw).
+
+The NASA score penalizes late predictions more than early ones, so the two sides of the
+interval are reported separately, and "late" means `prediction > rul_true`.
+
+| Dataset | Two-sided | Above lower bound | Below upper bound | Late | Late, `rul_true <= 30` | Above lower bound, `rul_true <= 30` |
+|---|---:|---:|---:|---:|---:|---:|
+| FD001 | 0.910 | 0.960 | 0.950 | 0.490 | 0.588 | 0.958 |
+| FD002 | 0.904 | 0.954 | 0.950 | 0.504 | 0.660 | 0.947 |
+| FD003 | 0.910 | 0.960 | 0.950 | 0.495 | 0.647 | 0.952 |
+| FD004 | 0.908 | 0.956 | 0.952 | 0.530 | 0.673 | 0.962 |
+
+Misses split evenly between the two sides, so the 90% interval does not hide its misses
+on the costly side. Point predictions are late about half the time overall but 59–67% of
+the time on critical engines; the lower bound still covers about 95% of those.
+
+Conformal coverage assumes exchangeable rows, and FD002 and FD004 mix six operating
+conditions. The locked bands depend on predicted RUL only. The second table gives
+coverage per condition (about 38 rows per condition per draw, 65 and 61 for the most
+frequent one) and a variant calibrated separately within each condition, at the same
+nominal 90% and on the same draws.
+
+| Dataset | Interval | Coverage | Mean width | Coverage range over conditions |
+|---|---|---:|---:|---|
+| FD002 | Mondrian (locked) | 0.904 | 58.8 | 0.899–0.915 |
+| FD002 | Per-condition Mondrian | 0.904 | 58.2 | 0.900–0.911 |
+| FD004 | Mondrian (locked) | 0.908 | 58.6 | 0.900–0.912 |
+| FD004 | Per-condition Mondrian | 0.904 | 57.8 | 0.900–0.913 |
+
+On development engines no condition is under-covered, and conditioning on it changes
+width by about 1%, so there is no case here for a weighted or condition-conditional
+interval. This does not bear on the test shortfall, which comes from engines with true
+RUL above 150 that development never scored ([diagnosis](#diagnosis-made-after-opening)).
+
 ### Seed sensitivity
 
 Ten seeds (42–51) refit the locked settings on FD001 and FD003 only, because a sweep
@@ -252,6 +295,16 @@ or a hash of such a file differed
 (`aeromaintain compare-runs --first fd001-v2 --second fd001-v2-repeat`, written to
 `runs/fd001-v2/robustness/compare_fd001-v2-repeat.json`). This does not establish identical output across
 machines or library versions.
+
+The XGBoost thread count is part of the specification. With row subsampling, XGBoost
+3.2's `hist` builder gives different trees for the same seed at different thread
+counts, and without subsampling the trees are identical
+([`test_xgboost_threads.py`](../tests/test_xgboost_threads.py)). The FD001 and FD003
+champions use `subsample` 0.7, and selection on every subset compares subsampled
+candidates. Reproducing a run therefore needs the `xgboost_n_jobs` its configuration
+records: 8 in `configs/project.yaml` and `configs/protocol_v3.yaml`, 6 in
+`configs/protocol_v3_six_conditions.yaml` (FD002, FD004). The locks record each file's
+hash, so a run made with another value carries a different configuration hash.
 
 ## Protocol v1 reference
 

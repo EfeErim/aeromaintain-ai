@@ -201,7 +201,9 @@ def test_lock_held_by_another_process_blocks_finish(run, tmp_path) -> None:
         stdin=subprocess.PIPE,
     )
     try:
-        deadline = time.monotonic() + 20
+        # The holder imports aeromaintain.delivery (about 4 s on an idle machine), so
+        # a loaded machine needs a generous start-up deadline.
+        deadline = time.monotonic() + 120
         while not ready.exists():
             assert holder.poll() is None, "lock holder exited early"
             assert time.monotonic() < deadline, "lock holder did not start"
