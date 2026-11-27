@@ -1,9 +1,10 @@
 """XGBoost thread count is part of a C-MAPSS run's specification.
 
-With row subsampling, XGBoost's ``hist`` builder draws rows per thread, so the same
-seed gives different trees at different ``xgboost_n_jobs``. The published configs fix
-the value and their hashes are in the locks; these tests record the behaviour, so a
-library upgrade that changes it is noticed.
+With row subsampling, XGBoost's ``hist`` builder may give different trees for the same
+seed at different ``xgboost_n_jobs``: on Windows the trees differ, on GitHub's Ubuntu
+runner they are identical. XGBoost promises neither, so these tests pin only what holds
+everywhere: a fixed thread count repeats, and without subsampling the thread count
+does not matter. The published configs fix the value and their hashes are in the locks.
 """
 
 from __future__ import annotations
@@ -29,9 +30,8 @@ def _model_bytes(subsample: float, threads: int) -> bytes:
     return bytes(model.get_booster().save_raw("ubj"))
 
 
-def test_subsampled_trees_depend_on_thread_count() -> None:
+def test_subsampled_trees_repeat_at_a_fixed_thread_count() -> None:
     assert _model_bytes(0.8, 2) == _model_bytes(0.8, 2)
-    assert _model_bytes(0.8, 1) != _model_bytes(0.8, 2)
 
 
 @pytest.mark.parametrize("threads", [2, 4])

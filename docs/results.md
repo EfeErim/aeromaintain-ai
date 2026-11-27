@@ -297,14 +297,18 @@ or a hash of such a file differed
 machines or library versions.
 
 The XGBoost thread count is part of the specification. With row subsampling, XGBoost
-3.2's `hist` builder gives different trees for the same seed at different thread
-counts, and without subsampling the trees are identical
+3.2's `hist` builder gave different trees for the same seed at different thread counts
+on the Windows machine that made these runs, and identical trees on GitHub's Ubuntu
+runner; without subsampling the trees are identical on both
 ([`test_xgboost_threads.py`](../tests/test_xgboost_threads.py)). The FD001 and FD003
 champions use `subsample` 0.7, and selection on every subset compares subsampled
 candidates. Reproducing a run therefore needs the `xgboost_n_jobs` its configuration
 records: 8 in `configs/project.yaml` and `configs/protocol_v3.yaml`, 6 in
-`configs/protocol_v3_six_conditions.yaml` (FD002, FD004). The locks record each file's
-hash, so a run made with another value carries a different configuration hash.
+`configs/protocol_v3_six_conditions.yaml` (FD002, FD004). Even then, byte-identical
+trees are shown only on the platform the runs were made on (Windows). The N-CMAPSS v4
+and v5 models use `subsample` 1.0 and do not depend on the thread count. The locks
+record each file's hash, so a run made with another value carries a different
+configuration hash.
 
 ## Protocol v1 reference
 
