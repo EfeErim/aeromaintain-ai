@@ -211,15 +211,21 @@ def acquire_archive(
         delete=False,
     ) as temporary_stream:
         temporary = Path(temporary_stream.name)
+        download_error: Exception | None = None
         try:
             with urllib.request.urlopen(contract.source_url, timeout=120) as response:
                 shutil.copyfileobj(response, temporary_stream)
         except Exception as exc:
-            raise DataPipelineError(
-                f"Could not download NASA archive from {contract.source_url}: {exc}"
-            ) from exc
+            download_error = exc
 
+    # The partial file is removed only after the stream is closed; Windows refuses to
+    # delete an open file.
     try:
+        if download_error is not None:
+            raise DataPipelineError(
+                f"Could not download NASA archive from {contract.source_url}: "
+                f"{download_error}"
+            ) from download_error
         verify_archive(temporary, contract)
         temporary.replace(destination)
     finally:

@@ -8,6 +8,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from aeromaintain.data import pipeline
 from aeromaintain.data.pipeline import (
     DATASET_SHAPES,
     SCHEMA,
@@ -269,3 +270,22 @@ def test_prepare_writes_isolated_labels_reports_and_stable_hashes(
     assert "<h1>FD001 EDA report</h1>" in (output / "eda_report.html").read_text(
         encoding="utf-8"
     )
+
+
+def test_failed_download_leaves_no_partial_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr(pipeline.urllib.request, "urlopen", refuse)
+    archive = tmp_path / "source.zip"
+    archive.write_bytes(b"unused")
+    contract = _contract_for(
+        archive, train_rows=1, test_rows=1, engines=1, development=1, calibration=0
+    )
+    raw_dir = tmp_path / "raw"
+
+    with pytest.raises(DataPipelineError, match="connection refused"):
+        pipeline.acquire_archive(raw_dir, contract)
+    assert list(raw_dir.iterdir()) == []
