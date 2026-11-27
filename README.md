@@ -8,8 +8,8 @@
 Remaining-useful-life (RUL) prediction for turbofan engines on NASA's simulated C-MAPSS
 and N-CMAPSS benchmarks: archive verification, leakage-safe features, Ridge/XGBoost,
 empirical prediction intervals, maintenance alarms and a Streamlit review app. On 35
-unseen N-CMAPSS engines it cuts RMSE from 22.7 (baseline) to 13.1 with 92.5% interval
-coverage.
+unseen N-CMAPSS engines it cuts RMSE from 22.7 (a constant engine-mean baseline) to 13.1
+with 92.5% interval coverage.
 
 Each test set was opened once, after the model and its thresholds were locked and
 committed. The tooling refuses a second opening; the single opening itself is my own
@@ -27,7 +27,8 @@ lists what the code does and does not enforce.
 | C-MAPSS FD004 | 248 | 27.40 (24.53–30.23) | 83% | [v3](docs/results.md#protocol-v3-runs) |
 | N-CMAPSS DS01, DS08a, DS08c | 35 | 13.06 (11.13–15.00), baseline 22.70 | 92.5% | [v5](docs/results_v5.md) |
 
-The [hosted demo](https://aeromaintain-ai-demo.streamlit.app/) shows the clean FD004
+The [hosted demo](https://aeromaintain-ai-demo.streamlit.app/) (Streamlit Community Cloud
+puts it to sleep when idle; the first visit wakes it) shows the clean FD004
 test (`fd004-v3-clean`, 248 engines, RMSE 27.40), the weakest C-MAPSS row; the
 long-life engines explained below account for most of its error.
 
@@ -40,6 +41,9 @@ only two engines; point values and gate results did not change
   limit was 3 misses, so it passed with no margin; requiring the alarm to start inside
   the window would have failed it ([sensitivity checks](docs/results_v5.md#sensitivity-checks-2026-11-16)).
   The other two v5 gates were lenient, so "all gates passed" mostly rests on the alarm.
+- The N-CMAPSS baseline is a constant. The simpler learned model, Ridge, reached RMSE
+  15.01 against XGBoost's 12.87 out-of-fold on the 64 development engines and was not
+  scored on the test engines ([development evidence](docs/protocol_v5_development.json)).
 - Scored the way most papers do (true RUL capped at 125), FD002 and FD004 come out at
   14.74 and 15.33. That rescoring came after the labels were open
   ([comparison](docs/results.md#retrospective-comparison-on-the-literature-scale)).

@@ -50,4 +50,5 @@ interval coverage (0.89-0.98)
 point alert rule: recall 0.80, precision 1.00, false alarms 0
 ```
 
-These match the `fd001-v3` column in [results](results.md#official-test): the run repeats.
+These match the `fd001-v3` column in [results](results.md#official-test): the run repeats on
+the Windows machine that made it ([reproducibility](results.md#reproducibility)).
