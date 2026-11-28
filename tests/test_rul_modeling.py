@@ -118,6 +118,11 @@ def test_alert_rule_reports_both_error_costs_with_wilson_intervals() -> None:
     # The published 25/25 reference recall has a lower bound near 87%, not 100%.
     perfect = wilson_interval(25, 25)
     assert perfect == {"low": pytest.approx(0.8668, abs=1e-4), "high": 1.0}
+    # One success in ten keeps a positive lower bound; only zero successes clamp to 0.
+    assert wilson_interval(1, 10) == {
+        "low": pytest.approx(0.0179, abs=1e-4),
+        "high": pytest.approx(0.4042, abs=1e-4),
+    }
 
 
 def test_train_lock_and_official_evaluation_are_reproducible(
